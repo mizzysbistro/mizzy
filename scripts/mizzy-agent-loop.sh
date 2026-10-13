@@ -207,6 +207,10 @@ fi
 if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
   echo "NOTICE: reviewer uses the same provider in a separate read-only session; independent provider review is not available."
 fi
+if [[ "$CRITICAL_TASK" -eq 1 && "$REVIEWER" == "$IMPLEMENTER" ]]; then
+  echo "BLOCKED: critical tasks require a separate Codex or Claude reviewer. Configure an independent provider before starting work." >&2
+  exit 2
+fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RUN_BASE="$ROOT/.agent-runs/${STAMP}-${TASK_SLUG}"
