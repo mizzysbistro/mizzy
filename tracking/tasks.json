@@ -123,13 +123,14 @@
       "Cross-tenant negative tests"
     ],
     "evidence": [
-      "Tenant membership schema and an authenticated organization bootstrap RPC are drafted; guarded Supabase client bootstrap is implemented."
+      "Tenant membership schema and an authenticated organization bootstrap RPC are drafted; guarded Supabase client bootstrap is implemented.",
+      "Draft PR #22 makes authenticated branch cards selectable and opens a branch-scoped POS workspace. It rechecks active branch membership via AuthRepository before cloud catalog fetch. Verification remains blocked by the Actions runner outage."
     ],
     "attempt_count": 0,
-    "blocker": "Interactive Auth lifecycle, invitation/membership workflow, session restore/logout UI and Auth tests are not yet implemented or verified.",
+    "blocker": "Branch selection is drafted but unverified; invitation/membership lifecycle, production role authorization tests and real-device validation remain incomplete. GitHub Actions runner issue #13 blocks test gates.",
     "approval_required": false,
     "next_action": "After RLS test results, add a minimal login/session lifecycle, organization/branch selection and membership access layer.",
-    "updated_at": "2026-10-13",
+    "updated_at": "2026-10-14",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/4"
   },
   {
@@ -393,12 +394,15 @@
       "Added tests for scope denial, active/inactive import, price update vs. immutable order snapshot, removed/reused SKU, unsynced local conflict, foreign-branch rejection, malformed data and session requirement. Tests are authored but not yet executed.",
       "Added an additional test proving local-only catalog rows in a cloud branch are quarantined and hidden until they can be reconciled to a server-owned UUID.",
       "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts.",
-      "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged."
+      "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged.",
+      "Stacked draft PR #22 wires branch selection to a POS workspace that refreshes the branch-scoped cloud catalog before display, keeps demo menu/table seeding isolated to local demo mode, disables Dine-in until cloud table sync exists, and truthfully labels orders/Kitchen/payments local. A widget test is authored but not executed.",
+      "Cloud workspace startup now catches catalog-refresh failures separately and still loads the verified local SQLite cache; a new widget regression test verifies cached products remain available for local order saving while the cloud-sync limitation is displayed. Authored but not executed.",
+      "Explicit branch membership denial now raises CloudBranchAccessDenied; the selected workspace clears visible cached menu/table/orders instead of falling back to data for a revoked branch. Temporary network errors still retain local cache. Added a widget regression test; unexecuted."
     ],
     "attempt_count": 0,
-    "blocker": "The catalog pull/cache repository is drafted but not wired into the POS Auth/branch-selection UI, and tests have not run because Flutter/Dart are unavailable and hosted Actions jobs fail before steps. Sync outbox and server event RPC drafts are also unverified.",
+    "blocker": "Cloud catalog and branch POS wiring plus offline startup fallback are draft-only and unverified; Actions jobs continue to fail before steps. The catalog worker/order upload and table/Kitchen/payment sync are not implemented.",
     "approval_required": false,
-    "next_action": "Review the catalog reconciliation code, wire it only after AuthRepository confirms active branch membership, restore Actions runners under issue #13, and run all gates. Do not enable order uploads before catalog identity and price conflicts are reconciled.",
+    "next_action": "Review stacked PR #21/#22 and restore Actions runners; run Dart format, analyzer, all Flutter tests, secret scan and Android debug APK plus local Supabase migration/pgTAP. Then implement cloud table sync and the authenticated outbox worker only after catalog/auth scope tests pass.",
     "updated_at": "2026-10-14",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/20"
   }

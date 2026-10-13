@@ -58,6 +58,230 @@ void main() {
   );
 
   testWidgets(
+    'selected cloud branch loads its catalog and never seeds demo data',
+    (tester) async {
+      final database = MizzyDatabase(
+        factory: databaseFactoryFfi,
+        databaseName: 'mizzy-cloud-branch-${const Uuid().v4()}.db',
+      );
+      addTearDown(database.close);
+      final organizationId = const Uuid().v4();
+      final branchId = const Uuid().v4();
+      final catalogId = const Uuid().v4();
+      final tableId = const Uuid().v4();
+      var syncCalls = 0;
+
+      Future<int> refreshCloudCatalog({
+        required MizzyDatabase database,
+        required String organizationId,
+        required String branchId,
+      }) async {
+        syncCalls++;
+        final rawDatabase = await database.open();
+        await rawDatabase.insert('catalog_items', <String, Object?>{
+          'id': catalogId,
+          'organization_id': organizationId,
+          'branch_id': branchId,
+          'name': 'Cloud Meal',
+          'sku': 'CLOUD-MEAL-001',
+          'category_name': 'Meals',
+          'price_minor': 12500,
+          'currency_code': 'PHP',
+          'is_active': 1,
+          'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+          'sync_state': 'synced',
+        });
+        await rawDatabase.insert('restaurant_tables', <String, Object?>{
+          'id': tableId, 'organization_id': organizationId, 'branch_id': branchId,
+          'name': 'Cloud T1', 'area_name': 'Main Hall', 'capacity': 4,
+          'status': 'available',
+          'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+          'sync_state': 'synced',
+        });
+        return 0;
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LocalPosWorkspace(
+            database: database,
+            organizationId: organizationId,
+            branchId: branchId,
+            cloudCatalogRefresh: refreshCloudCatalog,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(syncCalls, 1);
+      expect(find.text('Cloud Meal'), findsOneWidget);
+      expect(find.text('Chicken Adobo'), findsNothing);
+      expect(
+        find.textContaining('order sync is not enabled'),
+        findsOneWidget,
+      );
+
+      final rawDatabase = await database.open();
+      final cachedTables = await rawDatabase.query(
+        'restaurant_tables',
+        where: 'organization_id = ? AND branch_id = ?',
+        whereArgs: <Object?>[organizationId, branchId],
+      );
+      expect(cachedTables, hasLength(1));
+      expect(cachedTables.single['id'], tableId);
+      expect(cachedTables.single['name'], 'Cloud T1');
+      expect(cachedTables.single['status'], 'available');
+      expect(await rawDatabase.query('catalog_items'), hasLength(1));
+
+      await tester.tap(find.byTooltip('Add Cloud Meal'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save locally to Kitchen'));
+      await tester.pumpAndSettle();
+
+      final orders = await rawDatabase.query('orders');
+      final lines = await rawDatabase.query('order_lines');
+      expect(orders, hasLength(1));
+      expect(orders.single['organization_id'], organizationId);
+      expect(orders.single['branch_id'], branchId);
+      expect(lines.single['catalog_item_id'], catalogId);
+      expect(lines.single['item_name_snapshot'], 'Cloud Meal');
+      expect(lines.single['unit_price_minor'], 12500);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'cloud workspace falls back to cached catalog when refresh fails',
+    (tester) async {
+      final database = MizzyDatabase(
+        factory: databaseFactoryFfi,
+        databaseName: 'mizzy-cloud-offline-${const Uuid().v4()}.db',
+      );
+      addTearDown(database.close);
+      final organizationId = const Uuid().v4();
+      final branchId = const Uuid().v4();
+      final catalogId = const Uuid().v4();
+      final rawDatabase = await database.open();
+      await rawDatabase.insert('catalog_items', <String, Object?>{
+        'id': catalogId,
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'name': 'Cached Cloud Meal',
+        'sku': 'CACHED-MEAL-001',
+        'category_name': 'Meals',
+        'price_minor': 11000,
+        'currency_code': 'PHP',
+        'is_active': 1,
+        'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+        'sync_state': 'synced',
+      });
+      var refreshCalls = 0;
+
+      Future<int> failCloudRefresh({
+        required MizzyDatabase database,
+        required String organizationId,
+        required String branchId,
+      }) async {
+        refreshCalls++;
+        throw StateError('simulated offline network');
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LocalPosWorkspace(
+            database: database,
+            organizationId: organizationId,
+            branchId: branchId,
+            cloudCatalogRefresh: failCloudRefresh,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(refreshCalls, 1);
+      expect(find.text('Cached Cloud Meal'), findsOneWidget);
+      expect(find.text('Chicken Adobo'), findsNothing);
+      expect(
+        find.textContaining('Showing any verified catalog cached'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byTooltip('Add Cached Cloud Meal'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save locally to Kitchen'));
+      await tester.pumpAndSettle();
+
+      final orders = await rawDatabase.query('orders');
+      final lines = await rawDatabase.query('order_lines');
+      expect(orders, hasLength(1));
+      expect(orders.single['organization_id'], organizationId);
+      expect(orders.single['branch_id'], branchId);
+      expect(lines.single['catalog_item_id'], catalogId);
+      expect(lines.single['unit_price_minor'], 11000);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'confirmed branch access denial hides cached menu and table data',
+    (tester) async {
+      final database = MizzyDatabase(
+        factory: databaseFactoryFfi,
+        databaseName: 'mizzy-cloud-access-denied-${const Uuid().v4()}.db',
+      );
+      addTearDown(database.close);
+      final organizationId = const Uuid().v4();
+      final branchId = const Uuid().v4();
+      final rawDatabase = await database.open();
+      await rawDatabase.insert('catalog_items', <String, Object?>{
+        'id': const Uuid().v4(),
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'name': 'Restricted Cached Meal',
+        'sku': 'RESTRICTED-MEAL',
+        'category_name': 'Meals',
+        'price_minor': 10000,
+        'currency_code': 'PHP',
+        'is_active': 1,
+        'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+        'sync_state': 'synced',
+      });
+      await rawDatabase.insert('restaurant_tables', <String, Object?>{
+        'id': const Uuid().v4(),
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'name': 'Restricted Table',
+        'area_name': null,
+        'capacity': 2,
+        'status': 'available',
+        'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+        'sync_state': 'synced',
+      });
+      Future<int> denyBranch({
+        required MizzyDatabase database,
+        required String organizationId,
+        required String branchId,
+      }) async => throw const CloudBranchAccessDenied();
+
+      await tester.pumpWidget(MaterialApp(
+        home: LocalPosWorkspace(
+          database: database,
+          organizationId: organizationId,
+          branchId: branchId,
+          cloudCatalogRefresh: denyBranch,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Access to this branch is no longer active'), findsOneWidget);
+      expect(find.text('Restricted Cached Meal'), findsNothing);
+      expect(find.text('Restricted Table'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
     'table layout assigns one dine-in table to the saved order',
     (tester) async {
       final database = MizzyDatabase(
