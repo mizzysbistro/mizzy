@@ -240,10 +240,8 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
 
   Future<void> _saveOrder() async {
     if (_saving || _cart.isEmpty) return;
-    if (
-      _selectedOrderType == MizzyOrderType.dineIn &&
-      _selectedTableId == null
-    ) {
+    if (_selectedOrderType == MizzyOrderType.dineIn &&
+        _selectedTableId == null) {
       setState(() {
         _selectedTab = 1;
         _error = 'Choose an available table before saving a dine-in order.';
