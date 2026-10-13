@@ -20,12 +20,13 @@
       "Build Android debug APK"
     ],
     "evidence": [
-      "GitHub repository mizzysbistro/mizzy confirmed private and empty at initialization"
+      "Repository scaffold files committed to main.",
+      "Flutter source and widget smoke test added; runtime test/build not executed in current environment."
     ],
     "attempt_count": 0,
-    "blocker": "Flutter/Dart/Android SDK availability not yet verified in a dedicated development runner",
+    "blocker": "Local environment has no Flutter, Dart, or adb. Build/test result is not yet verified.",
     "approval_required": false,
-    "next_action": "Check CI/toolchain availability and create Flutter app scaffold",
+    "next_action": "Wait for GitHub Actions run or arrange Flutter/Android SDK runner; resolve any CI errors.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/1"
   },
@@ -175,7 +176,7 @@
     "phase": "P0",
     "type": "testing",
     "priority": "P1",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-01"
     ],
@@ -188,11 +189,13 @@
       "Review workflow configuration",
       "Run test workflow"
     ],
-    "evidence": [],
+    "evidence": [
+      "GitHub Actions workflow added at .github/workflows/flutter.yml; execution result not yet observed."
+    ],
     "attempt_count": 0,
-    "blocker": "Flutter runner availability needs verification",
+    "blocker": "Workflow execution status not available from current tool output.",
     "approval_required": false,
-    "next_action": "Inspect available GitHub Actions runners/tooling and add CI",
+    "next_action": "Inspect the first GitHub Actions run and repair failures.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   }
