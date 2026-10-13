@@ -245,11 +245,19 @@ begin
 end;
 $$;
 
+-- Intentional authenticated RPC: the function performs narrow ticket transitions
+-- after auth.uid(), active branch and Kitchen/Manager role checks. Client roles
+-- cannot write receipt rows directly. Supabase security advisors may still flag
+-- SECURITY DEFINER in public; review the warning deliberately rather than
+-- suppressing it without validation.
 revoke all on function public.apply_kitchen_transition_event(
     uuid, uuid, uuid, uuid, text, text
-) from public, anon;
+) from public, anon, authenticated;
 grant execute on function public.apply_kitchen_transition_event(
     uuid, uuid, uuid, uuid, text, text
 ) to authenticated;
+comment on function public.apply_kitchen_transition_event(
+    uuid, uuid, uuid, uuid, text, text
+) is 'Authenticated-only idempotent Kitchen event endpoint. Enforces active branch role, expected source status, immutable event fingerprint, and atomic audit/receipt write.';
 
 commit;

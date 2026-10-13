@@ -1,6 +1,6 @@
 # P1 order, kitchen and cash-tender contract
 
-**Status:** design contract; the cloud order schema/RPCs are not implemented yet. This design intentionally keeps order writes server-authorized and retry-safe.
+**Status:** Initial cloud POS tables and RPCs are implemented in `supabase/migrations/20261013143801_p1_pos_foundation.sql` and have prior disposable-database test evidence. This document defines the intended behavior; full role/negative-case verification, production readiness, and UI integration remain incomplete. The current local Counter/Orders/Kitchen demo does not yet use these cloud endpoints.
 
 ## One logical order
 

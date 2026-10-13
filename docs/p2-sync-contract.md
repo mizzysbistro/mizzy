@@ -8,13 +8,13 @@ A local outbox row is not proof of cloud persistence. The client may set status 
 
 ### Order creation
 
-- Send order creation through `public.save_order`, not direct table writes. The RPC rechecks the signed-in user’s branch role and active branch, validates cloud catalog membership/current price, computes server totals, and commits the order, lines and initial Kitchen ticket in one transaction.
+- Send order creation through `public.save_order`, not direct table writes. The RPC rechecks the signed-in user’s branch role and active branch, validates cloud catalog membership/current price, computes server totals, and commits the order, lines and initial Kitchen ticket in one transaction. The current local outbox key is `order:<uuid>`, but `save_order` expects a UUID parameter: validate and pass only the UUID suffix as `p_idempotency_key`; never send the prefixed string as that UUID.
 - The local Kitchen-ticket create outbox event is dependent on order creation because the cloud order RPC creates the ticket itself. After the parent event is confirmed, verify that the remote ticket ID/order ID match before acknowledging the local ticket-create event. Never issue a second insert for the same ticket.
 - The current local sample catalog is seeded only in SQLite; it is not the remote `menu_items` catalog. Orders referencing unavailable/stale cloud menu IDs must be quarantined for catalog reconciliation rather than silently re-priced or retried forever. Catalog synchronization remains a prerequisite.
 
 ### Kitchen transitions
 
-- Use `public.apply_kitchen_transition_event` with the stable event UUID, organization/branch, ticket UUID, recorded `fromStatus`, and desired `toStatus`.
+- Use `public.apply_kitchen_transition_event` with the stable event UUID, organization/branch, ticket UUID, recorded `fromStatus`, and desired `toStatus`. Validate that the `eventId` payload UUID matches the `kitchen-transition:<uuid>` outbox-key suffix before sending.
 - The server locks the event identity, checks the active user’s branch role, compares the expected source state, updates ticket/order/table state and audit history, and stores an idempotency receipt in the same transaction.
 - Replaying the same event UUID and same request returns the original receipt without applying another transition or audit entry. Reusing that event UUID with changed contents is rejected.
 - A stale expected source state returns a conflict. The client must quarantine the event and ask an authorized operator to reconcile; it must not attempt to force the old transition or invent a new event ID.
