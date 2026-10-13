@@ -78,5 +78,8 @@ Keep the task packet concise. Do not paste credentials, real restaurant/customer
 ## Local runner
 Use `scripts/mizzy-agent-loop.sh <task-slug> <task description>` on a development machine that has Git, Flutter/Dart and at least one authenticated Codex or Claude Code CLI. Run it on a clean feature branch—not `main`. It will not push, commit, merge or deploy.
 - Optional environment: `MIZZY_IMPLEMENTER=codex|claude`, `MIZZY_REVIEWER=codex|claude|same`, `MIZZY_VERIFY=targeted|full`, `MIZZY_TARGET_TEST=test/path_test.dart`.
-- `targeted`: strict format, analyzer and either the specified test or the Flutter test suite.
+- `targeted`: strict format and analyzer, then the explicitly specified `MIZZY_TARGET_TEST`, or every changed tracked test file. If no tracked test file changed (including newly created untracked tests), safely fall back to the full Flutter test suite.
 - `full`: strict format, analyzer, entire Flutter test suite, debug APK, and local Gitleaks scan when the binary is installed. Set `MIZZY_RUN_SUPABASE_TESTS=1` only when the local Supabase CLI and Docker/test stack are ready; this runs the local database tests and does not deploy to hosted Supabase.
+
+
+The launcher validates `MIZZY_AGENT_MAX_TURNS` as a positive integer and creates a unique `.agent-runs/` directory for each invocation so repeated runs do not overwrite earlier evidence. A same-provider read-only review is not equivalent to an independent cross-provider review; report that limitation clearly.
