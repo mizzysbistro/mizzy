@@ -64,9 +64,10 @@
     "No real Android phone/tablet install, printer/peripheral, production signing, upgrade or release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision resources that may incur costs without approval.",
     "Counter/Tables/Orders/Kitchen screens and catalog still run as local-only demonstration data; cloud sync, production catalog management and real payments are not enabled.",
-    "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete."
+    "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
+    "P2 dependency-ordering patch is unverified and intentionally unmerged pending code review and CI runner recovery; authenticated network sync remains unimplemented."
   ],
-  "next_action": "Resolve the runner blocker on issue 13 without paid provisioning or repo visibility changes. When runner access is restored, execute strict Dart format, analysis, all Flutter tests (13 order repository + 7 outbox + two widget tests), secret scan, Android debug APK build, and Supabase migration/pgTAP. Keep PR 11 unmerged until all gates pass. Then continue P1 auth-backed production catalog/table flows and implement issue 15's trusted authenticated upload/pull worker, dependency ordering, idempotent replay, cursors, offline/reconnect reconciliation and conflict handling.",
+  "next_action": "Review draft PR for P2 outbox dependency ordering without merging. Resolve Actions runner issue 13 without paid provisioning or visibility changes; then run Dart format, analyzer, Flutter tests, Gitleaks, Android debug APK build and local Supabase migrations/pgTAP. Only after those pass should authenticated upload/pull sync, cursors, offline/reconnect reconciliation and conflict handling continue.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -171,7 +172,8 @@
     "Added SyncOutboxRepository for branch-scoped durable event leases, expired-lease reclaim, bounded exponential backoff, safe error codes, delivered acknowledgment, and conflict quarantine; the repository does not make network calls.",
     "Added seven outbox tests covering organization/branch isolation, retry timing/backoff, expired-lease recovery, delivered/conflict state, invalid leases/batch sizes, concurrent claims, and wrong-branch acknowledgment.",
     "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
-    "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner."
+    "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner.",
+    "Prepared a draft P2 outbox dependency-ordering patch on a dedicated feature branch: kitchen-ticket creation depends on parent-order delivery, and Kitchen transitions chain behind the previous ticket event. Added a regression test; not verified because Flutter/Dart are unavailable in this execution environment and GitHub Actions runner jobs fail before any steps."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
