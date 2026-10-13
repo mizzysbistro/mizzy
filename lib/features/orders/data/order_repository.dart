@@ -533,11 +533,18 @@ class OrderRepository {
     required String branchId,
   }) async {
     final database = await _database.open();
-    return database.query(
-      'orders',
-      where: 'organization_id = ? AND branch_id = ?',
-      whereArgs: <Object?>[organizationId, branchId],
-      orderBy: 'created_at DESC, local_order_number DESC',
+    return database.rawQuery(
+      '''
+      SELECT orders.*, restaurant_tables.name AS table_name
+      FROM orders
+      LEFT JOIN restaurant_tables
+        ON restaurant_tables.id = orders.table_id
+        AND restaurant_tables.organization_id = orders.organization_id
+        AND restaurant_tables.branch_id = orders.branch_id
+      WHERE orders.organization_id = ? AND orders.branch_id = ?
+      ORDER BY orders.created_at DESC, orders.local_order_number DESC
+      ''',
+      <Object?>[organizationId, branchId],
     );
   }
 
