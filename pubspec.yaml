@@ -13,6 +13,7 @@ dependencies:
   crypto: ^3.0.7
   path: ^1.9.1
   sqflite: ^2.4.4+1
+  supabase_flutter: ^2.18.3
   uuid: ^4.6.0
 
 dev_dependencies:
