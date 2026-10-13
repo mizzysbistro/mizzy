@@ -52,6 +52,20 @@ Not yet verified or complete:
 - The Counter/Orders/Kitchen UI is still local-only and uses a sample menu. Inventory, purchasing and reporting have not been connected to operational screens.
 - The recorded debug APK is an older development artifact, not a signed production release; no production database, signed release APK, hardware validation or store publication has been created.
 
+## Smart multi-agent development loop
+
+The repository includes shared instructions for Codex and Claude Code plus a reusable smart-loop skill. The coordinator selects a task and acceptance criteria; one agent implements while a separate provider reviews read-only where available. Critical work (authentication, RLS, money, inventory, offline sync and migrations) requires explicit security review and stronger test evidence.
+
+On a development machine with Git, Flutter/Dart and an authenticated local Codex or Claude Code CLI, use a clean feature branch:
+
+```sh
+bash scripts/mizzy-agent-loop.sh pos-order-fix "Describe one bounded task and its acceptance criteria"
+```
+
+The launcher has a three-attempt cap, strict formatting/analyzer/test gates, and a read-only review. Use `MIZZY_VERIFY=full` at PR/release boundaries. It never commits, pushes, merges, deploys, provisions services or changes repository settings. Agent logs are stored under the ignored `.agent-runs/` directory. If only one provider is available, the loop reports that independent cross-provider review is unavailable.
+
+GitHub Actions remains the source of CI evidence. A workflow that fails before any step starts is an infrastructure blocker, not a source-code test failure. No paid model API key is added to CI.
+
 ## Development setup
 
 Install Flutter stable, including its bundled Dart SDK, and the Android SDK. The baseline currently targets Flutter 3.47+ and Dart 3.12+. Then run:
