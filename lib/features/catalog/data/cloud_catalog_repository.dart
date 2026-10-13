@@ -220,6 +220,7 @@ class CloudCatalogRepository {
           where: 'id = ? AND organization_id = ? AND branch_id = ?',
           whereArgs: <Object?>[cachedId, organizationId, branchId],
         );
+        if ((cached['is_active']! as int) != 0) deactivated++;
         conflicts.add(cachedId);
       }
 
@@ -250,7 +251,9 @@ class CloudCatalogRepository {
                 limit: 1,
               );
         if (skuCollision.isNotEmpty) {
-          final collidingId = skuCollision.single['id']! as String;
+          final colliding = skuCollision.single;
+          final collidingId = colliding['id']! as String;
+          if ((colliding['is_active']! as int) != 0) deactivated++;
           await transaction.update(
             'catalog_items',
             <String, Object?>{
@@ -262,6 +265,7 @@ class CloudCatalogRepository {
             whereArgs: <Object?>[collidingId, organizationId, branchId],
           );
           if (existing != null) {
+            if ((existing['is_active']! as int) != 0) deactivated++;
             await transaction.update(
               'catalog_items',
               <String, Object?>{
@@ -291,6 +295,7 @@ class CloudCatalogRepository {
         if (localSyncState != 'synced' && !fieldsMatch) {
           // Keep unsynced local values for review, but fail closed so the item
           // is not offered for new sales until its identity/price is reconciled.
+          if ((existing['is_active']! as int) != 0) deactivated++;
           await transaction.update(
             'catalog_items',
             <String, Object?>{
@@ -306,6 +311,9 @@ class CloudCatalogRepository {
         }
 
         final changed = !fieldsMatch || localSyncState != 'synced';
+        if ((existing['is_active']! as int) != 0 && !item.isActive) {
+          deactivated++;
+        }
         await transaction.update(
           'catalog_items',
           remoteValues,

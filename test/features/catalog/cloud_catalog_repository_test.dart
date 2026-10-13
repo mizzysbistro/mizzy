@@ -180,6 +180,26 @@ void main() {
     expect(line['unit_price_minor'], 14900);
   });
 
+  test('deactivates an existing cached item when the cloud disables it', () async {
+    final id = const Uuid().v4();
+    source.items = [item(id: id, active: true)];
+    await repository.syncBranch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    source.items = [item(id: id, active: false)];
+    final result = await repository.syncBranch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    expect(result.deactivated, 1);
+    final cached = await readItem(id);
+    expect(cached['is_active'], 0);
+    expect(cached['sync_state'], 'synced');
+  });
+
   test('deactivates removed items and frees a reused SKU without deleting history', () async {
     final oldId = const Uuid().v4();
     final newId = const Uuid().v4();
