@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'core/cloud/supabase_bootstrap.dart';
 import 'core/config/app_environment.dart';
+import 'features/auth/data/auth_repository.dart';
+import 'features/auth/presentation/auth_entry.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +38,9 @@ class MizzyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: FoundationScreen(cloudBootstrapStatus: cloudBootstrapStatus),
+      home: cloudBootstrapStatus == CloudBootstrapStatus.clientInitialized
+          ? AuthEntry(repository: AuthRepository())
+          : FoundationScreen(cloudBootstrapStatus: cloudBootstrapStatus),
     );
   }
 }
