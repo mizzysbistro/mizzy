@@ -10,8 +10,8 @@
   "completion_criteria": "production",
   "reporting": "detailed",
   "failure_recovery": "retry",
-  "current_phase": "P0",
-  "status": "in_progress",
+  "current_phase": "P1",
+  "status": "blocked",
   "verified_findings": {
     "target_repository_confirmed": true,
     "repository_full_name": "mizzysbistro/mizzy",
@@ -40,17 +40,20 @@
     "p1_order_rpc_behavior_tests_passed": true,
     "local_counter_orders_kitchen_ui_committed": true,
     "local_pos_ui_ci_passed": true,
-    "local_order_repository_integration_tests_added": true
+    "local_order_repository_integration_tests_added": true,
+    "local_branch_scope_and_concurrent_idempotency_tests_added": true,
+    "order_repository_public_database_constructor_fix_committed": true
   },
   "blockers": [
-    "Four new SQLite order repository integration tests were committed after the latest green CI run; their first CI result is still pending.",
-    "Debug APK is development-only and built from tested commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include the later integration tests commit.",
+    "GitHub Actions cannot currently validate the newest source: Flutter and Supabase runs 38425041168 and 38425041163 failed before any steps started; GitHub job records show runner_id 0 and empty steps. The failed jobs were retried but still have no actionable test logs. Check GitHub-hosted runner/Actions availability and usage limits without enabling paid billing.",
+    "Newest SQLite integration tests for tenant/branch scoping and simultaneous idempotent retries have not obtained a successful CI result.",
+    "Debug APK remains development-only and was built from tested commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include current integration-test coverage.",
     "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "Local Counter/Orders/Kitchen UI is sample-menu and local-only; cloud sync, production catalog/table management, and real payments are not enabled.",
+    "Local Counter/Orders/Kitchen UI still uses a sample menu and local-only storage; cloud sync, production catalog/table management, and real payments are not enabled.",
     "Authentication lifecycle, trusted membership management, offline sync/reconnect/conflict handling, and further adversarial cross-branch/payment validation remain incomplete."
   ],
-  "next_action": "Run CI against the new SQLite integration tests and fix any failures; then add tests for cross-branch local scoping and concurrent/idempotent writes, connect the local UI to a production catalog only after secure auth/tenant scope is ready, and continue P0-P6 release gates.",
+  "next_action": "Resolve GitHub Actions runner availability without enabling paid billing or making the private repository public. Then rerun formatter, analyzer, Flutter tests (including six SQLite integration tests), Android debug APK build, secret scan, and Supabase migration/pgTAP. Keep PR #11 unmerged until all checks pass; after verification continue authentication/membership/RLS and offline sync work.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -119,7 +122,11 @@
     "The first UI CI analysis found an inaccessible private named-parameter call; corrected the callsite to the public constructor parameter name and restarted strict CI validation.",
     "Created P1-01 GitHub issue to track Counter → Orders → Kitchen integration, acceptance criteria and remaining validation gaps.",
     "Verified green CI on validation branch: Dart format, static analysis, 17 Flutter tests, secret scan, Android debug APK build, APK-level SHA-256 recording, and fresh local Supabase migration/pgTAP tests.",
-    "Added four SQLite FFI integration tests covering one order/one kitchen ticket, idempotent retry without duplicates, Kitchen-to-Orders shared status, and rejection of illegal Kitchen status transitions. New test commit requires CI verification."
+    "Added four SQLite FFI integration tests covering one order/one kitchen ticket, idempotent retry without duplicates, Kitchen-to-Orders shared status, and rejection of illegal Kitchen status transitions. New test commit requires CI verification.",
+    "Fixed OrderRepository's inaccessible private named database parameter and committed the public database: constructor parameter to main and ci/p1-order-rpc-validation.",
+    "Added two SQLite integration tests for strict organization/branch visibility and simultaneous idempotent retries creating exactly one order, ticket, and outbox pair.",
+    "Investigated failed validation runs 38425041168 and 38425041163; job API evidence showed runner_id 0, empty steps, and no job logs, so added GitHub issue 13 as an external CI availability blocker.",
+    "Retried failed Flutter and Supabase workflow jobs once; the retry did not provide a passing run."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -154,7 +161,11 @@
     "c87860c0686fd4e41e67628e642095f5973023a0",
     "f69feb14b60cdb23199b7d994dac5441954960e0",
     "9a2efa9cbee7bb2ee9005083afd051f4ac81b12a",
-    "eae959ab8018d6a154cd2004b470a24d65cca1f9"
+    "eae959ab8018d6a154cd2004b470a24d65cca1f9",
+    "9ff6f04d245d95fbe4f58dedafac4127a642fdb6",
+    "2b776eddbbe8449f1fd3d607bb5a9ac14751e949",
+    "62751efce6d88682ca6477e43e9878a12d2e807f",
+    "f1fc4b37ec62a645ec135ce564e4f65a5ea968ff"
   ],
   "flutter_app_created": true,
   "apk_built": false,
@@ -186,5 +197,17 @@
     "artifact_expires_at": "2027-01-11T15:20:35Z",
     "tested_commit": "95a9528338085b2f2a057362e9b8fd5c066e6b81",
     "note": "Latest local order repository integration tests were added after this successful run and need a fresh CI pass."
+  },
+  "latest_ci_attempt": {
+    "validation_branch": "ci/p1-order-rpc-validation",
+    "tested_commit": "f1fc4b37ec62a645ec135ce564e4f65a5ea968ff",
+    "flutter_run_id": 38425041168,
+    "supabase_run_id": 38425041163,
+    "flutter_conclusion": "failure_before_first_step",
+    "supabase_conclusion": "failure_before_first_step",
+    "retry_attempt": 2,
+    "evidence": "GitHub job API records had runner_id=0, empty steps arrays, and no downloadable job logs; failures occurred within seconds. This is treated as a runner/Actions availability blocker rather than a test pass or a confirmed source-test failure.",
+    "tracking_issue": "https://github.com/mizzysbistro/mizzy/issues/13",
+    "status": "blocked_pending_runner_availability"
   }
 }
