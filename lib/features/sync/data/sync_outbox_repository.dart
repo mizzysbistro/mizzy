@@ -4,6 +4,7 @@ import '../../../core/database/mizzy_database.dart';
 
 enum SyncFailureCode {
   networkUnavailable('network_unavailable'),
+  authenticationRequired('authentication_required'),
   timeout('timeout'),
   serverUnavailable('server_unavailable'),
   rateLimited('rate_limited'),
@@ -68,9 +69,9 @@ class SyncOutboxRecord {
   final String? dependsOnEventId;
 }
 
-/// Manages durable local outbox transitions; it deliberately performs no
-/// network requests. A future sync worker must send the idempotency key to a
-/// trusted server endpoint before marking an event delivered.
+/// Manages durable local outbox transitions. Network operations live in
+/// the authenticated sync worker; an event may be marked delivered only after
+/// its idempotent server operation or verification succeeds.
 class SyncOutboxRepository {
   SyncOutboxRepository({
     required MizzyDatabase database,
