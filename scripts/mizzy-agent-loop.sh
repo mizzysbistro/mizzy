@@ -198,6 +198,10 @@ if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
   echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
   exit 2
 fi
+if [[ "$VERIFY_MODE" == "full" && ! -f "$ROOT/android/gradlew" ]]; then
+  echo "ERROR: full mode requires the Android platform scaffold at android/gradlew. Generate the Android scaffold with Flutter and review the resulting diff before rerunning." >&2
+  exit 2
+fi
 if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
   command -v supabase >/dev/null 2>&1 || {
     echo "ERROR: Supabase tests were requested but the Supabase CLI is missing." >&2
@@ -209,6 +213,10 @@ if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
   }
   docker info >/dev/null 2>&1 || {
     echo "ERROR: Docker is not ready; start the local container engine before agent execution." >&2
+    exit 2
+  }
+  supabase status >/dev/null 2>&1 || {
+    echo "ERROR: the local Supabase stack is not running. Start it with 'supabase start' before agent execution." >&2
     exit 2
   }
 fi
