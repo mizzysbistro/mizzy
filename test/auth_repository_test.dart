@@ -6,7 +6,10 @@ void main() {
   group('AuthInputValidator', () {
     test('accepts normal emails after trimming', () {
       expect(AuthInputValidator.isValidEmail('owner@example.com'), isTrue);
-      expect(AuthInputValidator.isValidEmail(' owner+pos@restaurant.ph '), isTrue);
+      expect(
+        AuthInputValidator.isValidEmail(' owner+pos@restaurant.ph '),
+        isTrue,
+      );
     });
 
     test('rejects malformed and overlong email addresses', () {
@@ -14,7 +17,9 @@ void main() {
       expect(AuthInputValidator.isValidEmail('not-an-email'), isFalse);
       expect(AuthInputValidator.isValidEmail('owner@localhost'), isFalse);
       expect(
-        AuthInputValidator.isValidEmail('${List<String>.filled(250, 'a').join()}@example.com'),
+        AuthInputValidator.isValidEmail(
+          '${List<String>.filled(250, 'a').join()}@example.com',
+        ),
         isFalse,
       );
     });
