@@ -8,7 +8,7 @@ void main() {
     expect(find.text('Mizzy POS'), findsOneWidget);
     expect(find.text('Your restaurant, connected.'), findsOneWidget);
     expect(find.text('Local persistence'), findsOneWidget);
-    expect(find.text('Supabase synchronization'), findsOneWidget);
+    expect(find.text('Supabase client'), findsOneWidget);
     expect(find.textContaining('not a finished POS'), findsOneWidget);
   });
 }
