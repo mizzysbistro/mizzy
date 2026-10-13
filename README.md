@@ -37,7 +37,7 @@ Dashboard, POS, tables, orders, kitchen, inventory, purchasing, employees, repor
 Implemented in source (verification status varies by commit; see CI links below):
 
 - Versioned SQLite schema and persisted device/installation ID.
-- Local Counter, Tables, Orders, and Kitchen demo screens backed by one SQLite order repository. The table grid supports dine-in selection, transactional table occupancy/release, and table names in Orders; saving an order writes immutable line snapshots, one kitchen ticket, and outbox operations in one transaction. Kitchen transitions update the same parent order, and cancellation is blocked when any captured payment exists until refund handling is implemented.
+- Local Counter, Tables, Orders, and Kitchen demo screens backed by one SQLite order repository. The demo menu is seeded once into the organization/branch-scoped SQLite catalog and is loaded from the catalog; order lines snapshot the catalog UUID, SKU, name and price. The table grid supports dine-in selection, transactional table occupancy/release, and table names in Orders; saving an order writes immutable line snapshots, one kitchen ticket, and outbox operations in one transaction. Kitchen transitions update the same parent order, and cancellation is blocked when any captured payment exists until refund handling is implemented.
 - Retry/idempotency protections, including order-ID-aware request fingerprints, branch-scoped reads, legal Kitchen transitions, and scoped organization/branch access tests.
 - Build-time Supabase configuration validation and guarded client initialization.
 - Draft versioned Supabase tenant/branch migration and database catalog/grant smoke-test SQL.
