@@ -171,7 +171,11 @@
     "Added SyncOutboxRepository for branch-scoped durable event leases, expired-lease reclaim, bounded exponential backoff, safe error codes, delivered acknowledgment, and conflict quarantine; the repository does not make network calls.",
     "Added seven outbox tests covering organization/branch isolation, retry timing/backoff, expired-lease recovery, delivered/conflict state, invalid leases/batch sizes, concurrent claims, and wrong-branch acknowledgment.",
     "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
-    "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner."
+    "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner.",
+    "Added AGENTS.md and CLAUDE.md shared project guardrails, plus docs/agent-orchestration.md defining fast/standard/critical lanes, single-writer coordination, independent review and evidence-based verdicts.",
+    "Added reusable Mizzy smart-loop skill under .agents/skills and .claude/skills.",
+    "Added scripts/mizzy-agent-loop.sh for local Codex/Claude CLI selection, clean non-main branch checks, bounded repair attempts, verification and read-only review; it never commits, pushes, merges, deploys or provisions.",
+    "Added CI shell syntax/help smoke test and documented the local launcher."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -257,7 +261,16 @@
     "36b95081ce0f943080622e2269a68abf4e9e2917",
     "caab09c92ba21b990ca02a510a14081b958cf76c",
     "6833001a1429273db5caf57f86e0b7ea2e8010b1",
-    "7ab879bed4b1538933d4ca7fede6eabadcca5d07"
+    "7ab879bed4b1538933d4ca7fede6eabadcca5d07",
+    "cb60cc50257cdb79f4ea3a9a3f730a9137c479da",
+    "24838d452d5f0fd4d4652718f8b527b3f09cfea7",
+    "c2d62ecbceee65add219124af8e2a03524c84a7e",
+    "99471ae298158f3a79441f852e43e83bac1bed27",
+    "e428df1cc19066df98c5f8f7c96dce38332b614f",
+    "35f1c557dbf6f8ffb4fdb26a2a505db90aebd454",
+    "9ec759c8ed6d6038bd3113cad67336da5089348a",
+    "49d20710ee436916710745a53909c4454097efac",
+    "b24aabf8099a589e29a3ea4178baff55879a2780"
   ],
   "flutter_app_created": true,
   "apk_built": true,
@@ -301,5 +314,33 @@
     "evidence": "GitHub REST job records show runner_id=0 and zero steps; jobs failed within seconds. The workflow commands did not run. This is a pre-runner availability blocker, not evidence the tests failed or passed.",
     "tracking_issue": "https://github.com/mizzysbistro/mizzy/issues/13",
     "status": "blocked_pending_actions_runner_availability"
+  },
+  "smart_agent_loop": {
+    "status": "implemented_pending_validation",
+    "pull_request": "https://github.com/mizzysbistro/mizzy/pull/17",
+    "branch": "feat/smart-agent-loop",
+    "capabilities": [
+      "Shared Codex/coding-agent instructions in AGENTS.md",
+      "Claude Code project instructions in CLAUDE.md",
+      "Fast/standard/critical routing and single-writer coordination",
+      "Reusable Mizzy smart-loop skill for .agents and .claude",
+      "Local launcher with Codex/Claude provider selection, clean non-main branch gate, three-attempt cap, local verification and read-only reviewer",
+      "CI bash syntax and help smoke check"
+    ],
+    "verification": {
+      "github_pr_diff_reviewed": true,
+      "shell_syntax_executed_locally": false,
+      "shell_syntax_ci_pending": true,
+      "codex_cli_executed_in_this_session": false,
+      "claude_code_executed_in_this_session": false,
+      "flutter_ci_pending": "Existing GitHub Actions runner issue #13 prevents reliable validation; do not claim the new shell or Flutter checks passed."
+    },
+    "safety_boundaries": [
+      "Launcher does not commit, push, merge, deploy, provision or alter repository settings",
+      "No paid model API keys added to GitHub Actions",
+      "No external agent output is claimed unless actually run",
+      "External CLIs must be installed and authenticated on the developer machine"
+    ],
+    "next_action": "Resolve GitHub Actions runner availability issue #13. Then validate bash -n and --help smoke test, test launcher refusal on main and dirty working trees, run it on a clean feature branch with at least one authenticated CLI, and confirm the read-only review cannot edit files. Keep PR 17 draft until current-head checks actually execute and pass."
   }
 }
