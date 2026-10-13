@@ -47,18 +47,22 @@
     "idempotency_key_cross_order_id_reuse_test_added": true,
     "readme_ci_status_corrected": true,
     "order_type_table_assignment_guard_added": true,
-    "counter_orders_kitchen_widget_test_added": true
+    "counter_orders_kitchen_widget_test_added": true,
+    "local_table_layout_and_dine_in_flow_committed": true,
+    "local_transactional_table_occupancy_and_safe_cancellation_committed": true,
+    "order_list_branch_scoped_table_name_join_committed": true,
+    "local_pos_table_widget_test_added": true
   },
   "blockers": [
-    "GitHub Actions cannot validate the latest source. Flutter run 38426653102 and Supabase run 38426653033 for commit 927bcae47f6359424b2134e646fcad5bc1a862ca failed before any step; job records show runner_id 0, zero steps and no logs. Earlier attempts on separate commits show the same. Check repository/owner Actions availability and usage limits; do not enable paid billing or change repo visibility without authorization.",
-    "The expanded SQLite order suite (nine tests) and Counter/Orders/Kitchen widget workflow test lack successful CI evidence.",
-    "Recorded debug APK is a development-only artifact built from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include the current order repository and UI test changes.",
+    "GitHub Actions cannot currently validate latest source. Flutter run 38428272003 and Supabase run 38428270475 for branch head a3a297e3c972b77aa993f7bc58a3d01bc66c0450 failed before any step (runner_id=0, zero steps and no logs). Multiple earlier heads show the same. Check repository/owner Actions availability and usage limits; do not enable paid billing or change repo visibility without authorization.",
+    "The expanded SQLite order repository suite (13 tests) and two local POS widget tests (Counter → Orders → Kitchen and dine-in table selection) have no successful CI evidence.",
+    "Recorded debug APK is a development-only artifact from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it predates the current table/dine-in code and expanded tests.",
     "No real Android phone/tablet installation, printer/peripheral, production signing, upgrade or release validation has been performed.",
-    "No hosted Supabase project is connected. Do not provision resources that may cost without approval.",
-    "Counter/Orders/Kitchen UI remains a sample-menu local-only demo; cloud sync, production catalog/table management and real payments are not enabled.",
+    "No hosted Supabase project is connected. Do not provision external resources that may cost without approval.",
+    "Counter/Orders/Kitchen/Table UI still runs on sample data in local-only development mode. Cloud sync, production catalog/table management and real payments are not enabled.",
     "Trusted staff invitation/membership lifecycle, partial offline sync/reconnect/conflict resolution and remaining adversarial cross-branch/payment validation remain incomplete."
   ],
-  "next_action": "Continue only safe work with explicit unverified status. The current code adds an injectable local database, expanded nine-test order repository coverage and a screen-level Counter → Orders → Kitchen test. Resolve Actions runner availability under issue 13, then run strict format/analyze, Flutter tests, secret scan, APK build and local Supabase migration/pgTAP. Keep PR 11 unmerged until all gates pass. Implement issue 14 through a trusted server-side staff invitation workflow, then proceed to P2 offline sync and reconciliation.",
+  "next_action": "Resolve the Actions runner blocker through repo/owner settings under issue 13 without paid provisioning or making the repo public. Then run strict format/analyze, all Flutter repository/widget tests, secret scan, Android debug APK build and Supabase migration/pgTAP. Keep PR 11 unmerged until checks pass. Continue P1 production catalog/table integration only after validation; implement staff invitation issue 14 through a trusted server-side workflow, then proceed to P2 offline sync/reconciliation.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -147,7 +151,12 @@
     "Added Counter → Orders → Kitchen widget coverage for one persisted parent order, one kitchen ticket and shared Kitchen-to-Orders status.",
     "Aligned local order validation with backend invariant: only dine-in orders may be table-assigned; added tests for missing and invalid table assignments.",
     "Reconciled README and tracker wording so older green CI and debug APK evidence are not misrepresented as validating latest changes.",
-    "Observed new validation head 927bcae47f6359424b2134e646fcad5bc1a862ca fail before steps in Flutter run 38426653102 and Supabase run 38426653033; current outcomes are unknown."
+    "Observed new validation head 927bcae47f6359424b2134e646fcad5bc1a862ca fail before steps in Flutter run 38426653102 and Supabase run 38426653033; current outcomes are unknown.",
+    "Implemented a branch-scoped local table grid with transactional demo seeding of eight tables and selection for dine-in orders.",
+    "Updated local order persistence to reserve only an available table belonging to the current organization/branch within the same transaction; orders now show joined table names.",
+    "Added safe dine-in cancellation behavior: an unpaid cancellation atomically releases the table; a captured payment blocks cancellation until an authorized refund flow exists.",
+    "Expanded SQLite test suite to 13 repository cases, including table ownership/status, rollback, and captured-payment cancellation safeguards; added two local POS screen-level widget tests.",
+    "Updated README and project tracker to reflect the local table grid and that current code remains unverified due to GitHub runner failures."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -200,11 +209,28 @@
     "901b80ae852375ca5fc0c73b487c132643b222a6",
     "927bcae47f6359424b2134e646fcad5bc1a862ca",
     "3d3be1b33a7413edddd2dca796b3cd8e55f1958f",
-    "66f53351c6cb0e3131d1c98ee294b1eb2b298b0b"
+    "66f53351c6cb0e3131d1c98ee294b1eb2b298b0b",
+    "c66ae0856ca64db12024aedb2c744f614fa17e92",
+    "cd80072d7e90fcac6eedaeb2b4624b88d6e016dc",
+    "f8c04053bc69f2cfbf864826cd01e6548eeb8f24",
+    "35fc479017dc80648aabcf59396ef5c7c5ace1a4",
+    "b9588ab1e6c86b9dcadc58c7dda82a0d349a0dad",
+    "0055d8957b249077ec979621f483096b46eb4719",
+    "98994758cdbc6c011d5b894b5cbfdecb81978064",
+    "632504cfe4f175925037561a613ffe75f0640126",
+    "8ab32d2eae15a3e9f21cb7b4897e04ba22e05bad",
+    "ac0e883ae8e138935f2a8bb1b0a344529e384b32",
+    "cf9d47b51c0ef99539253574f29bc81d7173fc3a",
+    "893d89b466c0f2e9954e076621c7453ee882c8ad",
+    "a3a297e3c972b77aa993f7bc58a3d01bc66c0450",
+    "8d627fcc28093376081c2b6c527550a5d5346a1a",
+    "323e9e6bed88a8c55a76cad69f8226a9ac58e2b9",
+    "b6e94e0737abfa25a5725cbdf337d00c44b63cb6",
+    "1b789adfe2974a85a6c7b43ceaebd96f2910077a"
   ],
   "flutter_app_created": true,
   "apk_built": true,
-  "build_test_status": "Last green CI commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 passed format/analyze, 17 Flutter tests, secret scan, Android debug APK, and Supabase migration/pgTAP. Current PR head 927bcae47f6359424b2134e646fcad5bc1a862ca adds nine SQLite repository tests and a Counter/Orders/Kitchen widget test; verification is blocked because latest Flutter run 38426653102 and Supabase run 38426653033 failed before the first step (runner_id=0, zero steps). The recorded APK is older and development-only.",
+  "build_test_status": "Last green CI commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 passed format/analyze, 17 Flutter tests, secret scan, Android debug APK build and Supabase migration/pgTAP. Current P1 branch head a3a297e3c972b77aa993f7bc58a3d01bc66c0450 adds 13 SQLite order repository tests and two local POS widget tests. Validation is blocked: Flutter run 38428272003 and Supabase run 38428270475 failed before the first step (runner_id=0, zero steps). The recorded APK is older and development-only.",
   "debug_apk_artifact": {
     "workflow_run_id": 38417639115,
     "branch": "ci/p1-pos-validation",
@@ -235,13 +261,13 @@
   },
   "latest_ci_attempt": {
     "validation_branch": "ci/p1-order-rpc-validation",
-    "tested_commit": "927bcae47f6359424b2134e646fcad5bc1a862ca",
-    "flutter_run_id": 38426653102,
-    "supabase_run_id": 38426653033,
+    "tested_commit": "a3a297e3c972b77aa993f7bc58a3d01bc66c0450",
+    "flutter_run_id": 38428272003,
+    "supabase_run_id": 38428270475,
     "flutter_conclusion": "failure_before_first_step",
     "supabase_conclusion": "failure_before_first_step",
     "retry_attempt": 1,
-    "evidence": "GitHub API job records for the current head show runner_id=0, zero steps, and jobs completing within seconds. This is a pre-runner CI blocker; no test command ran, so application-test outcome remains unknown.",
+    "evidence": "Current-head job APIs report runner_id=0 and zero steps; jobs finish within seconds without logs. The workflow commands did not execute. Application behavior and test outcome therefore remain unknown.",
     "tracking_issue": "https://github.com/mizzysbistro/mizzy/issues/13",
     "status": "blocked_pending_actions_runner_availability"
   }
