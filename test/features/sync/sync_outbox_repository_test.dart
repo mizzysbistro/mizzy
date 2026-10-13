@@ -58,7 +58,9 @@ void main() {
     return id;
   }
 
-  test('claims only due events from the requested organization and branch', () async {
+  test(
+    'claims only due events from the requested organization and branch',
+    () async {
     final first = await insertEvent(
       createdAt: now.subtract(const Duration(seconds: 2)),
     );
@@ -91,9 +93,12 @@ void main() {
     )).single;
     expect(foreignRow['status'], 'pending');
     expect(foreignRow['attempts'], 0);
-  });
+    },
+  );
 
-  test('retry uses bounded exponential backoff and the safe error code', () async {
+  test(
+    'retry uses bounded exponential backoff and the safe error code',
+    () async {
     final eventId = await insertEvent();
     final firstClaim = await repository.claimNextBatch(
       organizationId: organizationId,
@@ -152,9 +157,12 @@ void main() {
     )).single;
     expect(row['last_error'], 'timeout');
     expect(row['next_attempt_at'], secondRetryAt.toIso8601String());
-  });
+    },
+  );
 
-  test('expired processing lease can be safely reclaimed with a retry count', () async {
+  test(
+    'expired processing lease can be safely reclaimed with a retry count',
+    () async {
     final eventId = await insertEvent();
     final first = await repository.claimNextBatch(
       organizationId: organizationId,
@@ -179,7 +187,8 @@ void main() {
     );
     expect(reclaimed.single.id, eventId);
     expect(reclaimed.single.attempts, 2);
-  });
+    },
+  );
 
   test('only a leased event can be marked delivered or quarantined', () async {
     final eventId = await insertEvent();
@@ -249,7 +258,7 @@ void main() {
         branchId: branchId,
         limit: 0,
       ),
-      throwsRangeError,
+      throwsA(isA<RangeError>()),
     );
     await expectLater(
       repository.claimNextBatch(
