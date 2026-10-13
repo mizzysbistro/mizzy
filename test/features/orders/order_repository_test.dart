@@ -57,6 +57,24 @@ void main() {
     );
   }
 
+  Future<void> insertTable({
+    required String id,
+    required String tableBranchId,
+    String status = 'available',
+  }) async {
+    final rawDatabase = await database.open();
+    await rawDatabase.insert('restaurant_tables', <String, Object?>{
+      'id': id,
+      'organization_id': organizationId,
+      'branch_id': tableBranchId,
+      'name': 'Table ${const Uuid().v4().substring(0, 8)}',
+      'capacity': 2,
+      'status': status,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      'sync_state': 'pending',
+    });
+  }
+
   test('dine-in orders require a table before persistence', () async {
     await expectLater(
       repository.saveOrder(
@@ -95,6 +113,176 @@ void main() {
       ),
       isEmpty,
     );
+  });
+
+  test('dine-in order claims an available table in the same transaction', () async {
+    final tableId = const Uuid().v4();
+    await insertTable(id: tableId, tableBranchId: branchId);
+
+    final orderId = const Uuid().v4();
+    await repository.saveOrder(
+      draft(
+        orderId: orderId,
+        idempotencyKey: const Uuid().v4(),
+        orderType: MizzyOrderType.dineIn,
+        tableId: tableId,
+      ),
+    );
+
+    final rawDatabase = await database.open();
+    final table = (await rawDatabase.query(
+      'restaurant_tables',
+      where: 'id = ?',
+      whereArgs: <Object?>[tableId],
+      limit: 1,
+    )).single;
+    final order = await repository.readOrder(
+      organizationId: organizationId,
+      branchId: branchId,
+      orderId: orderId,
+    );
+
+    expect(table['status'], 'occupied');
+    expect(table['sync_state'], 'pending');
+    expect(order?['table_id'], tableId);
+    expect(await rawDatabase.query('orders'), hasLength(1));
+    expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
+  });
+
+  test('dine-in orders cannot claim occupied or cross-branch tables', () async {
+    final occupiedTableId = const Uuid().v4();
+    final otherBranch = const Uuid().v4();
+    final otherBranchTableId = const Uuid().v4();
+    await insertTable(
+      id: occupiedTableId,
+      tableBranchId: branchId,
+      status: 'occupied',
+    );
+    await insertTable(
+      id: otherBranchTableId,
+      tableBranchId: otherBranch,
+    );
+
+    await expectLater(
+      repository.saveOrder(
+        draft(
+          orderId: const Uuid().v4(),
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+          tableId: occupiedTableId,
+        ),
+      ),
+      throwsStateError,
+    );
+    await expectLater(
+      repository.saveOrder(
+        draft(
+          orderId: const Uuid().v4(),
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+          tableId: otherBranchTableId,
+        ),
+      ),
+      throwsStateError,
+    );
+
+    final rawDatabase = await database.open();
+    expect(await rawDatabase.query('orders'), isEmpty);
+    expect(await rawDatabase.query('order_lines'), isEmpty);
+    expect(await rawDatabase.query('kitchen_tickets'), isEmpty);
+  });
+
+  test('cancelling an unpaid dine-in order releases its table atomically', () async {
+    final tableId = const Uuid().v4();
+    final orderId = const Uuid().v4();
+    await insertTable(id: tableId, tableBranchId: branchId);
+    await repository.saveOrder(
+      draft(
+        orderId: orderId,
+        idempotencyKey: const Uuid().v4(),
+        orderType: MizzyOrderType.dineIn,
+        tableId: tableId,
+      ),
+    );
+
+    await repository.updateKitchenStatus(
+      organizationId: organizationId,
+      branchId: branchId,
+      orderId: orderId,
+      nextStatus: KitchenTicketStatus.cancelled,
+    );
+
+    final rawDatabase = await database.open();
+    final table = (await rawDatabase.query(
+      'restaurant_tables',
+      where: 'id = ?',
+      whereArgs: <Object?>[tableId],
+      limit: 1,
+    )).single;
+    final order = await repository.readOrder(
+      organizationId: organizationId,
+      branchId: branchId,
+      orderId: orderId,
+    );
+    expect(order?['status'], 'cancelled');
+    expect((order?['kitchenTicket'] as Map<String, Object?>)['status'], 'cancelled');
+    expect(table['status'], 'available');
+    expect(table['sync_state'], 'pending');
+  });
+
+  test('captured payment prevents dine-in cancellation without a refund', () async {
+    final tableId = const Uuid().v4();
+    final orderId = const Uuid().v4();
+    await insertTable(id: tableId, tableBranchId: branchId);
+    await repository.saveOrder(
+      draft(
+        orderId: orderId,
+        idempotencyKey: const Uuid().v4(),
+        orderType: MizzyOrderType.dineIn,
+        tableId: tableId,
+      ),
+    );
+
+    final rawDatabase = await database.open();
+    final timestamp = DateTime.now().toUtc().toIso8601String();
+    await rawDatabase.insert('payments', <String, Object?>{
+      'id': const Uuid().v4(),
+      'organization_id': organizationId,
+      'branch_id': branchId,
+      'order_id': orderId,
+      'method': 'cash',
+      'status': 'captured',
+      'amount_minor': 100,
+      'currency_code': 'PHP',
+      'idempotency_key': const Uuid().v4(),
+      'created_at': timestamp,
+      'updated_at': timestamp,
+    });
+
+    await expectLater(
+      repository.updateKitchenStatus(
+        organizationId: organizationId,
+        branchId: branchId,
+        orderId: orderId,
+        nextStatus: KitchenTicketStatus.cancelled,
+      ),
+      throwsStateError,
+    );
+
+    final table = (await rawDatabase.query(
+      'restaurant_tables',
+      where: 'id = ?',
+      whereArgs: <Object?>[tableId],
+      limit: 1,
+    )).single;
+    final order = await repository.readOrder(
+      organizationId: organizationId,
+      branchId: branchId,
+      orderId: orderId,
+    );
+    expect(order?['status'], 'saved');
+    expect((order?['kitchenTicket'] as Map<String, Object?>)['status'], 'queued');
+    expect(table['status'], 'occupied');
   });
 
   test('saving an order creates one order and one linked kitchen ticket', () async {
