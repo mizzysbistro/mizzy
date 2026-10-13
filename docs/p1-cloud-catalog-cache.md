@@ -13,8 +13,8 @@
 
 ## Remaining integration and safety work
 
-- The stacked draft now wires the authenticated workspace's active branch list to a selectable branch POS. Its callback rechecks membership via AuthRepository before fetching; Supabase RLS remains the server authorization boundary.
+- The stacked draft now wires the authenticated workspace's active branch list to a selectable branch POS. Its callback rechecks membership via AuthRepository before fetching both catalog and tables; Supabase RLS remains the server authorization boundary.
 - Decide how catalog management writes and audit history are performed; the service deliberately makes no cloud writes.
-- Local demo data stays in its separate generated organization/branch namespace. Cloud-selected branches skip demo menu/table seeding and quarantine local-only products. Cloud order upload remains disabled; orders are explicitly saved locally until the sync worker is tested.
+- Local demo data stays in its separate generated organization/branch namespace. Cloud-selected branches skip demo menu/table seeding and pull real branch table UUIDs/statuses. Dine-in is only offered when an available cloud table is cached. Cloud order upload remains disabled; orders are saved locally until the sync worker is tested.
 - Keep order upload blocked until the selected branch catalog has completed a successful pull and any price/identity conflicts are reconciled.
 - Run all new tests plus existing Flutter tests, formatter/analyzer, secret scanning, Android debug build and fresh local Supabase migration/pgTAP. Current GitHub Actions runners fail before workflow steps, so no Dart tests or build are yet verified.
