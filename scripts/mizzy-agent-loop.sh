@@ -15,7 +15,7 @@ Optional environment:
   MIZZY_IMPLEMENTER=auto|codex|claude   (default: auto, prefer Codex)
   MIZZY_REVIEWER=auto|codex|claude|same (default: independent provider if available)
   MIZZY_VERIFY=targeted|full            (default: targeted)
-  MIZZY_TARGET_TEST=test/path_test.dart (targeted test; unset runs all Flutter tests)
+  MIZZY_TARGET_TEST=test/path_test.dart (optional explicit test; otherwise changed tests or full suite)
   MIZZY_AGENT_MAX_TURNS=8              (Claude Code turn cap)
   MIZZY_RUN_SUPABASE_TESTS=1            (opt in to local 'supabase test db')
 USAGE
