@@ -1,0 +1,192 @@
+[
+  {
+    "task_id": "P0-01",
+    "title": "Initialize isolated Flutter application baseline",
+    "phase": "P0",
+    "type": "infra",
+    "priority": "P0",
+    "status": "in_progress",
+    "dependencies": [],
+    "acceptance_criteria": [
+      "Use this distinct repository; do not change other POS repos",
+      "Document supported Flutter/Dart/Android versions and environment setup",
+      "Clean debug build succeeds in a suitable environment",
+      "README documents setup and test commands"
+    ],
+    "verification_plan": [
+      "Check toolchain and repository tree",
+      "Run flutter doctor",
+      "Run flutter analyze and flutter test",
+      "Build Android debug APK"
+    ],
+    "evidence": [
+      "GitHub repository mizzysbistro/mizzy confirmed private and empty at initialization"
+    ],
+    "attempt_count": 0,
+    "blocker": "Flutter/Dart/Android SDK availability not yet verified in a dedicated development runner",
+    "approval_required": false,
+    "next_action": "Check CI/toolchain availability and create Flutter app scaffold",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-02",
+    "title": "Define architecture, environments, and local persistence",
+    "phase": "P0",
+    "type": "feature",
+    "priority": "P1",
+    "status": "not_started",
+    "dependencies": [
+      "P0-01"
+    ],
+    "acceptance_criteria": [
+      "Separate UI, application/domain, data and infrastructure layers",
+      "SQLite persistence schema and migrations documented",
+      "Environment configuration uses placeholders and excludes secrets"
+    ],
+    "verification_plan": [
+      "Architecture review",
+      "SQLite migration and persistence tests"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": null,
+    "approval_required": false,
+    "next_action": "Create architecture decision record after Flutter baseline",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-03",
+    "title": "Add secure Supabase client and migration scaffolding",
+    "phase": "P0",
+    "type": "security",
+    "priority": "P1",
+    "status": "not_started",
+    "dependencies": [
+      "P0-01",
+      "P0-02"
+    ],
+    "acceptance_criteria": [
+      "No service-role key in client code",
+      "Environment config documented",
+      "Migrations are versioned and repeatable",
+      "Supabase free-tier limits reviewed before provisioning"
+    ],
+    "verification_plan": [
+      "Secret scan",
+      "Migration validation",
+      "Configuration review"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": "Supabase project not created or connected",
+    "approval_required": true,
+    "next_action": "Prepare local migrations and request approval before paid/external provisioning",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-04",
+    "title": "Implement authentication, organization and branch membership",
+    "phase": "P0",
+    "type": "feature",
+    "priority": "P1",
+    "status": "not_started",
+    "dependencies": [
+      "P0-03"
+    ],
+    "acceptance_criteria": [
+      "Auth lifecycle handled",
+      "Organization/branch membership schema is tenant-scoped",
+      "Unauthenticated and cross-tenant access denied"
+    ],
+    "verification_plan": [
+      "Auth tests",
+      "Cross-tenant negative tests"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": null,
+    "approval_required": false,
+    "next_action": "Design schema and authorization model",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-05",
+    "title": "Implement least-privilege Owner/Manager/Counter/Kitchen permissions",
+    "phase": "P0",
+    "type": "security",
+    "priority": "P0",
+    "status": "not_started",
+    "dependencies": [
+      "P0-04"
+    ],
+    "acceptance_criteria": [
+      "Four agreed roles have documented permission matrix",
+      "Sensitive actions checked server-side",
+      "Unauthorized actions denied and audited"
+    ],
+    "verification_plan": [
+      "Role matrix tests",
+      "Server-side authorization tests",
+      "Audit review"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": null,
+    "approval_required": false,
+    "next_action": "Draft permission matrix",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-06",
+    "title": "Implement organization and branch RLS isolation",
+    "phase": "P0",
+    "type": "security",
+    "priority": "P0",
+    "status": "not_started",
+    "dependencies": [
+      "P0-03",
+      "P0-04"
+    ],
+    "acceptance_criteria": [
+      "Tenant/branch RLS policies cover scoped tables",
+      "Cross-tenant read/write negative tests fail safely",
+      "No client bypass or privileged key"
+    ],
+    "verification_plan": [
+      "Policy review",
+      "Automated RLS integration tests"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": "Requires Supabase-compatible test environment",
+    "approval_required": false,
+    "next_action": "Draft and review migration policies locally",
+    "updated_at": "2026-10-13"
+  },
+  {
+    "task_id": "P0-07",
+    "title": "Add baseline tests, static analysis, secret checks and CI",
+    "phase": "P0",
+    "type": "testing",
+    "priority": "P1",
+    "status": "not_started",
+    "dependencies": [
+      "P0-01"
+    ],
+    "acceptance_criteria": [
+      "CI runs formatting, static analysis and tests",
+      "Secret scan enabled",
+      "Failures remain visible and cannot be bypassed silently"
+    ],
+    "verification_plan": [
+      "Review workflow configuration",
+      "Run test workflow"
+    ],
+    "evidence": [],
+    "attempt_count": 0,
+    "blocker": "Flutter runner availability needs verification",
+    "approval_required": false,
+    "next_action": "Inspect available GitHub Actions runners/tooling and add CI",
+    "updated_at": "2026-10-13"
+  }
+]
