@@ -19,3 +19,5 @@ android/key.properties
 .env.*
 !.env.example
 supabase/.temp/
+# Local agent prompts, reports, and logs
+.agent-runs/
