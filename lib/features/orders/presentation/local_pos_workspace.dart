@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -9,7 +11,10 @@ import '../data/order_repository.dart';
 /// This is deliberately marked as a development workspace. It does not process
 /// real payments or synchronize with a hosted database.
 class LocalPosWorkspace extends StatefulWidget {
-  const LocalPosWorkspace({super.key});
+  const LocalPosWorkspace({super.key, this.database});
+
+  /// Optional injected database for isolated widget tests.
+  final MizzyDatabase? database;
 
   @override
   State<LocalPosWorkspace> createState() => _LocalPosWorkspaceState();
@@ -56,8 +61,9 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     ),
   ];
 
-  final MizzyDatabase _database = MizzyDatabase();
-  late final OrderRepository _orders = OrderRepository(database: _database);
+  late final bool _ownsDatabase;
+  late final MizzyDatabase _database;
+  late final OrderRepository _orders;
   final Map<String, int> _cart = <String, int>{};
 
   String? _organizationId;
@@ -72,7 +78,16 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   @override
   void initState() {
     super.initState();
+    _ownsDatabase = widget.database == null;
+    _database = widget.database ?? MizzyDatabase();
+    _orders = OrderRepository(database: _database);
     _initializeLocalWorkspace();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsDatabase) unawaited(_database.close());
+    super.dispose();
   }
 
   Future<String> _stableLocalId(String key) async {
