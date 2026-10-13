@@ -62,7 +62,7 @@ On a development machine with Git, Flutter/Dart and an authenticated local Codex
 bash scripts/mizzy-agent-loop.sh pos-order-fix "Describe one bounded task and its acceptance criteria"
 ```
 
-The launcher has a three-attempt cap, strict formatting/analyzer/test gates, and a read-only review. Use `MIZZY_VERIFY=full` at PR/release boundaries. It never commits, pushes, merges, deploys, provisions services or changes repository settings. Agent logs are stored under the ignored `.agent-runs/` directory. If only one provider is available, the loop reports that independent cross-provider review is unavailable.
+The launcher has a three-attempt cap, strict formatting/analyzer/test gates, explicit first-line verdict checks, and a read-only review. Low-risk tasks stay on the fast lane; authentication/RLS, money, inventory, sync, migration, backup/restore and release tasks automatically switch to full verification and require local Supabase tests, Gitleaks, Flutter tests and a debug APK/checksum. The critical lane fails fast if its Supabase/Docker/Gitleaks prerequisites are missing. Use `MIZZY_VERIFY=full` at PR/release boundaries for noncritical work. It never commits, pushes, merges, deploys, provisions services or changes repository settings. Agent logs are stored under the ignored `.agent-runs/` directory. If only one provider is available, the loop labels same-provider review and will not approve critical work without a separate provider.
 
 GitHub Actions remains the source of CI evidence. A workflow that fails before any step starts is an infrastructure blocker, not a source-code test failure. No paid model API key is added to CI.
 
