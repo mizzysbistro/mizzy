@@ -76,8 +76,8 @@ select is((select count(*)::integer from public.organizations), 1, 'second tenan
 reset role;
 set local role anon;
 set local request.jwt.claim.sub = '';
-select is((select count(*)::integer from public.organizations), 0, 'anonymous caller cannot read organizations');
-select is((select count(*)::integer from public.branches), 0, 'anonymous caller cannot read branches');
+select ok(not has_table_privilege('anon', 'public.organizations', 'SELECT'), 'anonymous caller has no organization table privilege');
+select ok(not has_table_privilege('anon', 'public.branches', 'SELECT'), 'anonymous caller has no branch table privilege');
 
 select * from finish();
 rollback;
