@@ -21,12 +21,13 @@
     ],
     "evidence": [
       "Repository scaffold files committed to main.",
-      "Flutter source and widget smoke test added; runtime test/build not executed in current environment."
+      "Flutter source and widget smoke test added; runtime test/build not executed in current environment.",
+      "Reviewed the Flutter scaffold and CI workflow against the repository; Flutter/Dart/Android SDK are unavailable locally, and no successful GitHub Actions run/build evidence has been retrieved."
     ],
     "attempt_count": 0,
-    "blocker": "Local environment has no Flutter, Dart, or adb. Build/test result is not yet verified.",
+    "blocker": "Local environment lacks Flutter, Dart, Android SDK/adb; available GitHub status tooling did not expose a push-triggered Actions run result.",
     "approval_required": false,
-    "next_action": "Wait for GitHub Actions run or arrange Flutter/Android SDK runner; resolve any CI errors.",
+    "next_action": "Retrieve the workflow run and APK artifact from GitHub Actions; fix all formatting, analysis, test or build failures before marking baseline verified.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/1"
   },
@@ -36,7 +37,7 @@
     "phase": "P0",
     "type": "feature",
     "priority": "P1",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-01"
     ],
@@ -49,11 +50,14 @@
       "Architecture review",
       "SQLite migration and persistence tests"
     ],
-    "evidence": [],
+    "evidence": [
+      "Added docs/architecture.md with application boundaries, local SQLite table plan, safe money representation, outbox, offline/reconnect and unified Counter/Orders/Kitchen flow.",
+      "Added docs/security-model.md with organization/branch scope and the initial role matrix. SQLite implementation and persistence tests remain outstanding."
+    ],
     "attempt_count": 0,
-    "blocker": null,
+    "blocker": "Architecture is documented, but no SQLite runtime/provider/migrations or persistence tests are implemented yet.",
     "approval_required": false,
-    "next_action": "Create architecture decision record after Flutter baseline",
+    "next_action": "Implement versioned SQLite persistence and repository boundaries after CI toolchain availability is established.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/2"
   },
@@ -63,7 +67,7 @@
     "phase": "P0",
     "type": "security",
     "priority": "P1",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-01",
       "P0-02"
@@ -79,11 +83,14 @@
       "Migration validation",
       "Configuration review"
     ],
-    "evidence": [],
+    "evidence": [
+      "Added draft supabase/migrations/20261013000000_tenant_foundation.sql with organizations, branches, memberships, audit events, scoped helper functions, organization bootstrap RPC, RLS, and least-privilege grants.",
+      "Added supabase/tests/20261013000000_tenant_foundation.sql as an 18-assertion catalog/grant smoke test and supabase/tests/README.md with the required RLS authorization matrix. Tests have not been run."
+    ],
     "attempt_count": 0,
-    "blocker": "Supabase project not created or connected",
+    "blocker": "Migration has not been applied or tested: Supabase CLI, PostgreSQL client and Docker are unavailable locally; no Supabase project is connected. External provisioning remains approval-gated.",
     "approval_required": true,
-    "next_action": "Prepare local migrations and request approval before paid/external provisioning",
+    "next_action": "Review the migration; run smoke and JWT-based negative tests against a disposable Supabase local stack before enabling the app client.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/3"
   },
@@ -148,7 +155,7 @@
     "phase": "P0",
     "type": "security",
     "priority": "P0",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-03",
       "P0-04"
@@ -162,11 +169,14 @@
       "Policy review",
       "Automated RLS integration tests"
     ],
-    "evidence": [],
+    "evidence": [
+      "Draft migration enables RLS on all five initial tenant/branch tables and defines membership-scoped SELECT policies plus restricted branch-write policies.",
+      "Smoke test file checks RLS flags and selected grants; the full wrong-tenant/wrong-branch/role matrix is documented but not executed."
+    ],
     "attempt_count": 0,
-    "blocker": "Requires Supabase-compatible test environment",
+    "blocker": "No Supabase/PostgreSQL test stack is available here; RLS correctness is not verified.",
     "approval_required": false,
-    "next_action": "Draft and review migration policies locally",
+    "next_action": "Run positive and negative tests for anon, cross-tenant, cross-branch, Counter, Kitchen, Manager and Owner identities before marking verified.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/6"
   },
@@ -190,12 +200,14 @@
       "Run test workflow"
     ],
     "evidence": [
-      "GitHub Actions workflow added at .github/workflows/flutter.yml; execution result not yet observed."
+      "GitHub Actions workflow added at .github/workflows/flutter.yml; execution result not yet observed.",
+      "Updated .github/workflows/flutter.yml to modern checkout/setup-java actions and added Gitleaks secret scanning with full-history checkout.",
+      "Reviewed workflow source; no CI run success/failure logs or APK artifact evidence could be obtained from the available connector tools."
     ],
     "attempt_count": 0,
-    "blocker": "Workflow execution status not available from current tool output.",
+    "blocker": "Workflow execution result and artifact status remain unverified; local Flutter/Dart/Android SDK unavailable.",
     "approval_required": false,
-    "next_action": "Inspect the first GitHub Actions run and repair failures.",
+    "next_action": "Inspect GitHub Actions run result, resolve failures, and confirm the debug APK artifact is produced before closing the CI issue.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   }
