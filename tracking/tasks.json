@@ -22,12 +22,14 @@
     "evidence": [
       "Repository scaffold files committed to main.",
       "Flutter source and widget smoke test added; runtime test/build not executed in current environment.",
-      "Reviewed the Flutter scaffold and CI workflow against the repository; Flutter/Dart/Android SDK are unavailable locally, and no successful GitHub Actions run/build evidence has been retrieved."
+      "Reviewed the Flutter scaffold and CI workflow against the repository; Flutter/Dart/Android SDK are unavailable locally, and no successful GitHub Actions run/build evidence has been retrieved.",
+      "GitHub Actions run 38410952119 installed Flutter 3.47.7, generated Android scaffolding, and resolved dependencies, but failed strict formatting; source formatting has been delegated to a validation-branch CI repair step.",
+      "Latest validation run 38412247170 is in progress; no completed APK/build evidence yet."
     ],
     "attempt_count": 0,
-    "blocker": "Local environment lacks Flutter, Dart, Android SDK/adb; available GitHub status tooling did not expose a push-triggered Actions run result.",
+    "blocker": "Latest Flutter workflow must complete formatter, analyzer, unit/widget tests and debug APK; no successful APK yet.",
     "approval_required": false,
-    "next_action": "Retrieve the workflow run and APK artifact from GitHub Actions; fix all formatting, analysis, test or build failures before marking baseline verified.",
+    "next_action": "Use the current CI run to apply formatter output, fix new analyzer/test/build failures, then restore strict format check and confirm a successful debug APK artifact.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/1"
   },
@@ -52,12 +54,14 @@
     ],
     "evidence": [
       "Added docs/architecture.md with application boundaries, local SQLite table plan, safe money representation, outbox, offline/reconnect and unified Counter/Orders/Kitchen flow.",
-      "Added docs/security-model.md with organization/branch scope and the initial role matrix. SQLite implementation and persistence tests remain outstanding."
+      "Added docs/security-model.md with organization/branch scope and the initial role matrix. SQLite implementation and persistence tests remain outstanding.",
+      "Implemented versioned SQLite schema and installation ID in lib/core/database/mizzy_database.dart, including orders, sale-line snapshots, kitchen tickets, payments, inventory movements and sync outbox/cursors.",
+      "Implemented transactional local OrderRepository: order+lines+single Kitchen ticket+outbox events commit together; replay is idempotent; Kitchen transitions update the same parent order; branch-scoped reads; tests authored in test/order_repository_test.dart."
     ],
     "attempt_count": 0,
-    "blocker": "Architecture is documented, but no SQLite runtime/provider/migrations or persistence tests are implemented yet.",
+    "blocker": "Flutter tests and static analysis still need a clean CI run; database repository not connected to user-facing POS screens.",
     "approval_required": false,
-    "next_action": "Implement versioned SQLite persistence and repository boundaries after CI toolchain availability is established.",
+    "next_action": "Complete CI validation, then connect repository to a simple Counter, Orders and Kitchen flow with a shared order ID.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/2"
   },
@@ -85,12 +89,14 @@
     ],
     "evidence": [
       "Added draft supabase/migrations/20261013000000_tenant_foundation.sql with organizations, branches, memberships, audit events, scoped helper functions, organization bootstrap RPC, RLS, and least-privilege grants.",
-      "Added supabase/tests/20261013000000_tenant_foundation.sql as an 18-assertion catalog/grant smoke test and supabase/tests/README.md with the required RLS authorization matrix. Tests have not been run."
+      "Added supabase/tests/20261013000000_tenant_foundation.sql as an 18-assertion catalog/grant smoke test and supabase/tests/README.md with the required RLS authorization matrix. Tests have not been run.",
+      "Added guarded Supabase Flutter bootstrap and build-time configuration validation; refuses sb_secret_ keys and legacy JWTs with role=service_role.",
+      "Added supabase/config.toml plus a dedicated isolated Supabase migration/RLS CI workflow; run 38412247971 is in progress."
     ],
     "attempt_count": 0,
-    "blocker": "Migration has not been applied or tested: Supabase CLI, PostgreSQL client and Docker are unavailable locally; no Supabase project is connected. External provisioning remains approval-gated.",
+    "blocker": "No hosted Supabase project is connected. Local migration tests have not yet completed; provisioning remains approval-gated.",
     "approval_required": true,
-    "next_action": "Review the migration; run smoke and JWT-based negative tests against a disposable Supabase local stack before enabling the app client.",
+    "next_action": "Use isolated CI results to fix migration/test failures; add Auth lifecycle only after migration and RLS security tests pass.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/3"
   },
@@ -100,7 +106,7 @@
     "phase": "P0",
     "type": "feature",
     "priority": "P1",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-03"
     ],
@@ -113,11 +119,13 @@
       "Auth tests",
       "Cross-tenant negative tests"
     ],
-    "evidence": [],
+    "evidence": [
+      "Tenant membership schema and an authenticated organization bootstrap RPC are drafted; guarded Supabase client bootstrap is implemented."
+    ],
     "attempt_count": 0,
-    "blocker": null,
+    "blocker": "Interactive Auth lifecycle, invitation/membership workflow, session restore/logout UI and Auth tests are not yet implemented or verified.",
     "approval_required": false,
-    "next_action": "Design schema and authorization model",
+    "next_action": "After RLS test results, add a minimal login/session lifecycle, organization/branch selection and membership access layer.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/4"
   },
@@ -127,7 +135,7 @@
     "phase": "P0",
     "type": "security",
     "priority": "P0",
-    "status": "not_started",
+    "status": "in_progress",
     "dependencies": [
       "P0-04"
     ],
@@ -141,11 +149,13 @@
       "Server-side authorization tests",
       "Audit review"
     ],
-    "evidence": [],
+    "evidence": [
+      "Documented Owner/Manager/Counter/Kitchen least-privilege baseline and encoded initial roles in tenant migration/policies; SQL role-test cases authored but not yet verified."
+    ],
     "attempt_count": 0,
-    "blocker": null,
+    "blocker": "Server-side role authorization coverage is incomplete; test workflow results pending.",
     "approval_required": false,
-    "next_action": "Draft permission matrix",
+    "next_action": "Use RLS CI results to validate actual role policies; add trusted authorized write paths and role-negative tests before implementing sensitive UI actions.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/5"
   },
@@ -171,12 +181,14 @@
     ],
     "evidence": [
       "Draft migration enables RLS on all five initial tenant/branch tables and defines membership-scoped SELECT policies plus restricted branch-write policies.",
-      "Smoke test file checks RLS flags and selected grants; the full wrong-tenant/wrong-branch/role matrix is documented but not executed."
+      "Smoke test file checks RLS flags and selected grants; the full wrong-tenant/wrong-branch/role matrix is documented but not executed.",
+      "Added 18-assertion schema/grant pgTAP smoke test and a 21-assertion tenant/branch role matrix covering cross-organization and assigned-branch access.",
+      "Supabase local database CI run 38412247971 is in progress; no test result has yet been captured."
     ],
     "attempt_count": 0,
-    "blocker": "No Supabase/PostgreSQL test stack is available here; RLS correctness is not verified.",
+    "blocker": "Migration and RLS tests not yet observed to pass; production security not verified.",
     "approval_required": false,
-    "next_action": "Run positive and negative tests for anon, cross-tenant, cross-branch, Counter, Kitchen, Manager and Owner identities before marking verified.",
+    "next_action": "Inspect database CI job logs, repair SQL/test failures, and rerun until all assertions pass.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/6"
   },
@@ -202,12 +214,15 @@
     "evidence": [
       "GitHub Actions workflow added at .github/workflows/flutter.yml; execution result not yet observed.",
       "Updated .github/workflows/flutter.yml to modern checkout/setup-java actions and added Gitleaks secret scanning with full-history checkout.",
-      "Reviewed workflow source; no CI run success/failure logs or APK artifact evidence could be obtained from the available connector tools."
+      "Reviewed workflow source; no CI run success/failure logs or APK artifact evidence could be obtained from the available connector tools.",
+      "Secret scan passed in run 38410952119 and run 38412059992 with explicit 'no leaks found' output.",
+      "Flutter run 38410952119 failed strict formatter; run 38411354601 passed formatter after temporary format-and-diff step but failed analysis for two lint issues, now fixed on main.",
+      "Run 38412247170 is testing a branch-only canonical formatter repair and will continue through tests/build if its repair step succeeds."
     ],
     "attempt_count": 0,
-    "blocker": "Workflow execution result and artifact status remain unverified; local Flutter/Dart/Android SDK unavailable.",
+    "blocker": "No successful end-to-end Flutter quality gate or APK artifact yet; strict format gate must be restored after canonical source formatting.",
     "approval_required": false,
-    "next_action": "Inspect GitHub Actions run result, resolve failures, and confirm the debug APK artifact is produced before closing the CI issue.",
+    "next_action": "Complete the current diagnostic CI loop, fix any new analyzer/test/build issues, restore strict formatting, and capture the APK checksum.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   }
