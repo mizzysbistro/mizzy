@@ -62,12 +62,14 @@
     "The 13 SQLite order repository tests, 7 SQLite outbox lifecycle tests, and two local POS widget tests lack successful CI evidence.",
     "Recorded debug APK is a development-only artifact from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 and predates current catalog, table and sync-queue changes.",
     "No real Android phone/tablet install, printer/peripheral, production signing, upgrade or release validation has been performed.",
-    "No hosted Supabase project is connected. Do not provision resources that may incur costs without approval.",
     "Counter/Tables/Orders/Kitchen screens and catalog still run as local-only demonstration data; cloud sync, production catalog management and real payments are not enabled.",
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
-    "PR #18 follow-up migration/backfill and branch-scoped dependency tests are unverified and unmerged because GitHub-hosted Actions jobs still fail before step 1; no authenticated network sync worker exists yet."
+    "PR #18 follow-up migration/backfill and branch-scoped dependency tests are unverified and unmerged because GitHub-hosted Actions jobs still fail before step 1; no authenticated network sync worker exists yet.",
+    "A hosted Supabase project remains unconnected and is not needed for the local test plan; do not provision one without approval.",
+    "Stacked P2 source/SQL tests remain unverified because Actions jobs fail before any steps; no authenticated upload/pull worker or remote catalog sync is implemented.",
+    "No dedicated Mizzy Supabase project is configured. Connected-project inventory currently lists only projects named `pos` and `banawe`; repository boundaries prohibit repurposing older POS projects without explicit authorization. No new project or paid resources were provisioned."
   ],
-  "next_action": "Review draft PR #18 for schema-v2 legacy outbox dependency backfill, quarantine behavior and branch-scoped dependency gating. The latest CI run failed before any step due to unavailable hosted runners; resolve issue 13 without paid provisioning or repo visibility changes. Then run formatter, analyzer, all Flutter tests (including v1 migration and outbox dependency tests), Gitleaks, Android debug APK and local Supabase migration/pgTAP. Do not enable a network worker until these gates and independent review pass.",
+  "next_action": "Obtain independent review of stacked PRs #18/#19 and restore Actions runners under issue 13. A disposable Supabase test project/local stack and CLI are required to execute the new migration/pgTAP checks; do not repurpose existing `pos`/`banawe` projects or create paid resources without approval. Then run Flutter/Dart gates and implement authenticated upload/pull sync only after the server RPC and catalog contracts pass.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -174,7 +176,9 @@
     "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
     "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner.",
     "Prepared a draft P2 outbox dependency-ordering patch on a dedicated feature branch: kitchen-ticket creation depends on parent-order delivery, and Kitchen transitions chain behind the previous ticket event. Added a regression test; not verified because Flutter/Dart are unavailable in this execution environment and GitHub Actions runner jobs fail before any steps.",
-    "Extended draft PR #18 with safe v1→v2 legacy outbox dependency backfill, per-branch dependency scope checks, unresolved legacy event quarantine, and migration/cross-branch regression tests. This source and test change remains unverified pending toolchain/CI runner recovery."
+    "Extended draft PR #18 with safe v1→v2 legacy outbox dependency backfill, per-branch dependency scope checks, unresolved legacy event quarantine, and migration/cross-branch regression tests. This source and test change remains unverified pending toolchain/CI runner recovery.",
+    "Prepared a stacked P2 server-side sync contract PR with an idempotent Kitchen-transition receipt RPC, expected-from-status conflict protection, branch/role validation, and pgTAP cases for replay, changed-payload reuse, stale state, invalid transitions, and unauthorized roles. Execution remains unverified; Actions runner issue 13 is still active.",
+    "Checked the connected Supabase project inventory; only projects named pos and banawe were listed. Preserved the independent-project boundary and did not alter or provision any Supabase resource."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
