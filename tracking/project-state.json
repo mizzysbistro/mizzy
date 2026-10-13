@@ -36,20 +36,21 @@
     "supabase_migrations_passed": true,
     "supabase_pgtap_passed": true,
     "flutter_format_analyze_tests_passed": true,
-    "apk_sha256_recorded": false,
+    "apk_sha256_recorded": true,
     "p1_order_rpc_behavior_tests_passed": true,
     "local_counter_orders_kitchen_ui_committed": true,
-    "local_pos_ui_ci_passed": true
+    "local_pos_ui_ci_passed": true,
+    "local_order_repository_integration_tests_added": true
   },
   "blockers": [
-    "Android debug APK build and APK SHA-256 recording for the new local Counter/Orders/Kitchen UI are still running in workflow 38421231622.",
+    "Four new SQLite order repository integration tests were committed after the latest green CI run; their first CI result is still pending.",
+    "Debug APK is development-only and built from tested commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include the later integration tests commit.",
     "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "Local POS demo uses a static sample menu and takeaway-only orders; production catalog, table assignment, cash-session/payment UI and real cloud sync are not implemented.",
-    "Additional adversarial RPC coverage for concurrent duplicate submissions, overpayment, stale prices, illegal kitchen transitions and cross-branch access remains incomplete; offline sync/reconnect and conflict resolution remain incomplete.",
-    "Authentication lifecycle and trusted membership management remain incomplete."
+    "Local Counter/Orders/Kitchen UI is sample-menu and local-only; cloud sync, production catalog/table management, and real payments are not enabled.",
+    "Authentication lifecycle, trusted membership management, offline sync/reconnect/conflict handling, and further adversarial cross-branch/payment validation remain incomplete."
   ],
-  "next_action": "Finish APK build/checksum run 38421231622, record the artifact digest, then expand local POS integration tests and branch-scoped catalog/table/payment flows while keeping hosted sync and real payments disabled until their security gates pass.",
+  "next_action": "Run CI against the new SQLite integration tests and fix any failures; then add tests for cross-branch local scoping and concurrent/idempotent writes, connect the local UI to a production catalog only after secure auth/tenant scope is ready, and continue P0-P6 release gates.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -116,7 +117,9 @@
     "The P1 order RPC behavior test step passed in Supabase workflow run 38418953622, covering idempotent order save, server-calculated total, single order/line/ticket, kitchen transitions, Kitchen-role denial, cash completion and table release.",
     "Added a clearly labeled local-only Counter, Orders and Kitchen UI over the shared SQLite OrderRepository. Saving from Counter writes one order and one kitchen ticket; Orders and Kitchen read the same local parent order, and Kitchen transitions update that order.",
     "The first UI CI analysis found an inaccessible private named-parameter call; corrected the callsite to the public constructor parameter name and restarted strict CI validation.",
-    "Created P1-01 GitHub issue to track Counter → Orders → Kitchen integration, acceptance criteria and remaining validation gaps."
+    "Created P1-01 GitHub issue to track Counter → Orders → Kitchen integration, acceptance criteria and remaining validation gaps.",
+    "Verified green CI on validation branch: Dart format, static analysis, 17 Flutter tests, secret scan, Android debug APK build, APK-level SHA-256 recording, and fresh local Supabase migration/pgTAP tests.",
+    "Added four SQLite FFI integration tests covering one order/one kitchen ticket, idempotent retry without duplicates, Kitchen-to-Orders shared status, and rejection of illegal Kitchen status transitions. New test commit requires CI verification."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -165,5 +168,23 @@
     "artifact_zip_sha256": "5baf86d208c349330e6f3f48e191a022510107c03bc5578073489377321946b3",
     "expires_at": "2027-01-11T14:56:00Z",
     "note": "Digest is for the downloaded GitHub Actions artifact ZIP, not the APK file itself; the next validation run adds an APK-level SHA-256 checksum."
+  },
+  "latest_ci_validation": {
+    "flutter_run_id": 38421231622,
+    "database_run_id": 38421231810,
+    "flutter_conclusion": "success",
+    "database_conclusion": "success",
+    "flutter_tests_passed": 17,
+    "dart_analysis": "passed",
+    "dart_format": "passed",
+    "secret_scan": "passed",
+    "android_debug_apk_built": true,
+    "apk_sha256": "3f9d2944b5a2b568bf211f2f95efd04250d83c529afa19cc942a7d1d31349a6c",
+    "artifact_id": 11827121316,
+    "artifact_name": "mizzy-debug-apk",
+    "artifact_sha256": "a2bb1df68515d537066ee0938a08487ba31a9e48c7fe0456a19aac4553966f3e",
+    "artifact_expires_at": "2027-01-11T15:20:35Z",
+    "tested_commit": "95a9528338085b2f2a057362e9b8fd5c066e6b81",
+    "note": "Latest local order repository integration tests were added after this successful run and need a fresh CI pass."
   }
 }
