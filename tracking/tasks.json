@@ -24,12 +24,13 @@
       "Flutter source and widget smoke test added; runtime test/build not executed in current environment.",
       "Reviewed the Flutter scaffold and CI workflow against the repository; Flutter/Dart/Android SDK are unavailable locally, and no successful GitHub Actions run/build evidence has been retrieved.",
       "GitHub Actions run 38410952119 installed Flutter 3.47.7, generated Android scaffolding, and resolved dependencies, but failed strict formatting; source formatting has been delegated to a validation-branch CI repair step.",
-      "Latest validation run 38412247170 is in progress; no completed APK/build evidence yet."
+      "Latest validation run 38412247170 is in progress; no completed APK/build evidence yet.",
+      "Pull request validation run 38417639115 passed Dart formatting, static analysis, and unit/widget tests; Android debug APK build is still in progress, so P0-01 remains unverified."
     ],
     "attempt_count": 0,
-    "blocker": "Latest Flutter workflow must complete formatter, analyzer, unit/widget tests and debug APK; no successful APK yet.",
+    "blocker": "Android debug APK build and artifact upload must finish successfully; then inspect the artifact and record its checksum.",
     "approval_required": false,
-    "next_action": "Use the current CI run to apply formatter output, fix new analyzer/test/build failures, then restore strict format check and confirm a successful debug APK artifact.",
+    "next_action": "Capture the debug APK artifact and checksum, then continue connecting the verified local order repository to Counter, Orders and Kitchen screens.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/1"
   },
@@ -91,10 +92,12 @@
       "Added draft supabase/migrations/20261013000000_tenant_foundation.sql with organizations, branches, memberships, audit events, scoped helper functions, organization bootstrap RPC, RLS, and least-privilege grants.",
       "Added supabase/tests/20261013000000_tenant_foundation.sql as an 18-assertion catalog/grant smoke test and supabase/tests/README.md with the required RLS authorization matrix. Tests have not been run.",
       "Added guarded Supabase Flutter bootstrap and build-time configuration validation; refuses sb_secret_ keys and legacy JWTs with role=service_role.",
-      "Added supabase/config.toml plus a dedicated isolated Supabase migration/RLS CI workflow; run 38412247971 is in progress."
+      "Added supabase/config.toml plus a dedicated isolated Supabase migration/RLS CI workflow; run 38412247971 is in progress.",
+      "Fresh disposable Supabase stack successfully applied both tenant foundation and P1 POS migrations in run 38417639097.",
+      "Supabase pgTAP suite passed: 3 files, 66 assertions, Result: PASS in run 38417639097; no hosted Supabase project has been provisioned."
     ],
     "attempt_count": 0,
-    "blocker": "No hosted Supabase project is connected. Local migration tests have not yet completed; provisioning remains approval-gated.",
+    "blocker": "Hosted Supabase project remains unconnected and cost-gated; local migrations/tests passed, but the Auth lifecycle and full order RPC authorization matrix still need additional tests.",
     "approval_required": true,
     "next_action": "Use isolated CI results to fix migration/test failures; add Auth lifecycle only after migration and RLS security tests pass.",
     "updated_at": "2026-10-13",
@@ -183,10 +186,11 @@
       "Draft migration enables RLS on all five initial tenant/branch tables and defines membership-scoped SELECT policies plus restricted branch-write policies.",
       "Smoke test file checks RLS flags and selected grants; the full wrong-tenant/wrong-branch/role matrix is documented but not executed.",
       "Added 18-assertion schema/grant pgTAP smoke test and a 21-assertion tenant/branch role matrix covering cross-organization and assigned-branch access.",
-      "Supabase local database CI run 38412247971 is in progress; no test result has yet been captured."
+      "Supabase local database CI run 38412247971 is in progress; no test result has yet been captured.",
+      "Run 38417639097 applied all migrations to a fresh local database and passed all 66 pgTAP assertions across tenant schema, tenant RLS and P1 POS catalog/grant tests."
     ],
     "attempt_count": 0,
-    "blocker": "Migration and RLS tests not yet observed to pass; production security not verified.",
+    "blocker": "Initial tenant and P1 catalog/grant tests pass; add adversarial role/branch tests for the new save-order, kitchen-transition and cash-payment RPCs before declaring the full security matrix verified.",
     "approval_required": false,
     "next_action": "Inspect database CI job logs, repair SQL/test failures, and rerun until all assertions pass.",
     "updated_at": "2026-10-13",
@@ -217,12 +221,13 @@
       "Reviewed workflow source; no CI run success/failure logs or APK artifact evidence could be obtained from the available connector tools.",
       "Secret scan passed in run 38410952119 and run 38412059992 with explicit 'no leaks found' output.",
       "Flutter run 38410952119 failed strict formatter; run 38411354601 passed formatter after temporary format-and-diff step but failed analysis for two lint issues, now fixed on main.",
-      "Run 38412247170 is testing a branch-only canonical formatter repair and will continue through tests/build if its repair step succeeds."
+      "Run 38412247170 is testing a branch-only canonical formatter repair and will continue through tests/build if its repair step succeeds.",
+      "Pull request run 38417639115 passed secret scanning, Dart formatting, static analysis and unit/widget tests; debug APK build is still in progress."
     ],
     "attempt_count": 0,
-    "blocker": "No successful end-to-end Flutter quality gate or APK artifact yet; strict format gate must be restored after canonical source formatting.",
+    "blocker": "End-to-end Flutter workflow is not complete until Android debug APK build and artifact upload finish.",
     "approval_required": false,
-    "next_action": "Complete the current diagnostic CI loop, fix any new analyzer/test/build issues, restore strict formatting, and capture the APK checksum.",
+    "next_action": "Wait for debug APK build, record artifact/checksum, and rerun strict gates after any source changes.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   }
