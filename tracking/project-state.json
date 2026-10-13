@@ -342,11 +342,16 @@
         "Validate MIZZY_AGENT_MAX_TURNS as a positive integer before starting agents.",
         "Automatically route security/financial/sync/release keywords to critical lane and refuse PASS when independent cross-provider review is unavailable.",
         "Use a unique mktemp evidence directory to avoid overwriting reports when task runs start in the same second.",
-        "In targeted mode, run changed tracked test files first; if none changed, fall back to the full Flutter suite.",
+        "Target changed existing test files from staged/unstaged tracked diffs and untracked files; skip deleted tests and safely fall back to the full Flutter suite when selection is empty.",
         "Document fast-path selection and distinguish same-provider review from independent cross-provider review."
       ],
-      "static_review_fix_commit": "111acadd56f78cf485fb74c1949ecbd1978d439c",
+      "static_review_fix_commit": "c5df7d3cf81e0b1e704bca5a4208d47c9d03470b",
       "shell_syntax_executed_locally": false,
+      "helper_shell_syntax_executed_locally": true,
+      "smoke_script_syntax_executed_locally": true,
+      "helper_logic_smoke_passed_locally": true,
+      "smoke_script_executed_locally_with_launcher_guard_stub": true,
+      "complete_launcher_syntax_and_guard_smoke_passed": false,
       "shell_syntax_ci_pending": true,
       "codex_cli_executed_in_this_session": false,
       "claude_code_executed_in_this_session": false,
@@ -355,9 +360,11 @@
       "guard_smoke_test_ci_pending": true,
       "latest_observed_workflow_run": {
         "run_id": 38431426089,
+        "run_attempt": 2,
         "tested_commit": "b24aabf8099a589e29a3ea4178baff55879a2780",
+        "current_pr_head": "77bfe485e39f6f86b3edfd3af9eeae28af420288",
         "conclusion": "failure_before_first_step",
-        "evidence": "Both jobs reported runner_id=0 and zero steps. This run predates the latest shell guard smoke test and does not validate it."
+        "evidence": "Reran failed jobs once: both again completed within seconds with runner_id=0, zero steps and no logs. The run tests an older commit, not the current head; no actual launcher or Flutter tests executed."
       }
     },
     "safety_boundaries": [
@@ -366,6 +373,6 @@
       "No external agent output is claimed unless actually run",
       "External CLIs must be installed and authenticated on the developer machine"
     ],
-    "next_action": "Wait for GitHub Actions runner availability issue #13 to be resolved; do not spam retries. Then validate the latest PR head: bash syntax/help, guard smoke test (main and dirty-tree rejection), full Flutter formatting/analyzer/tests, secret scan, local Supabase migration/pgTAP, and Android debug APK. On a local development machine, validate the launcher with authenticated Codex/Claude CLI and independently confirm the reviewer is read-only. Keep PR 17 draft until evidence is green."
+    "next_action": "Resolve the hosted GitHub Actions runner blocker (issue #13); the latest single retry again failed before steps, so do not repeat it. Then run the latest PR head through full launcher bash syntax/help, real guard smoke test, Flutter format/analyzer/tests, secret scan, local Supabase migration/pgTAP, and Android debug APK. Run the launcher with authenticated Codex/Claude CLI, verify read-only peer permissions, and keep PR 17 draft until all required evidence is green."
   }
 }
