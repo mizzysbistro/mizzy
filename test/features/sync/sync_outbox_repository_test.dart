@@ -266,7 +266,7 @@ void main() {
         branchId: branchId,
         limit: SyncOutboxRepository.maximumBatchSize + 1,
       ),
-      throwsRangeError,
+      throwsA(isA<RangeError>()),
     );
     await expectLater(
       repository.claimNextBatch(
