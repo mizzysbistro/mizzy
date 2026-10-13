@@ -36,17 +36,18 @@
     "supabase_migrations_passed": true,
     "supabase_pgtap_passed": true,
     "flutter_format_analyze_tests_passed": true,
-    "apk_sha256_recorded": false
+    "apk_sha256_recorded": false,
+    "p1_order_rpc_behavior_tests_passed": true
   },
   "blockers": [
-    "APK-level SHA-256 checksum is not yet recorded; the workflow has been updated and a follow-up validation run is building the artifact with its checksum.",
+    "Current Android debug APK build and APK SHA-256 recording are still running in workflow 38418953531; prior debug APK build and upload succeeded.",
     "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "User-facing Counter, Orders and Kitchen screens are not yet connected to the local repository; the P1 RPC behavior suite is still running.",
-    "Authentication lifecycle, full adversarial authorization coverage, offline sync/reconnect and conflict resolution remain incomplete.",
-    "GitHub labels/milestones are not supported by the currently available connector actions."
+    "User-facing Counter, Orders and Kitchen screens are not yet connected to the local repository.",
+    "Additional adversarial RPC coverage for concurrent duplicate submissions, overpayment, stale prices, illegal kitchen transitions and cross-branch access remains incomplete; offline sync/reconnect and conflict resolution remain incomplete.",
+    "Authentication lifecycle and trusted membership management remain incomplete."
   ],
-  "next_action": "Finish the current Android debug APK build and save its checksum; then implement and test the Counter/Orders/Kitchen UI over the shared local order repository, add adversarial authorization tests for P1 write RPCs, and continue P0-P6 without deploying external resources.",
+  "next_action": "Capture APK-level SHA-256 and artifact from run 38418953531, then implement the first Counter/Orders/Kitchen screens against the shared SQLite OrderRepository; add remaining adversarial RPC and offline-sync tests before release.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -104,7 +105,8 @@
     "Added P1 menu, restaurant table, logical order, order-line snapshot, kitchen ticket and cash-payment schema with branch-scoped RLS, least-privilege client grants and server-side RPCs.",
     "Added 27-assertion P1 catalog/grant test; fresh local Supabase migration run applied all migrations and all 66 pgTAP assertions passed.",
     "Observed Flutter CI pass strict Dart formatting, static analysis, unit/widget tests and secret scan; Android debug APK build is still in progress.",
-    "Successfully built and uploaded debug APK artifact 11825148547 from Flutter run 38417639115; artifact ZIP SHA-256 digest recorded, with APK-level checksum pending the follow-up workflow run."
+    "Successfully built and uploaded debug APK artifact 11825148547 from Flutter run 38417639115; artifact ZIP SHA-256 digest recorded, with APK-level checksum pending the follow-up workflow run.",
+    "The P1 order RPC behavior test step passed in Supabase workflow run 38418953622, covering idempotent order save, server-calculated total, single order/line/ticket, kitchen transitions, Kitchen-role denial, cash completion and table release."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -143,7 +145,7 @@
   ],
   "flutter_app_created": true,
   "apk_built": false,
-  "build_test_status": "supabase_pgtap_passed_66_assertions; flutter_format_analyze_tests_passed; debug_apk_built_and_uploaded; apk_sha256_step_in_progress_on_followup_run",
+  "build_test_status": "supabase_pgtap_passed_including_p1_order_rpc_behavior; flutter_format_analyze_tests_passed; debug_apk_build_with_apk_sha256_in_progress",
   "debug_apk_artifact": {
     "workflow_run_id": 38417639115,
     "branch": "ci/p1-pos-validation",
