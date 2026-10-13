@@ -91,6 +91,13 @@ CRITICAL_TASK=0
 if mizzy_is_critical_task "$TASK_SLUG" "$TASK_DESCRIPTION"; then
   CRITICAL_TASK=1
   echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
+  if [[ "${MIZZY_VERIFY:-targeted}" != "full" ]]; then
+    echo "ROUTE: critical task forces full Flutter, APK/checksum and Gitleaks verification."
+  fi
+  if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" != "1" ]]; then
+    echo "ROUTE: critical task forces local Supabase database tests."
+    MIZZY_RUN_SUPABASE_TESTS=1
+  fi
 fi
 
 for command_name in git dart flutter; do
