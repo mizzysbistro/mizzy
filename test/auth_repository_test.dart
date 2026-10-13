@@ -14,7 +14,7 @@ void main() {
       expect(AuthInputValidator.isValidEmail('not-an-email'), isFalse);
       expect(AuthInputValidator.isValidEmail('owner@localhost'), isFalse);
       expect(
-        AuthInputValidator.isValidEmail('${'a' * 250}@example.com'),
+        AuthInputValidator.isValidEmail('${List<String>.filled(250, 'a').join()}@example.com'),
         isFalse,
       );
     });
