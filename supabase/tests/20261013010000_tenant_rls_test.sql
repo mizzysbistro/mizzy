@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(15);
+select plan(19);
 
 -- Seed isolated test identities and tenant records as the database test owner.
 insert into auth.users (
@@ -48,6 +48,8 @@ set local role authenticated;
 set local request.jwt.claim.sub = '10000000-0000-4000-8000-000000000001';
 select is((select count(*)::integer from public.organizations), 1, 'owner reads only their own organization');
 select is((select count(*)::integer from public.branches), 2, 'owner reads all branches in their organization');
+select is((select count(*)::integer from public.organization_memberships), 4, 'owner can view membership directory');
+select is((select count(*)::integer from public.branch_memberships), 3, 'owner can view branch assignments');
 
 set local request.jwt.claim.sub = '10000000-0000-4000-8000-000000000002';
 select is((select count(*)::integer from public.organizations), 1, 'counter reads their own organization');
@@ -60,11 +62,14 @@ with changed as (
 )
 select is((select count(*)::integer from changed), 0, 'counter cannot modify another tenant branch');
 select is((select count(*)::integer from public.audit_events), 0, 'counter cannot read manager/owner audit events');
+select is((select count(*)::integer from public.organization_memberships), 0, 'counter cannot list organization memberships');
+select is((select count(*)::integer from public.branch_memberships), 0, 'counter cannot list staff branch assignments');
 
 set local request.jwt.claim.sub = '10000000-0000-4000-8000-000000000003';
 select is((select count(*)::integer from public.branches), 1, 'manager reads only their assigned branch');
 select is((select count(*)::integer from public.audit_events), 1, 'manager can read audit events for their branch');
 select is((select count(*)::integer from public.audit_events where organization_id = 'bbbbbbbb-0000-4000-8000-000000000001'), 0, 'manager cannot read another organization audit events');
+select is((select count(*)::integer from public.branch_memberships), 3, 'manager can view assignments for their branch');
 
 set local request.jwt.claim.sub = '10000000-0000-4000-8000-000000000004';
 select is((select count(*)::integer from public.branches), 1, 'kitchen reads only assigned branch');
