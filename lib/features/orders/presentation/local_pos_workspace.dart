@@ -22,39 +22,39 @@ class LocalPosWorkspace extends StatefulWidget {
 
 class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   static const _uuid = Uuid();
-  static const _menu = <_DemoMenuItem>[
-    _DemoMenuItem(
-      id: 'adobo',
+  static const _demoCatalog = <_DemoMenuSeed>[
+    _DemoMenuSeed(
+      sku: 'MIZ-ADOB-001',
       name: 'Chicken Adobo',
       category: 'Meals',
       priceMinor: 14900,
     ),
-    _DemoMenuItem(
-      id: 'pancit',
+    _DemoMenuSeed(
+      sku: 'MIZ-PANC-001',
       name: 'Pancit Canton',
       category: 'Meals',
       priceMinor: 12900,
     ),
-    _DemoMenuItem(
-      id: 'sisig',
+    _DemoMenuSeed(
+      sku: 'MIZ-SISIG-001',
       name: 'Pork Sisig',
       category: 'Meals',
       priceMinor: 17900,
     ),
-    _DemoMenuItem(
-      id: 'rice',
+    _DemoMenuSeed(
+      sku: 'MIZ-RICE-001',
       name: 'Steamed Rice',
       category: 'Sides',
       priceMinor: 2500,
     ),
-    _DemoMenuItem(
-      id: 'iced-tea',
+    _DemoMenuSeed(
+      sku: 'MIZ-TEA-001',
       name: 'Iced Tea',
       category: 'Drinks',
       priceMinor: 3500,
     ),
-    _DemoMenuItem(
-      id: 'water',
+    _DemoMenuSeed(
+      sku: 'MIZ-WATER-001',
       name: 'Bottled Water',
       category: 'Drinks',
       priceMinor: 2000,
@@ -70,6 +70,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   String? _branchId;
   List<Map<String, Object?>> _orderRows = const [];
   List<Map<String, Object?>> _tableRows = const [];
+  List<_DemoMenuItem> _menuItems = const [];
   MizzyOrderType _selectedOrderType = MizzyOrderType.takeaway;
   String? _selectedTableId;
   int _selectedTab = 0;
@@ -124,7 +125,9 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         _branchId = branchId;
       });
       await _ensureDemoTables(organizationId, branchId);
+      await _ensureDemoCatalog(organizationId, branchId);
       await _refreshTables();
+      await _refreshMenu();
       await _refreshOrders();
     } on Object {
       if (!mounted) return;
@@ -167,6 +170,72 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         });
       }
     });
+  }
+
+  Future<void> _ensureDemoCatalog(
+    String organizationId,
+    String branchId,
+  ) async {
+    final database = await _database.open();
+    await database.transaction((transaction) async {
+      final existing = await transaction.query(
+        'catalog_items',
+        columns: <String>['id'],
+        where: 'organization_id = ? AND branch_id = ?',
+        whereArgs: <Object?>[organizationId, branchId],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) return;
+
+      final timestamp = DateTime.now().toUtc().toIso8601String();
+      for (final item in _demoCatalog) {
+        await transaction.insert('catalog_items', <String, Object?>{
+          'id': _uuid.v4(),
+          'organization_id': organizationId,
+          'branch_id': branchId,
+          'name': item.name,
+          'sku': item.sku,
+          'category_name': item.category,
+          'price_minor': item.priceMinor,
+          'currency_code': 'PHP',
+          'is_active': 1,
+          'updated_at': timestamp,
+          'sync_state': 'local',
+        });
+      }
+    });
+  }
+
+  Future<void> _refreshMenu() async {
+    final organizationId = _organizationId;
+    final branchId = _branchId;
+    if (organizationId == null || branchId == null) return;
+
+    try {
+      final database = await _database.open();
+      final rows = await database.query(
+        'catalog_items',
+        where:
+            'organization_id = ? AND branch_id = ? AND is_active = ?',
+        whereArgs: <Object?>[organizationId, branchId, 1],
+        orderBy: 'category_name COLLATE NOCASE ASC, name COLLATE NOCASE ASC',
+      );
+      if (!mounted) return;
+      setState(() {
+        _menuItems = rows.map((row) {
+          return _DemoMenuItem(
+            id: row['id']! as String,
+            sku: row['sku'] as String?,
+            name: row['name']! as String,
+            category: row['category_name'] as String? ?? 'Other',
+            priceMinor: row['price_minor']! as int,
+          );
+        }).toList(growable: false);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() => _error = 'Could not load the local menu catalog.');
+    }
   }
 
   Future<void> _refreshTables() async {
@@ -233,7 +302,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     });
   }
 
-  int get _cartTotalMinor => _menu.fold<int>(
+  int get _cartTotalMinor => _menuItems.fold<int>(
     0,
     (total, item) => total + item.priceMinor * (_cart[item.id] ?? 0),
   );
@@ -262,11 +331,13 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     });
 
     try {
-      final lines = _menu
+      final lines = _menuItems
           .where((item) => (_cart[item.id] ?? 0) > 0)
           .map(
             (item) => OrderLineDraft(
+              catalogItemId: item.id,
               itemName: item.name,
+              sku: item.sku,
               quantityMilli: _cart[item.id]! * 1000,
               unitPriceMinor: item.priceMinor,
             ),
@@ -537,7 +608,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
           children: [
             Text('Menu', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            ..._menu.map(_buildMenuItem),
+            ..._menuItems.map(_buildMenuItem),
             const SizedBox(height: 12),
             cart,
           ],
@@ -552,7 +623,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       children: [
         Text('Menu', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
-        ..._menu.map(_buildMenuItem),
+        ..._menuItems.map(_buildMenuItem),
       ],
     );
   }
@@ -658,7 +729,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                 child: Text('Add menu items to start an order.'),
               )
             else
-              ..._menu.where((item) => (_cart[item.id] ?? 0) > 0).map((item) {
+              ..._menuItems.where((item) => (_cart[item.id] ?? 0) > 0).map((item) {
                 final count = _cart[item.id]!;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -816,15 +887,31 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       '₱${(minorUnits / 100).toStringAsFixed(2)}';
 }
 
+class _DemoMenuSeed {
+  const _DemoMenuSeed({
+    required this.sku,
+    required this.name,
+    required this.category,
+    required this.priceMinor,
+  });
+
+  final String sku;
+  final String name;
+  final String category;
+  final int priceMinor;
+}
+
 class _DemoMenuItem {
   const _DemoMenuItem({
     required this.id,
+    required this.sku,
     required this.name,
     required this.category,
     required this.priceMinor,
   });
 
   final String id;
+  final String? sku;
   final String name;
   final String category;
   final int priceMinor;
