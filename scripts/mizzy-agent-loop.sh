@@ -57,6 +57,28 @@ if [[ ! -f AGENT.md || ! -f AGENTS.md || ! -f CLAUDE.md || ! -f docs/agent-orche
   echo "ERROR: shared agent rules are missing. Restore AGENT.md, AGENTS.md, CLAUDE.md and docs/agent-orchestration.md." >&2
   exit 2
 fi
+
+# Prevent accidental execution in a sibling POS repository.
+ORIGIN_URL="$(git remote get-url origin 2>/dev/null || true)"
+if [[ -z "$ORIGIN_URL" ]]; then
+  echo "ERROR: origin remote is missing; run this loop only from mizzysbistro/mizzy." >&2
+  exit 2
+fi
+ORIGIN_PATH="${ORIGIN_URL#*@}"
+if [[ "$ORIGIN_PATH" == *github.com/* ]]; then
+  ORIGIN_PATH="${ORIGIN_PATH#*github.com/}"
+elif [[ "$ORIGIN_PATH" == *github.com:* ]]; then
+  ORIGIN_PATH="${ORIGIN_PATH#*github.com:}"
+else
+  echo "ERROR: origin remote must point to mizzysbistro/mizzy on GitHub." >&2
+  exit 2
+fi
+ORIGIN_PATH="${ORIGIN_PATH%/}"
+ORIGIN_PATH="${ORIGIN_PATH%.git}"
+if [[ "$ORIGIN_PATH" != "mizzysbistro/mizzy" ]]; then
+  echo "ERROR: origin remote must point to mizzysbistro/mizzy on GitHub." >&2
+  exit 2
+fi
 if [[ ! -f "$ROOT/scripts/mizzy-agent-loop-lib.sh" ]]; then
   echo "ERROR: required helper scripts/mizzy-agent-loop-lib.sh is missing." >&2
   exit 2
@@ -269,7 +291,9 @@ run_verification() {
   if [[ "$VERIFY_MODE" == "full" ]]; then
     run_check flutter-tests flutter test
     run_check android-debug-apk flutter build apk --debug
-    run_check gitleaks gitleaks git --redact
+    run_check android-apk-checksum sha256sum build/app/outputs/flutter-apk/app-debug.apk
+    run_check gitleaks-working-tree gitleaks dir --redact --no-banner .
+    run_check gitleaks-history gitleaks git --redact
   elif [[ -n "${MIZZY_TARGET_TEST:-}" ]]; then
     run_check focused-flutter-test flutter test "$MIZZY_TARGET_TEST"
   else
