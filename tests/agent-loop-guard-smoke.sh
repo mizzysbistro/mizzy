@@ -65,7 +65,7 @@ printf 'void main() {}\\n' > "$selection_repo/test/deleted_test.dart"
 git -C "$selection_repo" add test
 git -C "$selection_repo" commit -qm "fixture: test discovery baseline"
 printf '// changed\\n' >> "$selection_repo/test/changed_test.dart"
-git -C "$selection_repo" add "$selection_repo/test/changed_test.dart"
+git -C "$selection_repo" add test/changed_test.dart
 rm "$selection_repo/test/deleted_test.dart"
 printf 'void main() {}\\n' > "$selection_repo/test/new_untracked_test.dart"
 selected="$(cd "$selection_repo" && mizzy_changed_test_files)"
@@ -78,7 +78,7 @@ if grep -Fq "deleted_test.dart" <<< "$selected"; then
 fi
 
 # No changed current test files must produce an empty list for full-suite fallback.
-git -C "$selection_repo" checkout -- test/changed_test.dart test/deleted_test.dart
+git -C "$selection_repo" reset --hard -q HEAD
 rm -f "$selection_repo/test/new_untracked_test.dart"
 selected="$(cd "$selection_repo" && mizzy_changed_test_files)"
 [[ -z "$selected" ]] || fail "test discovery should be empty for a clean test tree"
