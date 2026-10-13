@@ -18,6 +18,7 @@ void main() {
         factory: databaseFactoryFfi,
         databaseName: 'mizzy-pos-widget-${const Uuid().v4()}.db',
       );
+      addTearDown(database.close);
 
       await tester.pumpWidget(
         MaterialApp(home: LocalPosWorkspace(database: database)),
@@ -53,7 +54,6 @@ void main() {
       expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
 
       await tester.pumpWidget(const SizedBox.shrink());
-      await database.close();
     },
   );
 
