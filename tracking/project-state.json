@@ -25,7 +25,7 @@
     ],
     "supabase_project_created": false,
     "flutter_app_created": true,
-    "apk_built": false,
+    "apk_built": true,
     "tenant_migration_committed": true,
     "secret_scan_configured": true,
     "schema_smoke_tests_committed": true,
@@ -35,14 +35,15 @@
     "supabase_local_ci_configured": true,
     "supabase_migrations_passed": true,
     "supabase_pgtap_passed": true,
-    "flutter_format_analyze_tests_passed": true
+    "flutter_format_analyze_tests_passed": true,
+    "apk_sha256_recorded": false
   },
   "blockers": [
-    "Android debug APK build and artifact upload are still running; no downloadable artifact or checksum has been confirmed.",
-    "No real Android phone/tablet installation, peripheral/printer, signing, upgrade, or production release validation has been performed.",
+    "APK-level SHA-256 checksum is not yet recorded; the workflow has been updated and a follow-up validation run is building the artifact with its checksum.",
+    "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "User-facing Counter, Orders, Kitchen, inventory and purchasing screens are not yet connected to the local repository.",
-    "Authentication lifecycle, trusted membership management, adversarial authorization coverage for P1 write RPCs, offline sync/reconnect and conflict resolution remain incomplete.",
+    "User-facing Counter, Orders and Kitchen screens are not yet connected to the local repository; the P1 RPC behavior suite is still running.",
+    "Authentication lifecycle, full adversarial authorization coverage, offline sync/reconnect and conflict resolution remain incomplete.",
     "GitHub labels/milestones are not supported by the currently available connector actions."
   ],
   "next_action": "Finish the current Android debug APK build and save its checksum; then implement and test the Counter/Orders/Kitchen UI over the shared local order repository, add adversarial authorization tests for P1 write RPCs, and continue P0-P6 without deploying external resources.",
@@ -102,7 +103,8 @@
     "Observed Gitleaks succeed with no leaks found; observed Flutter CI format and analyzer failures and recorded them instead of claiming success.",
     "Added P1 menu, restaurant table, logical order, order-line snapshot, kitchen ticket and cash-payment schema with branch-scoped RLS, least-privilege client grants and server-side RPCs.",
     "Added 27-assertion P1 catalog/grant test; fresh local Supabase migration run applied all migrations and all 66 pgTAP assertions passed.",
-    "Observed Flutter CI pass strict Dart formatting, static analysis, unit/widget tests and secret scan; Android debug APK build is still in progress."
+    "Observed Flutter CI pass strict Dart formatting, static analysis, unit/widget tests and secret scan; Android debug APK build is still in progress.",
+    "Successfully built and uploaded debug APK artifact 11825148547 from Flutter run 38417639115; artifact ZIP SHA-256 digest recorded, with APK-level checksum pending the follow-up workflow run."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -141,5 +143,15 @@
   ],
   "flutter_app_created": true,
   "apk_built": false,
-  "build_test_status": "flutter_format_analyze_tests_passed; apk_build_in_progress; supabase_pgtap_passed_66_assertions"
+  "build_test_status": "supabase_pgtap_passed_66_assertions; flutter_format_analyze_tests_passed; debug_apk_built_and_uploaded; apk_sha256_step_in_progress_on_followup_run",
+  "debug_apk_artifact": {
+    "workflow_run_id": 38417639115,
+    "branch": "ci/p1-pos-validation",
+    "artifact_id": 11825148547,
+    "artifact_name": "mizzy-debug-apk",
+    "artifact_size_bytes": 77676589,
+    "artifact_zip_sha256": "5baf86d208c349330e6f3f48e191a022510107c03bc5578073489377321946b3",
+    "expires_at": "2027-01-11T14:56:00Z",
+    "note": "Digest is for the downloaded GitHub Actions artifact ZIP, not the APK file itself; the next validation run adds an APK-level SHA-256 checksum."
+  }
 }
