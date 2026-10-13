@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(20);
+select plan(21);
 
 -- Seed isolated test identities and tenant records as the database test owner.
 insert into auth.users (
@@ -62,10 +62,11 @@ with changed as (
 )
 select is((select count(*)::integer from changed), 0, 'counter cannot modify another tenant branch');
 select is((select count(*)::integer from public.audit_events), 0, 'counter cannot read manager/owner audit events');
-select is((select count(*)::integer from public.organization_memberships), 0, 'counter cannot list organization memberships');
-select is((select count(*)::integer from public.branch_memberships), 0, 'counter cannot list staff branch assignments');
+select is((select count(*)::integer from public.organization_memberships), 1, 'counter can read only its own organization membership');
+select is((select count(*)::integer from public.branch_memberships), 1, 'counter can read only its own branch assignment');
 
 set local request.jwt.claim.sub = '10000000-0000-4000-8000-000000000003';
+select is((select count(*)::integer from public.organization_memberships), 1, 'manager can read only their own organization membership');
 select is((select count(*)::integer from public.branches), 1, 'manager reads only their assigned branch');
 select is((select count(*)::integer from public.audit_events), 1, 'manager can read audit events for their branch');
 select is((select count(*)::integer from public.audit_events where organization_id = 'bbbbbbbb-0000-4000-8000-000000000001'), 0, 'manager cannot read another organization audit events');
