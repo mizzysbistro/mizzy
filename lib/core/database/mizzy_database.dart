@@ -25,12 +25,12 @@ class MizzyDatabase {
       return cached;
     }
 
-    final opening = _open();
-    _databaseFuture = opening;
-    return opening.catchError((Object error, StackTrace stackTrace) {
+    final opening = _open().catchError((Object error, StackTrace stackTrace) {
       _databaseFuture = null;
       Error.throwWithStackTrace(error, stackTrace);
     });
+    _databaseFuture = opening;
+    return opening;
   }
 
   Future<sqflite.Database> _open() async {
