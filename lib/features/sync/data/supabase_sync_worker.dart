@@ -58,12 +58,6 @@ abstract interface class CloudSyncTransport {
     required Map<String, Object?> parameters,
   });
 
-  Future<Map<String, Object?>?> readKitchenTicket({
-    required String organizationId,
-    required String branchId,
-    required String ticketId,
-  });
-
   Future<Map<String, Object?>> applyKitchenTransition({
     required Map<String, Object?> parameters,
   });
@@ -87,24 +81,6 @@ class SupabaseCloudSyncTransport implements CloudSyncTransport {
     return _call(() async {
       final result = await _client.rpc('save_order', params: parameters);
       return _singleRow(result, 'save_order');
-    });
-  }
-
-  @override
-  Future<Map<String, Object?>?> readKitchenTicket({
-    required String organizationId,
-    required String branchId,
-    required String ticketId,
-  }) {
-    return _call(() async {
-      final result = await _client
-          .from('kitchen_tickets')
-          .select('id,organization_id,branch_id,order_id,status')
-          .eq('id', ticketId)
-          .eq('organization_id', organizationId)
-          .eq('branch_id', branchId)
-          .maybeSingle();
-      return result == null ? null : Map<String, Object?>.from(result);
     });
   }
 
@@ -402,7 +378,7 @@ class AuthenticatedOutboxSyncWorker {
     throw const FormatException('Unsupported outbox event type.');
   }
 
-  Future<void> _sendOrderCreate(
+  Future<Map<String, Object?>> _sendOrderCreate(
     SyncOutboxRecord event,
     Map<String, Object?> payload,
     _SyncEntityRefs refs,
@@ -542,6 +518,10 @@ class AuthenticatedOutboxSyncWorker {
         'Server total/currency differs from the saved order snapshot.',
       );
     }
+    if (result['already_saved'] is! bool) {
+      throw const FormatException('Server order response lacks idempotency state.');
+    }
+    return result;
   }
 
   Future<void> _verifyKitchenTicketCreate(
@@ -563,21 +543,46 @@ class AuthenticatedOutboxSyncWorker {
     _validateUuid(ticketId, 'ticket.id');
     _validateUuid(orderId, 'ticket.orderId');
 
-    // save_order inserts the initial ticket atomically with the parent order.
-    // This child event confirms it exists instead of issuing a second insert.
-    final serverTicket = await _transport.readKitchenTicket(
-      organizationId: organizationId,
-      branchId: branchId,
-      ticketId: ticketId,
+    // save_order atomically creates the ticket along with the order. Replay the
+    // identical idempotent request rather than using direct table SELECT or
+    // issuing a second ticket insert.
+    final database = await _database.open();
+    final parentRows = await database.query(
+      'sync_outbox',
+      where:
+          'organization_id = ? AND branch_id = ? AND entity_type = ? '
+          'AND entity_id = ? AND operation = ? AND status = ?',
+      whereArgs: <Object?>[
+        organizationId,
+        branchId,
+        'order',
+        orderId,
+        'create',
+        'done',
+      ],
+      orderBy: 'created_at ASC',
+      limit: 1,
     );
-    if (serverTicket == null ||
-        serverTicket['id'] != ticketId ||
-        serverTicket['organization_id'] != organizationId ||
-        serverTicket['branch_id'] != branchId ||
-        serverTicket['order_id'] != orderId ||
-        serverTicket['status'] != _requiredString(payload, 'status')) {
+    if (parentRows.isEmpty) {
       throw const FormatException(
-        'Cloud Kitchen ticket differs from the saved local ticket.',
+        'Kitchen-create event has no server-confirmed parent order.',
+      );
+    }
+    final parentEvent = SyncOutboxRecord.fromRow(parentRows.single);
+    final parentPayload = _decodePayload(parentEvent);
+    if (parentPayload['kitchenTicketId'] != ticketId) {
+      throw const FormatException(
+        'Kitchen ticket ID does not match the parent order event.',
+      );
+    }
+    final replay = await _sendOrderCreate(
+      parentEvent,
+      parentPayload,
+      _entityRefs(parentEvent),
+    );
+    if (replay['already_saved'] != true) {
+      throw const FormatException(
+        'Server did not confirm idempotent order replay.',
       );
     }
   }

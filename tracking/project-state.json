@@ -179,7 +179,8 @@
     "Extended draft PR #18 with safe v1→v2 legacy outbox dependency backfill, per-branch dependency scope checks, unresolved legacy event quarantine, and migration/cross-branch regression tests. This source and test change remains unverified pending toolchain/CI runner recovery.",
     "Prepared a stacked P2 server-side sync contract PR with an idempotent Kitchen-transition receipt RPC, expected-from-status conflict protection, branch/role validation, and pgTAP cases for replay, changed-payload reuse, stale state, invalid transitions, and unauthorized roles. Execution remains unverified; Actions runner issue 13 is still active.",
     "Checked the connected Supabase project inventory; only projects named pos and banawe were listed. Preserved the independent-project boundary and did not alter or provision any Supabase resource.",
-    "Added a draft authenticated SQLite outbox worker implementing save_order upload, server-confirmed Kitchen-ticket verification, and stable-event Kitchen transition RPC replay; added six worker tests with fake server transport. Not wired into production UI and not verified."
+    "Added a draft authenticated SQLite outbox worker implementing save_order upload, server-confirmed Kitchen-ticket verification, and stable-event Kitchen transition RPC replay; added six worker tests with fake server transport. Not wired into production UI and not verified.",
+    "Hardened the P2 worker so ticket-create acknowledgment replays save_order with the same idempotency key/payload and requires already_saved=true and matching ticket ID, instead of depending on direct Kitchen-ticket SELECT grants."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

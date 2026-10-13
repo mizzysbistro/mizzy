@@ -163,7 +163,7 @@ void main() {
         transport.calls,
         [
           'save_order',
-          'read_kitchen_ticket',
+          'save_order',
           'apply_kitchen_transition_event',
         ],
       );
@@ -278,12 +278,14 @@ class _FakeCloudSyncTransport implements CloudSyncTransport {
   Map<String, Object?>? ticket;
   Map<String, Object?>? lastOrderParameters;
   SyncRemoteFailure? orderFailure;
+  int saveOrderCalls = 0;
 
   @override
   Future<Map<String, Object?>> saveOrder({
     required Map<String, Object?> parameters,
   }) async {
     calls.add('save_order');
+    saveOrderCalls++;
     lastOrderParameters = parameters;
     final failure = orderFailure;
     if (failure != null) throw failure;
@@ -305,25 +307,8 @@ class _FakeCloudSyncTransport implements CloudSyncTransport {
       'total_minor': totalMinor,
       'currency_code': 'PHP',
       'kitchen_ticket_id': parameters['p_kitchen_ticket_id'],
-      'already_saved': false,
+      'already_saved': saveOrderCalls > 1,
     };
-  }
-
-  @override
-  Future<Map<String, Object?>?> readKitchenTicket({
-    required String organizationId,
-    required String branchId,
-    required String ticketId,
-  }) async {
-    calls.add('read_kitchen_ticket');
-    final current = ticket;
-    if (current == null) return null;
-    if (current['id'] != ticketId ||
-        current['organization_id'] != organizationId ||
-        current['branch_id'] != branchId) {
-      return null;
-    }
-    return Map<String, Object?>.from(current);
   }
 
   @override
