@@ -51,18 +51,22 @@
     "local_table_layout_and_dine_in_flow_committed": true,
     "local_transactional_table_occupancy_and_safe_cancellation_committed": true,
     "order_list_branch_scoped_table_name_join_committed": true,
-    "local_pos_table_widget_test_added": true
+    "local_pos_table_widget_test_added": true,
+    "local_catalog_loaded_from_scoped_sqlite": true,
+    "sale_lines_use_catalog_uuid_and_snapshots": true,
+    "local_outbox_leasing_retry_backoff_and_conflict_foundation_added": true,
+    "outbox_worker_tests_auth_and_cloud_reconciliation_still_pending": true
   },
   "blockers": [
-    "GitHub Actions cannot currently validate latest source. Flutter run 38428272003 and Supabase run 38428270475 for branch head a3a297e3c972b77aa993f7bc58a3d01bc66c0450 failed before any step (runner_id=0, zero steps and no logs). Multiple earlier heads show the same. Check repository/owner Actions availability and usage limits; do not enable paid billing or change repo visibility without authorization.",
-    "The expanded SQLite order repository suite (13 tests) and two local POS widget tests (Counter → Orders → Kitchen and dine-in table selection) have no successful CI evidence.",
-    "Recorded debug APK is a development-only artifact from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it predates the current table/dine-in code and expanded tests.",
-    "No real Android phone/tablet installation, printer/peripheral, production signing, upgrade or release validation has been performed.",
-    "No hosted Supabase project is connected. Do not provision external resources that may cost without approval.",
-    "Counter/Orders/Kitchen/Table UI still runs on sample data in local-only development mode. Cloud sync, production catalog/table management and real payments are not enabled.",
-    "Trusted staff invitation/membership lifecycle, partial offline sync/reconnect/conflict resolution and remaining adversarial cross-branch/payment validation remain incomplete."
+    "GitHub Actions cannot validate latest source. Flutter run 38429528351 and Supabase run 38429528325 for PR head 6833001a1429273db5caf57f86e0b7ea2e8010b1 failed before any steps (runner_id=0, zero steps, no logs). Multiple earlier commits show the same. Owner must check GitHub Actions/runners availability and usage limits; do not enable paid billing or change private repository visibility without authorization.",
+    "The 13 SQLite order repository tests, 7 SQLite outbox lifecycle tests, and two local POS widget tests lack successful CI evidence.",
+    "Recorded debug APK is a development-only artifact from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 and predates current catalog, table and sync-queue changes.",
+    "No real Android phone/tablet install, printer/peripheral, production signing, upgrade or release validation has been performed.",
+    "No hosted Supabase project is connected. Do not provision resources that may incur costs without approval.",
+    "Counter/Tables/Orders/Kitchen screens and catalog still run as local-only demonstration data; cloud sync, production catalog management and real payments are not enabled.",
+    "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete."
   ],
-  "next_action": "Resolve the Actions runner blocker through repo/owner settings under issue 13 without paid provisioning or making the repo public. Then run strict format/analyze, all Flutter repository/widget tests, secret scan, Android debug APK build and Supabase migration/pgTAP. Keep PR 11 unmerged until checks pass. Continue P1 production catalog/table integration only after validation; implement staff invitation issue 14 through a trusted server-side workflow, then proceed to P2 offline sync/reconciliation.",
+  "next_action": "Resolve the runner blocker on issue 13 without paid provisioning or repo visibility changes. When runner access is restored, execute strict Dart format, analysis, all Flutter tests (13 order repository + 7 outbox + two widget tests), secret scan, Android debug APK build, and Supabase migration/pgTAP. Keep PR 11 unmerged until all gates pass. Then continue P1 auth-backed production catalog/table flows and implement issue 15's trusted authenticated upload/pull worker, dependency ordering, idempotent replay, cursors, offline/reconnect reconciliation and conflict handling.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -107,6 +111,11 @@
     {
       "task_id": "P0-08",
       "url": "https://github.com/mizzysbistro/mizzy/issues/14",
+      "status": "open"
+    },
+    {
+      "task_id": "P2-01",
+      "url": "https://github.com/mizzysbistro/mizzy/issues/15",
       "status": "open"
     }
   ],
@@ -156,7 +165,13 @@
     "Updated local order persistence to reserve only an available table belonging to the current organization/branch within the same transaction; orders now show joined table names.",
     "Added safe dine-in cancellation behavior: an unpaid cancellation atomically releases the table; a captured payment blocks cancellation until an authorized refund flow exists.",
     "Expanded SQLite test suite to 13 repository cases, including table ownership/status, rollback, and captured-payment cancellation safeguards; added two local POS screen-level widget tests.",
-    "Updated README and project tracker to reflect the local table grid and that current code remains unverified due to GitHub runner failures."
+    "Updated README and project tracker to reflect the local table grid and that current code remains unverified due to GitHub runner failures.",
+    "Moved the local sample menu into the organization/branch-scoped SQLite catalog; startup seeds sample rows only when no catalog rows exist, and Counter loads active items from SQLite.",
+    "Sales now store catalog UUIDs together with immutable SKU/name/price snapshots, with widget assertions for the catalog and sale-line link.",
+    "Added SyncOutboxRepository for branch-scoped durable event leases, expired-lease reclaim, bounded exponential backoff, safe error codes, delivered acknowledgment, and conflict quarantine; the repository does not make network calls.",
+    "Added seven outbox tests covering organization/branch isolation, retry timing/backoff, expired-lease recovery, delivered/conflict state, invalid leases/batch sizes, concurrent claims, and wrong-branch acknowledgment.",
+    "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
+    "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -226,11 +241,27 @@
     "8d627fcc28093376081c2b6c527550a5d5346a1a",
     "323e9e6bed88a8c55a76cad69f8226a9ac58e2b9",
     "b6e94e0737abfa25a5725cbdf337d00c44b63cb6",
-    "1b789adfe2974a85a6c7b43ceaebd96f2910077a"
+    "1b789adfe2974a85a6c7b43ceaebd96f2910077a",
+    "190c57814cc07f181ed796c9475fccc29e2a38aa",
+    "b3be45be669192b6ec01b3dbb5ab4935b443714b",
+    "40f586106554bcaabde4121bdcfefe5b0a35d0bb",
+    "fca13f6223a593fdc36da900f9d6c20c26c121c1",
+    "51aee53cbb5463868a7626347d031edab040eca3",
+    "b99209d3d7f09dc0a13c764d43ee16d6d16bd0e1",
+    "e55ac2eca7c10f31cda626c0a014db49444b7564",
+    "b63c401f88235b1500de7d73cd1d082350fa7ff6",
+    "89e51cc05e26418fe4596bbc31730753c3438bdf",
+    "21d449255e0b22e0c156815478d1f7e079d84924",
+    "a053b967b07fe9e7b883064f04be85b898ecb9ae",
+    "4ee1122d9994e71ffa8cc113c1f346e712fb8659",
+    "36b95081ce0f943080622e2269a68abf4e9e2917",
+    "caab09c92ba21b990ca02a510a14081b958cf76c",
+    "6833001a1429273db5caf57f86e0b7ea2e8010b1",
+    "7ab879bed4b1538933d4ca7fede6eabadcca5d07"
   ],
   "flutter_app_created": true,
   "apk_built": true,
-  "build_test_status": "Last green CI commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 passed format/analyze, 17 Flutter tests, secret scan, Android debug APK build and Supabase migration/pgTAP. Current P1 branch head a3a297e3c972b77aa993f7bc58a3d01bc66c0450 adds 13 SQLite order repository tests and two local POS widget tests. Validation is blocked: Flutter run 38428272003 and Supabase run 38428270475 failed before the first step (runner_id=0, zero steps). The recorded APK is older and development-only.",
+  "build_test_status": "Last verified green CI commit 95a9528338085b2f2a057362e9b8fd5c066e6b81 passed format/analyze, 17 Flutter tests, secret scan, Android debug APK build, and Supabase migration/pgTAP. Current PR head 6833001a1429273db5caf57f86e0b7ea2e8010b1 includes 13 SQLite order repository tests, 7 outbox lifecycle tests, and two POS widget tests. Latest Flutter run 38429528351 and Supabase run 38429528325 failed before first step (runner_id=0, zero steps). New tests and code are unverified; recorded APK is older and development-only.",
   "debug_apk_artifact": {
     "workflow_run_id": 38417639115,
     "branch": "ci/p1-pos-validation",
@@ -261,13 +292,13 @@
   },
   "latest_ci_attempt": {
     "validation_branch": "ci/p1-order-rpc-validation",
-    "tested_commit": "a3a297e3c972b77aa993f7bc58a3d01bc66c0450",
-    "flutter_run_id": 38428272003,
-    "supabase_run_id": 38428270475,
+    "tested_commit": "6833001a1429273db5caf57f86e0b7ea2e8010b1",
+    "flutter_run_id": 38429528351,
+    "supabase_run_id": 38429528325,
     "flutter_conclusion": "failure_before_first_step",
     "supabase_conclusion": "failure_before_first_step",
     "retry_attempt": 1,
-    "evidence": "Current-head job APIs report runner_id=0 and zero steps; jobs finish within seconds without logs. The workflow commands did not execute. Application behavior and test outcome therefore remain unknown.",
+    "evidence": "GitHub REST job records show runner_id=0 and zero steps; jobs failed within seconds. The workflow commands did not run. This is a pre-runner availability blocker, not evidence the tests failed or passed.",
     "tracking_issue": "https://github.com/mizzysbistro/mizzy/issues/13",
     "status": "blocked_pending_actions_runner_availability"
   }
