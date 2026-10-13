@@ -61,5 +61,20 @@ void main() {
 
       expect(environment.hasUsableSupabaseConfiguration, isFalse);
     });
+
+    test('rejects modern secret keys and legacy service-role JWTs', () {
+      const modernSecret = AppEnvironment(
+        supabaseUrl: 'https://project-ref.supabase.co',
+        supabasePublishableKey: 'sb_secret_not-for-mobile',
+      );
+      const legacyServiceRole = AppEnvironment(
+        supabaseUrl: 'https://project-ref.supabase.co',
+        supabasePublishableKey:
+            'eyJhbGciOiJub25lIn0.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.signature',
+      );
+
+      expect(modernSecret.hasUsableSupabaseConfiguration, isFalse);
+      expect(legacyServiceRole.hasUsableSupabaseConfiguration, isFalse);
+    });
   });
 }
