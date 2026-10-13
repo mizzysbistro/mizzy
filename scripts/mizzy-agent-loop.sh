@@ -40,6 +40,12 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   exit 2
 }
 cd "$ROOT"
+if [[ ! -f "$ROOT/scripts/mizzy-agent-loop-lib.sh" ]]; then
+  echo "ERROR: required helper scripts/mizzy-agent-loop-lib.sh is missing." >&2
+  exit 2
+fi
+# shellcheck source=scripts/mizzy-agent-loop-lib.sh
+source "$ROOT/scripts/mizzy-agent-loop-lib.sh"
 
 BRANCH="$(git branch --show-current)"
 if [[ -z "$BRANCH" || "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
@@ -160,7 +166,7 @@ fi
 
 # Critical POS/security work must not pass on a same-provider self-review.
 CRITICAL_TASK=0
-if printf '%s\n%s' "$TASK_SLUG" "$TASK_DESCRIPTION" | grep -Eiq '(auth|authorization|security|credential|privacy|RLS|tenant|branch[- ]scope|cross[- ](tenant|branch)|payment|financial|billing|refund|void|cash|tax|ledger|money|idempotenc|replay|inventory|stock|offline|sync|migration|schema|backup|restore|release|production|deploy)'; then
+if mizzy_is_critical_task "$TASK_SLUG" "$TASK_DESCRIPTION"; then
   CRITICAL_TASK=1
   echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
 fi
@@ -269,16 +275,7 @@ run_verification() {
   else
     # Fast path: execute changed test files, including newly created untracked
     # tests. Fall back to the full suite when no existing test file changed.
-    mapfile -t changed_tests < <(
-      {
-        git diff --name-only HEAD -- test/
-        git ls-files --others --exclude-standard -- test/
-      } | grep -E '^test/.*_test\.dart$' | sort -u || true
-    )
-    existing_tests=()
-    for test_file in "${changed_tests[@]}"; do
-      [[ -f "$test_file" ]] && existing_tests+=("$test_file")
-    done
+    mapfile -t existing_tests < <(mizzy_changed_test_files)
     if (( ${#existing_tests[@]} > 0 )); then
       local test_index=0
       for test_file in "${existing_tests[@]}"; do
