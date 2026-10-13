@@ -5,6 +5,7 @@ create extension if not exists pgtap with schema extensions;
 select plan(15);
 
 -- Synthetic identities and tenant fixtures only; transaction rolls back at the end.
+-- Validate positive and negative order/kitchen/cash RPC behavior on a fresh disposable stack.
 insert into auth.users (
   id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
