@@ -54,13 +54,29 @@ class FoundationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mizzy POS'),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Tooltip(
-                message: 'Cloud sync is not configured yet',
-                child: Icon(Icons.cloud_off_outlined),
+                message: switch (cloudBootstrapStatus) {
+                  CloudBootstrapStatus.notConfigured =>
+                    'Cloud sync is not configured',
+                  CloudBootstrapStatus.clientInitialized =>
+                    'Cloud client initialized; sync is not active yet',
+                  CloudBootstrapStatus.initializationFailed =>
+                    'Cloud client initialization failed',
+                },
+                child: Icon(
+                  switch (cloudBootstrapStatus) {
+                    CloudBootstrapStatus.notConfigured =>
+                      Icons.cloud_off_outlined,
+                    CloudBootstrapStatus.clientInitialized =>
+                      Icons.cloud_done_outlined,
+                    CloudBootstrapStatus.initializationFailed =>
+                      Icons.cloud_off_outlined,
+                  },
+                ),
               ),
             ),
           ),
