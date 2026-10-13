@@ -595,6 +595,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
             Text('Current order', style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             DropdownButtonFormField<MizzyOrderType>(
+              key: ValueKey(_selectedOrderType),
               initialValue: _selectedOrderType,
               decoration: const InputDecoration(
                 labelText: 'Order type',
