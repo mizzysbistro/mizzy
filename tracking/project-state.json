@@ -37,17 +37,19 @@
     "supabase_pgtap_passed": true,
     "flutter_format_analyze_tests_passed": true,
     "apk_sha256_recorded": false,
-    "p1_order_rpc_behavior_tests_passed": true
+    "p1_order_rpc_behavior_tests_passed": true,
+    "local_counter_orders_kitchen_ui_committed": true,
+    "local_pos_ui_ci_passed": false
   },
   "blockers": [
-    "Current Android debug APK build and APK SHA-256 recording are still running in workflow 38418953531; prior debug APK build and upload succeeded.",
+    "Strict CI validation of the new local POS UI is running; the previous analyzer failure was corrected, but the latest run must pass analysis, tests, Android build and checksum upload.",
+    "Local POS demo uses sample menu items and is explicitly local-only; it does not provide live cloud sync, real payment capture, production catalog management or table assignment.",
     "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "User-facing Counter, Orders and Kitchen screens are not yet connected to the local repository.",
     "Additional adversarial RPC coverage for concurrent duplicate submissions, overpayment, stale prices, illegal kitchen transitions and cross-branch access remains incomplete; offline sync/reconnect and conflict resolution remain incomplete.",
     "Authentication lifecycle and trusted membership management remain incomplete."
   ],
-  "next_action": "Capture APK-level SHA-256 and artifact from run 38418953531, then implement the first Counter/Orders/Kitchen screens against the shared SQLite OrderRepository; add remaining adversarial RPC and offline-sync tests before release.",
+  "next_action": "Complete the current strict CI run and record the APK checksum, then add integration/widget tests for the local Counter-to-Orders-to-Kitchen flow and expand the catalog/table/payment workflows without enabling real payments or hosted sync before authorization and security gates pass.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -106,7 +108,9 @@
     "Added 27-assertion P1 catalog/grant test; fresh local Supabase migration run applied all migrations and all 66 pgTAP assertions passed.",
     "Observed Flutter CI pass strict Dart formatting, static analysis, unit/widget tests and secret scan; Android debug APK build is still in progress.",
     "Successfully built and uploaded debug APK artifact 11825148547 from Flutter run 38417639115; artifact ZIP SHA-256 digest recorded, with APK-level checksum pending the follow-up workflow run.",
-    "The P1 order RPC behavior test step passed in Supabase workflow run 38418953622, covering idempotent order save, server-calculated total, single order/line/ticket, kitchen transitions, Kitchen-role denial, cash completion and table release."
+    "The P1 order RPC behavior test step passed in Supabase workflow run 38418953622, covering idempotent order save, server-calculated total, single order/line/ticket, kitchen transitions, Kitchen-role denial, cash completion and table release.",
+    "Added a clearly labeled local-only Counter, Orders and Kitchen UI over the shared SQLite OrderRepository. Saving from Counter writes one order and one kitchen ticket; Orders and Kitchen read the same local parent order, and Kitchen transitions update that order.",
+    "The first UI CI analysis found an inaccessible private named-parameter call; corrected the callsite to the public constructor parameter name and restarted strict CI validation."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
