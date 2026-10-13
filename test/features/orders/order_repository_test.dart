@@ -32,13 +32,16 @@ void main() {
   CreateOrderDraft draft({
     required String orderId,
     required String idempotencyKey,
+    MizzyOrderType orderType = MizzyOrderType.takeaway,
+    String? tableId,
   }) {
     return CreateOrderDraft(
       orderId: orderId,
       idempotencyKey: idempotencyKey,
       organizationId: organizationId,
       branchId: branchId,
-      orderType: MizzyOrderType.takeaway,
+      orderType: orderType,
+      tableId: tableId,
       lines: const [
         OrderLineDraft(
           itemName: 'Chicken Adobo',
@@ -53,6 +56,46 @@ void main() {
       ],
     );
   }
+
+  test('dine-in orders require a table before persistence', () async {
+    await expectLater(
+      repository.saveOrder(
+        draft(
+          orderId: const Uuid().v4(),
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+        ),
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      ),
+      isEmpty,
+    );
+  });
+
+  test('takeaway orders cannot be assigned to a table', () async {
+    await expectLater(
+      repository.saveOrder(
+        draft(
+          orderId: const Uuid().v4(),
+          idempotencyKey: const Uuid().v4(),
+          tableId: const Uuid().v4(),
+        ),
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      ),
+      isEmpty,
+    );
+  });
 
   test('saving an order creates one order and one linked kitchen ticket', () async {
     final orderId = const Uuid().v4();
