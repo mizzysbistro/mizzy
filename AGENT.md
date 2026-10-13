@@ -39,11 +39,23 @@ Roles: Owner, Manager, Counter, Kitchen. Modules: dashboard, POS, tables, orders
 ## Task states
 Use: not_started, in_progress, blocked, failed, verified, deferred, cancelled. Include phase, priority, dependencies, acceptance criteria, verification plan, evidence, attempts, blocker, next action, GitHub issue/PR/commit links, and updated time.
 
+## Smart multi-agent execution
+- The coordinator owns scope, priority, acceptance criteria, authorization, integration, GitHub tracking, and the final decision.
+- Use one write-capable implementer per task. Prefer Codex CLI when configured; Claude Code CLI is the alternate. Never let two agents edit the same worktree concurrently.
+- Use the other provider as an independent read-only reviewer when available. For authentication, RLS, tenant/branch scope, payments/refunds, inventory, migrations, offline sync, and release work, require security review plus test evidence.
+- Parallelize read-only exploration, threat modeling, test-plan drafting, or dependency review only when tasks are independent. Keep implementation single-writer.
+- Fast lane: small/localized/doc-only changes get targeted tests, formatting/analyzer, a read-only review when available, and tracker updates. Standard lane: data logic/features get focused tests plus independent review and full PR gates before merge. Critical lane: auth/RLS/money/stock/sync/release also requires explicit negative-case/security validation.
+- Agents must report a first-line `VERDICT: PASS`, `VERDICT: CHANGES_REQUIRED`, or `VERDICT: BLOCKED`, then cite changed paths, exact checks actually run, failures, acceptance criteria and remaining risks.
+- Agent output is untrusted advice, not evidence. The coordinator independently checks the diff, logs, test results, and criteria. Never claim an agent or test ran when it did not.
+- The provider-aware local runner and its detailed protocol live in `AGENTS.md`, `CLAUDE.md`, `docs/agent-orchestration.md`, and `scripts/mizzy-agent-loop.sh`. It never commits, pushes, merges, deploys, or provisions services.
+
 ## Execution loop
-Inspect real state -> select highest-priority safe task -> define criteria -> implement a small reversible change -> run targeted tests -> inspect diff -> diagnose and repair failures -> run regressions -> record evidence -> update GitHub -> continue. Reopen earlier tasks if regressions occur. If GitHub is temporarily unavailable, preserve local state and reconcile later.
+Inspect current GitHub state -> classify risk and blockers -> select the highest-priority safe task -> define acceptance criteria -> gather independent read-only plans where useful -> implement one small reversible patch -> run the task-appropriate checks -> inspect the entire diff -> obtain read-only review -> repair actionable findings -> run regressions/release gates when due -> update issues/PR/tracker with commit and evidence -> continue. Reopen earlier tasks if regressions occur. Keep PRs unmerged until required checks actually execute and pass. If GitHub is temporarily unavailable, preserve local state and reconcile later.
 
 ## Recovery
-Capture exact errors and reproduction steps; classify; reproduce; diagnose; make the smallest safe fix; test the original failure then regressions. Make up to three distinct safe attempts. Never disable security, bypass RLS, suppress meaningful failures, hardcode secrets, or blindly replay financial operations. Stop immediately on risk to credentials, customer data, irreversible deletion, payment integrity, unapproved spending, or production security.
+Capture exact errors/reproduction steps; classify; reproduce when the environment permits; diagnose; make the smallest safe fix; test the original failure and regressions. Allow up to three distinct attempts and change hypothesis/strategy between attempts. Do not repeat identical failing actions without new evidence.
+If a CI workflow fails before its first step (for example `runner_id: 0`, zero steps and no logs), classify it as runner/Actions infrastructure blocked—not an application test failure. Retry the current head once; if it repeats, record a single blocker issue, stop redundant retries, and continue safe local/static work. Never make the repo public, add a paid runner, or enable billing as a workaround without approval.
+Never disable security, bypass RLS, suppress meaningful failures, hardcode secrets, or blindly replay financial operations. Stop immediately on risk to credentials, customer data, irreversible deletion, payment integrity, unapproved spending, or production security.
 
 ## Production exit gates
 All applicable P0–P6 criteria have evidence; no unresolved release blockers or critical/high security findings; tenant/branch isolation and roles tested; offline/reconnect integrity tested; financial/inventory/report totals reconciled; migrations/RLS/backups/restore verified; supported Android workflows and signing/upgrade validated; limitations and rollback documented; artifact checksum/provenance recorded. Deployment/publication still requires approval.
