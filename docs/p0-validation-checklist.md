@@ -21,6 +21,14 @@ This checklist is intentionally evidence-driven. The CI validation branch applie
 - [ ] Organization/branch scoped reads do not return another branch's order.
 - [ ] Amounts use integer minor units; no money calculations use floating-point values.
 
+## Authentication and tenant bootstrap
+
+- [ ] Configured Supabase client routes through email/password sign-in and signup.
+- [ ] Account-creation flow handles email confirmation without pretending a session exists.
+- [ ] Authenticated users can list only organizations/branches allowed by their membership and RLS.
+- [ ] Initial owner and branch creation use the authenticated bootstrap RPC and are confirmed by the server response.
+- [ ] Sign-out returns the app to sign-in state; no service-role key is packaged.
+
 ## Supabase and access control
 
 - [ ] Apply the draft migration to a disposable local Supabase stack with a recorded CLI version.
