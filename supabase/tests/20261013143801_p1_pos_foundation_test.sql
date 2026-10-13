@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(25);
+select plan(27);
 
 -- P1 catalog smoke checks. These tests intentionally avoid production data.
 select has_table('public', 'menu_items', 'menu catalog table exists');
