@@ -5,7 +5,7 @@ set -Eeuo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  scripts/mizzy-agent-loop.sh <task-slug> <task description>
+  bash scripts/mizzy-agent-loop.sh <task-slug> <task description>
 
 Required:
   Run from a clean feature branch in the Mizzy repo.
