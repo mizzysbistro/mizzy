@@ -13,13 +13,15 @@ mizzy_is_critical_task() {
 # the full suite if this prints nothing. Includes staged/unstaged and untracked
 # test files, and filters deleted files so they are not passed to Flutter.
 mizzy_changed_test_files() {
-  {
-    git diff --name-only HEAD -- test/
-    git ls-files --others --exclude-standard -- test/
-  } |
-    grep -E '^test/.*_test\.dart$' |
-    sort -u |
-    while IFS= read -r test_file; do
-      [[ -f "$test_file" ]] && printf '%s\n' "$test_file"
-    done
+  local test_file
+  while IFS= read -r test_file; do
+    if [[ -f "$test_file" ]]; then
+      printf '%s\n' "$test_file"
+    fi
+  done < <(
+    {
+      git diff --name-only HEAD -- test/
+      git ls-files --others --exclude-standard -- test/
+    } | grep -E '^test/.*_test\.dart$' | sort -u || true
+  )
 }
