@@ -60,11 +60,11 @@ mkdir -p "$selection_repo/test"
 git -C "$selection_repo" init -q -b feature/test-selection
 git -C "$selection_repo" config user.name "Mizzy Agent Loop Test"
 git -C "$selection_repo" config user.email "mizzy-agent-loop-test@example.invalid"
-printf 'void main() {}\\n' > "$selection_repo/test/changed_test.dart"
+printf 'void main() {}\n' > "$selection_repo/test/changed_test.dart"
 printf 'void main() {}\\n' > "$selection_repo/test/deleted_test.dart"
 git -C "$selection_repo" add test
 git -C "$selection_repo" commit -qm "fixture: test discovery baseline"
-printf '// changed\\n' >> "$selection_repo/test/changed_test.dart"
+printf '// changed\n' >> "$selection_repo/test/changed_test.dart"
 git -C "$selection_repo" add test/changed_test.dart
 rm "$selection_repo/test/deleted_test.dart"
 printf 'void main() {}\\n' > "$selection_repo/test/new_untracked_test.dart"
