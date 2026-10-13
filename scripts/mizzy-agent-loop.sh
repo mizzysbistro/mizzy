@@ -86,6 +86,13 @@ fi
 # shellcheck source=scripts/mizzy-agent-loop-lib.sh
 source "$ROOT/scripts/mizzy-agent-loop-lib.sh"
 
+# Critical POS/security work cannot use the fast verification lane.
+CRITICAL_TASK=0
+if mizzy_is_critical_task "$TASK_SLUG" "$TASK_DESCRIPTION"; then
+  CRITICAL_TASK=1
+  echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
+fi
+
 for command_name in git dart flutter; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "ERROR: required command '$command_name' is not installed or not on PATH." >&2
@@ -106,6 +113,10 @@ VERIFY_MODE="${MIZZY_VERIFY:-targeted}"
 if [[ "$VERIFY_MODE" != "targeted" && "$VERIFY_MODE" != "full" ]]; then
   echo "ERROR: MIZZY_VERIFY must be 'targeted' or 'full'." >&2
   exit 2
+fi
+if [[ "$CRITICAL_TASK" -eq 1 && "$VERIFY_MODE" != "full" ]]; then
+  echo "ROUTE: critical task overrides MIZZY_VERIFY=$VERIFY_MODE; using full verification."
+  VERIFY_MODE="full"
 fi
 if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
   echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
@@ -184,13 +195,6 @@ if [[ "$REVIEWER" == "same" ]]; then
 fi
 if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
   echo "NOTICE: reviewer uses the same provider in a separate read-only session; independent provider review is not available."
-fi
-
-# Critical POS/security work must not pass on a same-provider self-review.
-CRITICAL_TASK=0
-if mizzy_is_critical_task "$TASK_SLUG" "$TASK_DESCRIPTION"; then
-  CRITICAL_TASK=1
-  echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
