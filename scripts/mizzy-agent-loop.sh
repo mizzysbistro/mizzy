@@ -116,37 +116,6 @@ if [[ "$has_codex" -eq 0 && "$has_claude" -eq 0 ]]; then
   exit 2
 fi
 
-VERIFY_MODE="${MIZZY_VERIFY:-targeted}"
-if [[ "$VERIFY_MODE" != "targeted" && "$VERIFY_MODE" != "full" ]]; then
-  echo "ERROR: MIZZY_VERIFY must be 'targeted' or 'full'." >&2
-  exit 2
-fi
-if [[ "$CRITICAL_TASK" -eq 1 && "$VERIFY_MODE" != "full" ]]; then
-  echo "ROUTE: critical task overrides MIZZY_VERIFY=$VERIFY_MODE; using full verification."
-  VERIFY_MODE="full"
-fi
-if [[ "$VERIFY_MODE" == "full" && "${MIZZY_RUN_SUPABASE_TESTS:-0}" != "1" ]]; then
-  echo "ROUTE: full verification enables local Supabase DB tests."
-  MIZZY_RUN_SUPABASE_TESTS=1
-fi
-if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
-  echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
-  exit 2
-fi
-if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
-  command -v supabase >/dev/null 2>&1 || {
-    echo "ERROR: Supabase tests were requested but the Supabase CLI is missing." >&2
-    exit 2
-  }
-  command -v docker >/dev/null 2>&1 || {
-    echo "ERROR: Supabase tests were requested but Docker is missing." >&2
-    exit 2
-  }
-  docker info >/dev/null 2>&1 || {
-    echo "ERROR: Docker is not ready; start the local container engine before agent execution." >&2
-    exit 2
-  }
-fi
 MAX_TURNS="${MIZZY_AGENT_MAX_TURNS:-8}"
 if [[ ! "$MAX_TURNS" =~ ^[1-9][0-9]*$ ]]; then
   echo "ERROR: MIZZY_AGENT_MAX_TURNS must be a positive integer." >&2
@@ -212,6 +181,37 @@ if [[ "$CRITICAL_TASK" -eq 1 && "$REVIEWER" == "$IMPLEMENTER" ]]; then
   exit 2
 fi
 
+VERIFY_MODE="${MIZZY_VERIFY:-targeted}"
+if [[ "$VERIFY_MODE" != "targeted" && "$VERIFY_MODE" != "full" ]]; then
+  echo "ERROR: MIZZY_VERIFY must be 'targeted' or 'full'." >&2
+  exit 2
+fi
+if [[ "$CRITICAL_TASK" -eq 1 && "$VERIFY_MODE" != "full" ]]; then
+  echo "ROUTE: critical task overrides MIZZY_VERIFY=$VERIFY_MODE; using full verification."
+  VERIFY_MODE="full"
+fi
+if [[ "$VERIFY_MODE" == "full" && "${MIZZY_RUN_SUPABASE_TESTS:-0}" != "1" ]]; then
+  echo "ROUTE: full verification enables local Supabase DB tests."
+  MIZZY_RUN_SUPABASE_TESTS=1
+fi
+if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
+  echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
+  exit 2
+fi
+if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
+  command -v supabase >/dev/null 2>&1 || {
+    echo "ERROR: Supabase tests were requested but the Supabase CLI is missing." >&2
+    exit 2
+  }
+  command -v docker >/dev/null 2>&1 || {
+    echo "ERROR: Supabase tests were requested but Docker is missing." >&2
+    exit 2
+  }
+  docker info >/dev/null 2>&1 || {
+    echo "ERROR: Docker is not ready; start the local container engine before agent execution." >&2
+    exit 2
+  }
+fi
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RUN_BASE="$ROOT/.agent-runs/${STAMP}-${TASK_SLUG}"
 mkdir -p "$ROOT/.agent-runs"
