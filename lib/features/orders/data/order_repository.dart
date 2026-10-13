@@ -28,12 +28,12 @@ enum KitchenTicketStatus {
   final String storageValue;
 
   String get orderStatus => switch (this) {
-        KitchenTicketStatus.queued => 'saved',
-        KitchenTicketStatus.preparing => 'preparing',
-        KitchenTicketStatus.ready => 'ready',
-        KitchenTicketStatus.served => 'served',
-        KitchenTicketStatus.cancelled => 'cancelled',
-      };
+    KitchenTicketStatus.queued => 'saved',
+    KitchenTicketStatus.preparing => 'preparing',
+    KitchenTicketStatus.ready => 'ready',
+    KitchenTicketStatus.served => 'served',
+    KitchenTicketStatus.cancelled => 'cancelled',
+  };
 }
 
 class OrderLineDraft {
@@ -104,9 +104,9 @@ class OrderRepository {
     required MizzyDatabase database,
     Uuid? uuid,
     DateTime Function()? clock,
-  })  : _database = database,
-        _uuid = uuid ?? const Uuid(),
-        _clock = clock ?? DateTime.now;
+  }) : _database = database,
+       _uuid = uuid ?? const Uuid(),
+       _clock = clock ?? DateTime.now;
 
   final MizzyDatabase _database;
   final Uuid _uuid;
@@ -115,8 +115,7 @@ class OrderRepository {
   static final BigInt _maxSqlInteger = BigInt.parse('9223372036854775807');
 
   static const Map<KitchenTicketStatus, Set<KitchenTicketStatus>>
-      _allowedKitchenTransitions = <KitchenTicketStatus,
-          Set<KitchenTicketStatus>>{
+  _allowedKitchenTransitions = <KitchenTicketStatus, Set<KitchenTicketStatus>>{
     KitchenTicketStatus.queued: <KitchenTicketStatus>{
       KitchenTicketStatus.preparing,
       KitchenTicketStatus.cancelled,
@@ -144,10 +143,7 @@ class OrderRepository {
       computedLines.map((line) => line.discountMinor),
       'discount',
     );
-    final tax = _sumAmounts(
-      computedLines.map((line) => line.taxMinor),
-      'tax',
-    );
+    final tax = _sumAmounts(computedLines.map((line) => line.taxMinor), 'tax');
     final total = _checkedAmount(
       BigInt.from(subtotal) - BigInt.from(discount) + BigInt.from(tax),
       'order total',
@@ -389,7 +385,9 @@ class OrderRepository {
         whereArgs: <Object?>[ticket['id'], currentStatus.storageValue],
       );
       if (ticketChanges != 1) {
-        throw StateError('Kitchen ticket changed concurrently; reload the order.');
+        throw StateError(
+          'Kitchen ticket changed concurrently; reload the order.',
+        );
       }
 
       final orderChanges = await transaction.update(
@@ -403,7 +401,9 @@ class OrderRepository {
         whereArgs: <Object?>[orderId, organizationId, branchId],
       );
       if (orderChanges != 1) {
-        throw StateError('Parent order changed concurrently; reload the order.');
+        throw StateError(
+          'Parent order changed concurrently; reload the order.',
+        );
       }
 
       final eventId = _uuid.v4();
@@ -529,16 +529,14 @@ class OrderRepository {
 
     final baseAmount =
         (BigInt.from(line.unitPriceMinor) * BigInt.from(line.quantityMilli) +
-                BigInt.from(500)) ~/
-            BigInt.from(1000);
+            BigInt.from(500)) ~/
+        BigInt.from(1000);
     final subtotal = _checkedAmount(baseAmount, 'line subtotal');
     if (line.discountMinor > subtotal) {
       throw ArgumentError('Line discount cannot exceed the line subtotal.');
     }
     final lineTotal = _checkedAmount(
-      baseAmount -
-          BigInt.from(line.discountMinor) +
-          BigInt.from(line.taxMinor),
+      baseAmount - BigInt.from(line.discountMinor) + BigInt.from(line.taxMinor),
       'line total',
     );
     return _ComputedLine(
@@ -565,10 +563,7 @@ class OrderRepository {
     return value.toInt();
   }
 
-  String _fingerprint(
-    CreateOrderDraft draft,
-    List<_ComputedLine> lines,
-  ) {
+  String _fingerprint(CreateOrderDraft draft, List<_ComputedLine> lines) {
     final canonicalPayload = <String, Object?>{
       'organizationId': draft.organizationId,
       'branchId': draft.branchId,
