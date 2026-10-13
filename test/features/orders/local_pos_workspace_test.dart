@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mizzy/core/database/mizzy_database.dart';
-import 'package:mizzy/features/orders/presentation/local_pos_workspace.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
+
+import 'package:mizzy/core/database/mizzy_database.dart';
+import 'package:mizzy/features/orders/presentation/local_pos_workspace.dart';
 
 void main() {
   setUpAll(() {
