@@ -160,7 +160,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _createAccount ? 'Create your Mizzy account' : 'Welcome back',
+                          _createAccount
+                              ? 'Create your Mizzy account'
+                              : 'Welcome back',
                           style: theme.textTheme.headlineSmall,
                           textAlign: TextAlign.center,
                         ),
@@ -177,7 +179,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.username, AutofillHints.email],
+                          autofillHints: const [
+                            AutofillHints.username,
+                            AutofillHints.email,
+                          ],
                           autocorrect: false,
                           decoration: const InputDecoration(
                             labelText: 'Email',
@@ -250,9 +255,15 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
-                                : Text(_createAccount ? 'Create account' : 'Sign in'),
+                                : Text(
+                                    _createAccount
+                                        ? 'Create account'
+                                        : 'Sign in',
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -345,7 +356,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final organizationName = _organizationController.text.trim();
     final branchName = _branchController.text.trim();
     if (organizationName.isEmpty || branchName.isEmpty) {
-      setState(() => _error = 'Enter both a restaurant name and first branch name.');
+      setState(
+        () => _error = 'Enter both a restaurant name and first branch name.',
+      );
       return;
     }
 
@@ -371,7 +384,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       if (mounted) setState(() => _error = error.message);
     } on ArgumentError catch (error) {
       if (mounted) {
-        setState(() => _error = error.message?.toString() ?? 'Review the fields.');
+        setState(
+          () => _error = error.message?.toString() ?? 'Review the fields.',
+        );
       }
     } on Object {
       if (mounted) {
@@ -391,7 +406,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       await widget.repository.signOut();
     } on Object {
       if (mounted) {
-        setState(() => _error = 'Sign-out failed. Check the connection and retry.');
+        setState(
+          () => _error = 'Sign-out failed. Check the connection and retry.',
+        );
       }
     }
   }
@@ -450,7 +467,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                 : () => setState(() => _showCreateForm = !_showCreateForm),
             icon: const Icon(Icons.add_business_outlined),
             label: Text(
-              _showCreateForm ? 'Cancel new workspace' : 'Create a restaurant workspace',
+              _showCreateForm
+                  ? 'Cancel new workspace'
+                  : 'Create a restaurant workspace',
             ),
           ),
           if (_showCreateForm) ...[
