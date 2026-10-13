@@ -147,6 +147,11 @@ void main() {
     expect(table['status'], 'occupied');
     expect(table['sync_state'], 'pending');
     expect(order?['table_id'], tableId);
+    final listedOrders = await repository.listOrders(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+    expect(listedOrders.single['table_name'], table['name']);
     expect(await rawDatabase.query('orders'), hasLength(1));
     expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
     },
