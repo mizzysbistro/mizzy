@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:mizzy/core/database/mizzy_database.dart';
@@ -285,6 +286,29 @@ void main() {
     expect(rows.last['status'], 'pending');
   });
 
+  test('missing server RPC is retryable and does not quarantine the event', () async {
+    await createOrder();
+    transport.orderPostgrestFailure = PostgrestException(
+      message: 'function not found in schema cache',
+      code: 'PGRST202',
+    );
+
+    final result = await worker.syncOnce(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    expect(result.retried, 1);
+    expect(result.conflicts, 0);
+    final rows = await (await database.open()).query(
+      'sync_outbox',
+      orderBy: 'created_at ASC, rowid ASC',
+    );
+    expect(rows.first['status'], 'failed');
+    expect(rows.first['last_error'], 'server_unavailable');
+    expect(rows.last['status'], 'pending');
+  });
+
   test('malformed outbox payload is quarantined without a network write', () async {
     await createOrder();
     final db = await database.open();
@@ -319,6 +343,7 @@ class _FakeCloudSyncTransport implements CloudSyncTransport {
   Map<String, Object?>? ticket;
   Map<String, Object?>? lastOrderParameters;
   SyncRemoteFailure? orderFailure;
+  PostgrestException? orderPostgrestFailure;
   int saveOrderCalls = 0;
 
   @override
@@ -330,6 +355,8 @@ class _FakeCloudSyncTransport implements CloudSyncTransport {
     lastOrderParameters = parameters;
     final failure = orderFailure;
     if (failure != null) throw failure;
+    final serverFailure = orderPostgrestFailure;
+    if (serverFailure != null) throw serverFailure;
 
     final lines = parameters['p_lines']! as List<Object?>;
     var totalMinor = 0;

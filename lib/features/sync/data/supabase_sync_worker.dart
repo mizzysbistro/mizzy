@@ -119,7 +119,11 @@ class SupabaseCloudSyncTransport implements CloudSyncTransport {
       if (code == '429' || code == 'PGRST003') {
         throw const SyncRemoteFailure.retryable(SyncFailureCode.rateLimited);
       }
-      if (code.startsWith('5') || code == 'PGRST000') {
+      if (code.startsWith('5') ||
+          code == 'PGRST000' ||
+          code == 'PGRST202') {
+        // Missing RPC/schema-cache responses describe server deployment state,
+        // not a permanent defect in this individual local event.
         throw const SyncRemoteFailure.retryable(
           SyncFailureCode.serverUnavailable,
         );
@@ -133,7 +137,6 @@ class SupabaseCloudSyncTransport implements CloudSyncTransport {
         'P0002',
         '0A000',
         '22003',
-        'PGRST202',
       }.contains(code) ||
           code.startsWith('22') ||
           code.startsWith('23')) {
@@ -821,7 +824,6 @@ class AuthenticatedOutboxSyncWorker {
         'P0002',
         '0A000',
         '22003',
-        'PGRST202',
       }.contains(code) ||
       code.startsWith('22') ||
       code.startsWith('23');
@@ -833,7 +835,9 @@ class AuthenticatedOutboxSyncWorker {
     if (code == '429' || code == 'PGRST003') {
       return SyncFailureCode.rateLimited;
     }
-    if (code.startsWith('5') || code == 'PGRST000') {
+    if (code.startsWith('5') ||
+        code == 'PGRST000' ||
+        code == 'PGRST202') {
       return SyncFailureCode.serverUnavailable;
     }
     return SyncFailureCode.unknown;

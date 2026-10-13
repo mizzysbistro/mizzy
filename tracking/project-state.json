@@ -69,7 +69,7 @@
     "Stacked P2 source/SQL tests remain unverified because Actions jobs fail before any steps; no authenticated upload/pull worker or remote catalog sync is implemented.",
     "No dedicated Mizzy Supabase project is configured. Connected-project inventory currently lists only projects named `pos` and `banawe`; repository boundaries prohibit repurposing older POS projects without explicit authorization. No new project or paid resources were provisioned."
   ],
-  "next_action": "Complete static code review of PR #23 role permissions, verify AuthRepository helper maps to SQL RPC roles, and keep worker unwired until CI is restored. Account owner must inspect Actions quota/settings or escalate to GitHub Support; no billing limit was changed.",
+  "next_action": "Final static review of worker retry/permanent classification; restore Actions runner availability under issue #13, then execute role-matrix, worker and full Flutter gates, Gitleaks, Android build, local Supabase migrations/pgTAP and independent security review before enabling sync.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -182,7 +182,8 @@
     "Added a draft authenticated SQLite outbox worker implementing save_order upload, server-confirmed Kitchen-ticket verification, and stable-event Kitchen transition RPC replay; added six worker tests with fake server transport. Not wired into production UI and not verified.",
     "Hardened the P2 worker so ticket-create acknowledgment replays save_order with the same idempotency key/payload and requires already_saved=true and matching ticket ID, instead of depending on direct Kitchen-ticket SELECT grants.",
     "Fixed sync-worker role-handling design: per-event role denial now yields a retryable role_not_permitted state rather than falsely quarantining a valid Kitchen transition from a Counter-only account; added a regression test. Not yet executed.",
-    "Added AuthRepository.canPerformSyncEvent with a fail-closed role matrix matching SQL RPCs, plus six pure permission tests for owner/manager/counter/Kitchen role capabilities. These tests are authored but unexecuted; server authorization remains authoritative."
+    "Added AuthRepository.canPerformSyncEvent with a fail-closed role matrix matching SQL RPCs, plus six pure permission tests for owner/manager/counter/Kitchen role capabilities. These tests are authored but unexecuted; server authorization remains authoritative.",
+    "Changed PGRST202 RPC/schema-cache failures to retryable server_unavailable instead of permanent conflict and added a regression test. Tests remain unexecuted."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
