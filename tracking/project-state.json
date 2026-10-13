@@ -32,17 +32,20 @@
     "secret_scan_passed": true,
     "sqlite_schema_and_order_repository_committed": true,
     "supabase_guarded_client_bootstrap_committed": true,
-    "supabase_local_ci_configured": true
+    "supabase_local_ci_configured": true,
+    "supabase_migrations_passed": true,
+    "supabase_pgtap_passed": true,
+    "flutter_format_analyze_tests_passed": true
   },
   "blockers": [
-    "Flutter and Supabase CI are running; no successful end-to-end Flutter tests, APK build, or database/RLS test completion has been captured yet.",
+    "Android debug APK build and artifact upload are still running; no downloadable artifact or checksum has been confirmed.",
     "No real Android phone/tablet installation, peripheral/printer, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
     "User-facing Counter, Orders, Kitchen, inventory and purchasing screens are not yet connected to the local repository.",
-    "Authentication lifecycle, trusted membership management, full role coverage, offline sync/reconnect and conflict resolution remain incomplete.",
+    "Authentication lifecycle, trusted membership management, adversarial authorization coverage for P1 write RPCs, offline sync/reconnect and conflict resolution remain incomplete.",
     "GitHub labels/milestones are not supported by the currently available connector actions."
   ],
-  "next_action": "Resolve the current Flutter CI run and inspect the isolated Supabase CI run; use test logs to fix SQL/source failures, then continue P0 auth/role integration and connect the shared SQLite order flow to Counter, Orders and Kitchen. Keep P0-P6 production gate open until evidence is complete.",
+  "next_action": "Finish the current Android debug APK build and save its checksum; then implement and test the Counter/Orders/Kitchen UI over the shared local order repository, add adversarial authorization tests for P1 write RPCs, and continue P0-P6 without deploying external resources.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -96,7 +99,10 @@
     "Added versioned SQLite schema and transactional local order repository with one logical order shared by Order/Kitchen views, idempotent retries, immutable sale-line snapshots and transactional outbox.",
     "Added guarded Supabase client bootstrap and explicit build-time public-key configuration validation that rejects privileged service-role credential formats.",
     "Added a local Supabase CLI config and CI workflow for fresh-database migration, schema and RLS tests.",
-    "Observed Gitleaks succeed with no leaks found; observed Flutter CI format and analyzer failures and recorded them instead of claiming success."
+    "Observed Gitleaks succeed with no leaks found; observed Flutter CI format and analyzer failures and recorded them instead of claiming success.",
+    "Added P1 menu, restaurant table, logical order, order-line snapshot, kitchen ticket and cash-payment schema with branch-scoped RLS, least-privilege client grants and server-side RPCs.",
+    "Added 27-assertion P1 catalog/grant test; fresh local Supabase migration run applied all migrations and all 66 pgTAP assertions passed.",
+    "Observed Flutter CI pass strict Dart formatting, static analysis, unit/widget tests and secret scan; Android debug APK build is still in progress."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -135,5 +141,5 @@
   ],
   "flutter_app_created": true,
   "apk_built": false,
-  "build_test_status": "not_yet_verified"
+  "build_test_status": "flutter_format_analyze_tests_passed; apk_build_in_progress; supabase_pgtap_passed_66_assertions"
 }
