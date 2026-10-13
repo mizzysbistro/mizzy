@@ -61,13 +61,13 @@ git -C "$selection_repo" init -q -b feature/test-selection
 git -C "$selection_repo" config user.name "Mizzy Agent Loop Test"
 git -C "$selection_repo" config user.email "mizzy-agent-loop-test@example.invalid"
 printf 'void main() {}\n' > "$selection_repo/test/changed_test.dart"
-printf 'void main() {}\\n' > "$selection_repo/test/deleted_test.dart"
+printf 'void main() {}\n' > "$selection_repo/test/deleted_test.dart"
 git -C "$selection_repo" add test
 git -C "$selection_repo" commit -qm "fixture: test discovery baseline"
 printf '// changed\n' >> "$selection_repo/test/changed_test.dart"
 git -C "$selection_repo" add test/changed_test.dart
 rm "$selection_repo/test/deleted_test.dart"
-printf 'void main() {}\\n' > "$selection_repo/test/new_untracked_test.dart"
+printf 'void main() {}\n' > "$selection_repo/test/new_untracked_test.dart"
 selected="$(cd "$selection_repo" && mizzy_changed_test_files)"
 grep -Fxq "test/changed_test.dart" <<< "$selected" ||
   fail "staged tracked test was not discovered"
@@ -83,4 +83,4 @@ rm -f "$selection_repo/test/new_untracked_test.dart"
 selected="$(cd "$selection_repo" && mizzy_changed_test_files)"
 [[ -z "$selected" ]] || fail "test discovery should be empty for a clean test tree"
 
-echo "PASS: launcher refuses protected main branch and dirty working tree"
+echo "PASS: launcher guards, critical routing, and fast test discovery"
