@@ -39,17 +39,17 @@
     "apk_sha256_recorded": false,
     "p1_order_rpc_behavior_tests_passed": true,
     "local_counter_orders_kitchen_ui_committed": true,
-    "local_pos_ui_ci_passed": false
+    "local_pos_ui_ci_passed": true
   },
   "blockers": [
-    "Strict CI validation of the new local POS UI is running; the previous analyzer failure was corrected, but the latest run must pass analysis, tests, Android build and checksum upload.",
-    "Local POS demo uses sample menu items and is explicitly local-only; it does not provide live cloud sync, real payment capture, production catalog management or table assignment.",
+    "Android debug APK build and APK SHA-256 recording for the new local Counter/Orders/Kitchen UI are still running in workflow 38421231622.",
     "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
+    "Local POS demo uses a static sample menu and takeaway-only orders; production catalog, table assignment, cash-session/payment UI and real cloud sync are not implemented.",
     "Additional adversarial RPC coverage for concurrent duplicate submissions, overpayment, stale prices, illegal kitchen transitions and cross-branch access remains incomplete; offline sync/reconnect and conflict resolution remain incomplete.",
     "Authentication lifecycle and trusted membership management remain incomplete."
   ],
-  "next_action": "Complete the current strict CI run and record the APK checksum, then add integration/widget tests for the local Counter-to-Orders-to-Kitchen flow and expand the catalog/table/payment workflows without enabling real payments or hosted sync before authorization and security gates pass.",
+  "next_action": "Finish APK build/checksum run 38421231622, record the artifact digest, then expand local POS integration tests and branch-scoped catalog/table/payment flows while keeping hosted sync and real payments disabled until their security gates pass.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -155,7 +155,7 @@
   ],
   "flutter_app_created": true,
   "apk_built": false,
-  "build_test_status": "supabase_pgtap_passed_including_p1_order_rpc_behavior; flutter_format_analyze_tests_passed; debug_apk_build_with_apk_sha256_in_progress",
+  "build_test_status": "strict_flutter_format_analyze_widget_unit_tests_passed; supabase_pgtap_81_assertions_passed; local_pos_debug_apk_build_in_progress; apk_sha256_pending",
   "debug_apk_artifact": {
     "workflow_run_id": 38417639115,
     "branch": "ci/p1-pos-validation",
