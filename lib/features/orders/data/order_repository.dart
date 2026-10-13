@@ -497,6 +497,9 @@ class OrderRepository {
     if (draft.orderType == MizzyOrderType.dineIn && draft.tableId == null) {
       throw ArgumentError('Dine-in orders must be assigned to a table.');
     }
+    if (draft.orderType != MizzyOrderType.dineIn && draft.tableId != null) {
+      throw ArgumentError('Only dine-in orders can be assigned to a table.');
+    }
     if (draft.currencyCode.length != 3 ||
         draft.currencyCode != draft.currencyCode.toUpperCase()) {
       throw ArgumentError.value(
