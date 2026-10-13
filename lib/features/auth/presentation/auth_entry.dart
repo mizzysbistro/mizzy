@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/database/mizzy_database.dart';
 import '../../catalog/data/cloud_catalog_repository.dart';
+import '../../tables/data/cloud_table_repository.dart';
 import '../../orders/presentation/local_pos_workspace.dart';
 import '../data/auth_repository.dart';
 
@@ -372,30 +373,38 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     required String organizationId,
     required String branchId,
   }) async {
+    Future<bool> hasBranchAccess({
+      required String organizationId,
+      required String branchId,
+    }) async {
+      final organizations = await widget.repository.listMyOrganizations();
+      return organizations.any(
+        (organization) =>
+            organization.id == organizationId &&
+            organization.branches.any(
+              (assignedBranch) =>
+                  assignedBranch.id == branchId &&
+                  assignedBranch.organizationId == organizationId,
+            ),
+      );
+    }
     final catalog = CloudCatalogRepository(
       database: database,
       source: SupabaseCloudCatalogSource(client: Supabase.instance.client),
-      hasBranchAccess: ({
-        required String organizationId,
-        required String branchId,
-      }) async {
-        final organizations = await widget.repository.listMyOrganizations();
-        return organizations.any(
-          (organization) =>
-              organization.id == organizationId &&
-              organization.branches.any(
-                (assignedBranch) =>
-                    assignedBranch.id == branchId &&
-                    assignedBranch.organizationId == organizationId,
-              ),
-        );
-      },
+      hasBranchAccess: hasBranchAccess,
     );
-    final result = await catalog.syncBranch(
-      organizationId: organizationId,
-      branchId: branchId,
+    final tables = CloudTableRepository(
+      database: database,
+      source: SupabaseCloudTableSource(client: Supabase.instance.client),
+      hasBranchAccess: hasBranchAccess,
     );
-    return result.conflicts;
+    final catalogResult = await catalog.syncBranch(
+      organizationId: organizationId, branchId: branchId,
+    );
+    final tableResult = await tables.syncBranch(
+      organizationId: organizationId, branchId: branchId,
+    );
+    return catalogResult.conflicts + tableResult.conflicts;
   }
 
   Future<void> _createOrganization() async {
