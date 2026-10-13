@@ -42,18 +42,21 @@
     "local_pos_ui_ci_passed": true,
     "local_order_repository_integration_tests_added": true,
     "local_branch_scope_and_concurrent_idempotency_tests_added": true,
-    "order_repository_public_database_constructor_fix_committed": true
+    "order_repository_public_database_constructor_fix_committed": true,
+    "local_order_id_in_idempotency_fingerprint_committed": true,
+    "idempotency_key_cross_order_id_reuse_test_added": true,
+    "readme_ci_status_corrected": true
   },
   "blockers": [
-    "GitHub Actions cannot currently validate the newest source: Flutter and Supabase runs 38425041168 and 38425041163 failed before any steps started; GitHub job records show runner_id 0 and empty steps. The failed jobs were retried but still have no actionable test logs. Check GitHub-hosted runner/Actions availability and usage limits without enabling paid billing.",
-    "Newest SQLite integration tests for tenant/branch scoping and simultaneous idempotent retries have not obtained a successful CI result.",
-    "Debug APK remains development-only and was built from tested commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include current integration-test coverage.",
-    "No real Android phone/tablet installation, printer/peripheral, signing, upgrade, or production release validation has been performed.",
+    "GitHub Actions cannot currently validate latest source. Runs 38425928242 and 38425928255 for commit c8e1ac850da9bb11c65d440d4dbbd9849c2e7ef0 failed before any steps; job records show runner_id 0, empty steps and no logs. A distinct retry on prior CI attempts also failed. Owner must check Actions availability and usage limits; do not enable paid billing as workaround without approval.",
+    "Seven SQLite order repository integration tests, including branch scope, concurrent idempotency, and idempotency-key/order-ID mismatch, have not received successful CI evidence.",
+    "Recorded debug APK is development-only from commit 95a9528338085b2f2a057362e9b8fd5c066e6b81; it does not include the latest repository constructor/fingerprint changes or expanded tests.",
+    "No real Android phone/tablet install, printer/peripheral, release signing, upgrade or production release validation has been performed.",
     "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
-    "Local Counter/Orders/Kitchen UI still uses a sample menu and local-only storage; cloud sync, production catalog/table management, and real payments are not enabled.",
-    "Authentication lifecycle, trusted membership management, offline sync/reconnect/conflict handling, and further adversarial cross-branch/payment validation remain incomplete."
+    "Local Counter/Orders/Kitchen UI still uses a sample menu and local-only storage; cloud sync, production catalog/table management and real payments are not enabled.",
+    "Trusted staff invitation/membership lifecycle, partial offline sync/reconnect/conflict handling, and remaining adversarial cross-branch/payment validation are incomplete."
   ],
-  "next_action": "Resolve GitHub Actions runner availability without enabling paid billing or making the private repository public. Then rerun formatter, analyzer, Flutter tests (including six SQLite integration tests), Android debug APK build, secret scan, and Supabase migration/pgTAP. Keep PR #11 unmerged until all checks pass; after verification continue authentication/membership/RLS and offline sync work.",
+  "next_action": "Continue safe P1 work and strengthen test coverage while preserving the new test-only status. Resolve the repository's GitHub Actions runner availability (issue 13) without paid provisioning or making the repository public; then rerun strict format/analyze, the full seven-test SQLite integration suite, secret scan, Android debug APK build and Supabase migration/pgTAP. Keep PR 11 unmerged until these gates pass. Implement staff invitation and branch-role administration only through a trusted server-side workflow (issue 14), then proceed to P2 offline sync and reconciliation.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -94,6 +97,11 @@
       "task_id": "P1-01",
       "url": "https://github.com/mizzysbistro/mizzy/issues/12",
       "status": "open"
+    },
+    {
+      "task_id": "P0-08",
+      "url": "https://github.com/mizzysbistro/mizzy/issues/14",
+      "status": "open"
     }
   ],
   "completed_in_this_step": [
@@ -126,7 +134,13 @@
     "Fixed OrderRepository's inaccessible private named database parameter and committed the public database: constructor parameter to main and ci/p1-order-rpc-validation.",
     "Added two SQLite integration tests for strict organization/branch visibility and simultaneous idempotent retries creating exactly one order, ticket, and outbox pair.",
     "Investigated failed validation runs 38425041168 and 38425041163; job API evidence showed runner_id 0, empty steps, and no job logs, so added GitHub issue 13 as an external CI availability blocker.",
-    "Retried failed Flutter and Supabase workflow jobs once; the retry did not provide a passing run."
+    "Retried failed Flutter and Supabase workflow jobs once; the retry did not provide a passing run.",
+    "Fixed OrderRepository's public constructor dependency on main and validation branch.",
+    "Added organization/branch visibility tests and simultaneous idempotent save tests.",
+    "Included the logical order ID in the canonical idempotency fingerprint and added a test that rejects reusing one idempotency key across different order IDs.",
+    "Updated README to describe the local-only Counter/Orders/Kitchen demo and distinguish an older green APK build from current unverified changes.",
+    "Created issue 14 for trusted staff invitations and branch-role management; reviewed that direct membership and audit table writes remain denied.",
+    "Captured a new failure-before-first-step CI result on commit c8e1ac850da9bb11c65d440d4dbbd9849c2e7ef0 and updated project-state rather than claiming a pass."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -165,11 +179,16 @@
     "9ff6f04d245d95fbe4f58dedafac4127a642fdb6",
     "2b776eddbbe8449f1fd3d607bb5a9ac14751e949",
     "62751efce6d88682ca6477e43e9878a12d2e807f",
-    "f1fc4b37ec62a645ec135ce564e4f65a5ea968ff"
+    "f1fc4b37ec62a645ec135ce564e4f65a5ea968ff",
+    "e17d6b027b1e465c3dd990e151b1d6faa63620e2",
+    "00d4bd51b3af84dbdb4170eb832c84e817c61cc1",
+    "43eacc438c9c68681bcd090a33fccfe77a9d5033",
+    "c8e1ac850da9bb11c65d440d4dbbd9849c2e7ef0",
+    "7c37d534a9048d7cec9cfd4938ceb938d253dc3a"
   ],
   "flutter_app_created": true,
-  "apk_built": false,
-  "build_test_status": "strict_flutter_format_analyze_widget_unit_tests_passed; supabase_pgtap_81_assertions_passed; local_pos_debug_apk_build_in_progress; apk_sha256_pending",
+  "apk_built": true,
+  "build_test_status": "Last verified green commit 95a9528338085b2f2a057362e9b8fd5c066e6b81: 17 Flutter tests plus format/analyze, secret scan, Android debug APK build, and Supabase migration/pgTAP passed. Current P1 commit c8e1ac850da9bb11c65d440d4dbbd9849c2e7ef0 adds three more SQLite integration checks but is not verified: latest Flutter and Supabase jobs failed before steps (runner_id=0, empty steps). The recorded APK is older and development-only.",
   "debug_apk_artifact": {
     "workflow_run_id": 38417639115,
     "branch": "ci/p1-pos-validation",
@@ -200,14 +219,14 @@
   },
   "latest_ci_attempt": {
     "validation_branch": "ci/p1-order-rpc-validation",
-    "tested_commit": "f1fc4b37ec62a645ec135ce564e4f65a5ea968ff",
-    "flutter_run_id": 38425041168,
-    "supabase_run_id": 38425041163,
+    "tested_commit": "c8e1ac850da9bb11c65d440d4dbbd9849c2e7ef0",
+    "flutter_run_id": 38425928242,
+    "supabase_run_id": 38425928255,
     "flutter_conclusion": "failure_before_first_step",
     "supabase_conclusion": "failure_before_first_step",
-    "retry_attempt": 2,
-    "evidence": "GitHub job API records had runner_id=0, empty steps arrays, and no downloadable job logs; failures occurred within seconds. This is treated as a runner/Actions availability blocker rather than a test pass or a confirmed source-test failure.",
+    "retry_attempt": 1,
+    "evidence": "Latest jobs started and completed within about two seconds, reported runner_id=0 with empty steps arrays, and exposed no actionable test logs. The previous distinct retry also failed before steps. This does not prove an application test failure or pass.",
     "tracking_issue": "https://github.com/mizzysbistro/mizzy/issues/13",
-    "status": "blocked_pending_runner_availability"
+    "status": "blocked_pending_actions_runner_availability"
   }
 }
