@@ -565,6 +565,7 @@ class OrderRepository {
 
   String _fingerprint(CreateOrderDraft draft, List<_ComputedLine> lines) {
     final canonicalPayload = <String, Object?>{
+      'orderId': draft.orderId,
       'organizationId': draft.organizationId,
       'branchId': draft.branchId,
       'orderType': draft.orderType.storageValue,
