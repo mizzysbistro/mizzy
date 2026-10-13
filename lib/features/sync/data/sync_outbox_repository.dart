@@ -272,7 +272,9 @@ class SyncOutboxRepository {
       ],
     );
     if (changed != 1) {
-      throw StateError('Only a leased event in this branch can be quarantined.');
+      throw StateError(
+        'Only a leased event in this branch can be quarantined.',
+      );
     }
   }
 
