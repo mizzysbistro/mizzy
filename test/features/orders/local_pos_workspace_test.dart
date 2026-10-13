@@ -100,6 +100,26 @@ void main() {
       expect(orders.single['table_id'], isNotNull);
       expect(tables.single['status'], 'occupied');
 
+      final catalog = await rawDatabase.query(
+        'catalog_items',
+        where: 'organization_id = ? AND branch_id = ? AND is_active = ?',
+        whereArgs: <Object?>[
+          orders.single['organization_id'],
+          orders.single['branch_id'],
+          1,
+        ],
+      );
+      final lines = await rawDatabase.query(
+        'order_lines',
+        where: 'order_id = ?',
+        whereArgs: <Object?>[orders.single['id']],
+      );
+      expect(catalog, hasLength(6));
+      expect(lines, hasLength(1));
+      expect(lines.single['catalog_item_id'], isNotNull);
+      expect(lines.single['sku_snapshot'], 'MIZ-ADOB-001');
+      expect(lines.single['item_name_snapshot'], 'Chicken Adobo');
+
       await tester.tap(find.text('Tables'));
       await tester.pumpAndSettle();
       expect(find.text('OCCUPIED'), findsOneWidget);
