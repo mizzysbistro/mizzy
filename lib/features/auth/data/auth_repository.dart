@@ -213,6 +213,63 @@ class AuthRepository {
 
     return List<OrganizationAccess>.unmodifiable(organizations);
   }
+
+  /// Client-side preflight for the current user's role in a branch.
+  ///
+  /// This helper prevents the sync worker from needlessly quarantining valid
+  /// events when the active account is signed into a different staff role.
+  /// The server RPC/RLS remains authoritative and must recheck every write.
+  Future<bool> canPerformSyncEvent({
+    required String organizationId,
+    required String branchId,
+    required String entityType,
+    required String operation,
+  }) async {
+    final organizations = await listMyOrganizations();
+    for (final organization in organizations) {
+      if (organization.id != organizationId) continue;
+      for (final branch in organization.branches) {
+        if (branch.id != branchId ||
+            branch.organizationId != organizationId) {
+          continue;
+        }
+        return allowsSyncEventForRoles(
+          organizationRole: organization.role,
+          branchRole: branch.role,
+          entityType: entityType,
+          operation: operation,
+        );
+      }
+    }
+    return false;
+  }
+
+  /// Pure role matrix so sync event permissions can be tested without a live
+  /// Supabase session. These are preflight rules, not an authorization boundary.
+  static bool allowsSyncEventForRoles({
+    required String organizationRole,
+    required String branchRole,
+    required String entityType,
+    required String operation,
+  }) {
+    if (organizationRole == 'owner' || branchRole == 'owner' ||
+        branchRole == 'manager') {
+      return (entityType == 'order' && operation == 'create') ||
+          (entityType == 'kitchen_ticket' &&
+              (operation == 'create' || operation == 'transition'));
+    }
+
+    if ((entityType == 'order' && operation == 'create') ||
+        (entityType == 'kitchen_ticket' && operation == 'create')) {
+      // Kitchen-create verifies/replays save_order; its RPC requires counter
+      // or manager privileges because save_order creates the ticket atomically.
+      return branchRole == 'counter';
+    }
+    if (entityType == 'kitchen_ticket' && operation == 'transition') {
+      return branchRole == 'kitchen';
+    }
+    return false;
+  }
 }
 
 class AuthInputValidator {

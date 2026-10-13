@@ -69,7 +69,7 @@
     "Stacked P2 source/SQL tests remain unverified because Actions jobs fail before any steps; no authenticated upload/pull worker or remote catalog sync is implemented.",
     "No dedicated Mizzy Supabase project is configured. Connected-project inventory currently lists only projects named `pos` and `banawe`; repository boundaries prohibit repurposing older POS projects without explicit authorization. No new project or paid resources were provisioned."
   ],
-  "next_action": "Obtain independent review of stacked PRs #18/#19 and restore Actions runners under issue 13. A disposable Supabase test project/local stack and CLI are required to execute the new migration/pgTAP checks; do not repurpose existing `pos`/`banawe` projects or create paid resources without approval. Then run Flutter/Dart gates and implement authenticated upload/pull sync only after the server RPC and catalog contracts pass.",
+  "next_action": "Final static review of worker retry/permanent classification; restore Actions runner availability under issue #13, then execute role-matrix, worker and full Flutter gates, Gitleaks, Android build, local Supabase migrations/pgTAP and independent security review before enabling sync.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -178,7 +178,12 @@
     "Prepared a draft P2 outbox dependency-ordering patch on a dedicated feature branch: kitchen-ticket creation depends on parent-order delivery, and Kitchen transitions chain behind the previous ticket event. Added a regression test; not verified because Flutter/Dart are unavailable in this execution environment and GitHub Actions runner jobs fail before any steps.",
     "Extended draft PR #18 with safe v1→v2 legacy outbox dependency backfill, per-branch dependency scope checks, unresolved legacy event quarantine, and migration/cross-branch regression tests. This source and test change remains unverified pending toolchain/CI runner recovery.",
     "Prepared a stacked P2 server-side sync contract PR with an idempotent Kitchen-transition receipt RPC, expected-from-status conflict protection, branch/role validation, and pgTAP cases for replay, changed-payload reuse, stale state, invalid transitions, and unauthorized roles. Execution remains unverified; Actions runner issue 13 is still active.",
-    "Checked the connected Supabase project inventory; only projects named pos and banawe were listed. Preserved the independent-project boundary and did not alter or provision any Supabase resource."
+    "Checked the connected Supabase project inventory; only projects named pos and banawe were listed. Preserved the independent-project boundary and did not alter or provision any Supabase resource.",
+    "Added a draft authenticated SQLite outbox worker implementing save_order upload, server-confirmed Kitchen-ticket verification, and stable-event Kitchen transition RPC replay; added six worker tests with fake server transport. Not wired into production UI and not verified.",
+    "Hardened the P2 worker so ticket-create acknowledgment replays save_order with the same idempotency key/payload and requires already_saved=true and matching ticket ID, instead of depending on direct Kitchen-ticket SELECT grants.",
+    "Fixed sync-worker role-handling design: per-event role denial now yields a retryable role_not_permitted state rather than falsely quarantining a valid Kitchen transition from a Counter-only account; added a regression test. Not yet executed.",
+    "Added AuthRepository.canPerformSyncEvent with a fail-closed role matrix matching SQL RPCs, plus six pure permission tests for owner/manager/counter/Kitchen role capabilities. These tests are authored but unexecuted; server authorization remains authoritative.",
+    "Changed PGRST202 RPC/schema-cache failures to retryable server_unavailable instead of permanent conflict and added a regression test. Tests remain unexecuted."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
