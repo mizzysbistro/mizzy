@@ -4,7 +4,8 @@ import '../config/app_environment.dart';
 
 enum CloudBootstrapStatus {
   notConfigured,
-  ready,
+  clientInitialized,
+  initializationFailed,
 }
 
 /// Initializes Supabase only when build-time public configuration is valid.
@@ -31,6 +32,6 @@ class SupabaseBootstrap {
       );
     }
 
-    return CloudBootstrapStatus.ready;
+    return CloudBootstrapStatus.clientInitialized;
   }
 }
