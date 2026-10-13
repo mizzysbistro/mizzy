@@ -42,10 +42,7 @@ class MizzyApp extends StatelessWidget {
 }
 
 class FoundationScreen extends StatelessWidget {
-  const FoundationScreen({
-    super.key,
-    required this.cloudBootstrapStatus,
-  });
+  const FoundationScreen({super.key, required this.cloudBootstrapStatus});
 
   final CloudBootstrapStatus cloudBootstrapStatus;
 
@@ -67,16 +64,14 @@ class FoundationScreen extends StatelessWidget {
                   CloudBootstrapStatus.initializationFailed =>
                     'Cloud client initialization failed',
                 },
-                child: Icon(
-                  switch (cloudBootstrapStatus) {
-                    CloudBootstrapStatus.notConfigured =>
-                      Icons.cloud_off_outlined,
-                    CloudBootstrapStatus.clientInitialized =>
-                      Icons.cloud_done_outlined,
-                    CloudBootstrapStatus.initializationFailed =>
-                      Icons.cloud_off_outlined,
-                  },
-                ),
+                child: Icon(switch (cloudBootstrapStatus) {
+                  CloudBootstrapStatus.notConfigured =>
+                    Icons.cloud_off_outlined,
+                  CloudBootstrapStatus.clientInitialized =>
+                    Icons.cloud_done_outlined,
+                  CloudBootstrapStatus.initializationFailed =>
+                    Icons.cloud_off_outlined,
+                }),
               ),
             ),
           ),
@@ -160,10 +155,7 @@ class _StatusRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Text(label)),
           const SizedBox(width: 12),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          Text(value, style: Theme.of(context).textTheme.labelLarge),
         ],
       ),
     );
