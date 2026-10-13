@@ -125,6 +125,10 @@ if [[ "$CRITICAL_TASK" -eq 1 && "$VERIFY_MODE" != "full" ]]; then
   echo "ROUTE: critical task overrides MIZZY_VERIFY=$VERIFY_MODE; using full verification."
   VERIFY_MODE="full"
 fi
+if [[ "$VERIFY_MODE" == "full" && "${MIZZY_RUN_SUPABASE_TESTS:-0}" != "1" ]]; then
+  echo "ROUTE: full verification enables local Supabase DB tests."
+  MIZZY_RUN_SUPABASE_TESTS=1
+fi
 if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
   echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
   exit 2
