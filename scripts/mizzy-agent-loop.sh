@@ -98,6 +98,10 @@ if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
   }
 fi
 MAX_TURNS="${MIZZY_AGENT_MAX_TURNS:-8}"
+if [[ ! "$MAX_TURNS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "ERROR: MIZZY_AGENT_MAX_TURNS must be a positive integer." >&2
+  exit 2
+fi
 MAX_ATTEMPTS=3
 
 choose_provider() {
@@ -155,8 +159,9 @@ if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-RUN_DIR="$ROOT/.agent-runs/${STAMP}-${TASK_SLUG}"
-mkdir -p "$RUN_DIR"
+RUN_BASE="$ROOT/.agent-runs/${STAMP}-${TASK_SLUG}"
+mkdir -p "$ROOT/.agent-runs"
+RUN_DIR="$(mktemp -d "${RUN_BASE}.XXXXXX")"
 CHECK_FAILED=0
 CHECK_SUMMARY="$RUN_DIR/verification-summary.txt"
 
@@ -257,7 +262,109 @@ run_verification() {
   elif [[ -n "${MIZZY_TARGET_TEST:-}" ]]; then
     run_check focused-flutter-test flutter test "$MIZZY_TARGET_TEST"
   else
-    run_check flutter-tests flutter test
+    # Fast path: run every test file changed by the implementer. If no test
+    # file changed, fall back to the full suite so implementation edits cannot
+    # accidentally skip regression coverage.
+    mapfile -t changed_tests < <(git diff --name-only -- 'test/*_test.dart' 'test/**/*.dart' | grep -E '^test/.*_test\.dart
+
+  if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
+    run_check supabase-local-tests supabase test db
+  fi
+}
+
+extract_verdict() {
+  local file="$1"
+  local verdict
+  verdict="$(grep -E '^VERDICT:[[:space:]]*(PASS|CHANGES_REQUIRED|BLOCKED)' "$file" 2>/dev/null | tail -n 1 | sed -E 's/^VERDICT:[[:space:]]*//')" || true
+  printf '%s' "${verdict:-MISSING}"
+}
+
+make_reviewer_prompt() {
+  local attempt="$1"
+  cat > "$RUN_DIR/reviewer-prompt.md" <<PROMPT
+You are a strictly READ-ONLY independent reviewer. Read AGENT.md and docs/agent-orchestration.md.
+Do not edit files, run mutating commands, commit, push, or change settings.
+Review the full uncommitted diff against HEAD, the relevant tests, and these logs:
+- $CHECK_SUMMARY
+- Files in $RUN_DIR
+
+Task and acceptance criteria:
+$TASK_DESCRIPTION
+
+Review correctness, missing tests, branch/tenant scope, money/idempotency, error states,
+security, regressions, style, and scope. Cite file:line for each actionable finding.
+Do not report a test passed unless the log explicitly says it did.
+On the FIRST line output exactly one:
+VERDICT: PASS
+VERDICT: CHANGES_REQUIRED
+VERDICT: BLOCKED
+Then provide severity-ranked findings, evidence and a short rationale. If verification logs
+show infrastructure/tooling blockers, say so explicitly instead of inferring code failure.
+Review pass: $attempt
+PROMPT
+}
+
+attempt=1
+prior_context=""
+final_verdict="BLOCKED"
+while (( attempt <= MAX_ATTEMPTS )); do
+  IMPLEMENTER_FAILED=0
+  REVIEWER_FAILED=0
+  make_implementer_prompt "$attempt" "$prior_context"
+  if ! run_agent "$IMPLEMENTER" implementer "$RUN_DIR/implementer-prompt.md" "$RUN_DIR/implementer-${attempt}.log" "$RUN_DIR/implementer-${attempt}-final.txt"; then
+    IMPLEMENTER_FAILED=1
+    prior_context="The previous implementer process exited non-zero. Inspect $RUN_DIR/implementer-${attempt}.log; diagnose before modifying further."
+  fi
+
+  echo
+  echo "=== Verification attempt $attempt / $MAX_ATTEMPTS ==="
+  run_verification
+
+  make_reviewer_prompt "$attempt"
+  if ! run_agent "$REVIEWER" reviewer "$RUN_DIR/reviewer-prompt.md" "$RUN_DIR/reviewer-${attempt}.log" "$RUN_DIR/reviewer-${attempt}-final.txt"; then
+    REVIEWER_FAILED=1
+    echo "Reviewer process failed. Review evidence is incomplete." | tee -a "$CHECK_SUMMARY"
+  fi
+  final_verdict="$(extract_verdict "$RUN_DIR/reviewer-${attempt}-final.txt")"
+
+  if [[ "$CHECK_FAILED" -eq 0 && "$final_verdict" == "PASS" && "$IMPLEMENTER_FAILED" -eq 0 && "$REVIEWER_FAILED" -eq 0 ]]; then
+    echo
+    echo "PASS: local verification and review completed. No GitHub write/merge/deploy was performed."
+    echo "Evidence folder: $RUN_DIR"
+    exit 0
+  fi
+
+  if [[ "$final_verdict" == "BLOCKED" && "$CHECK_FAILED" -eq 0 ]]; then
+    echo "BLOCKED: reviewer could not verify the change. See $RUN_DIR."
+    exit 1
+  fi
+
+  if (( attempt == MAX_ATTEMPTS )); then
+    echo "STOP: reached $MAX_ATTEMPTS distinct attempts. No commit/push/merge/deploy was performed."
+    echo "Last reviewer verdict: $final_verdict"
+    echo "Verification summary:"
+    cat "$CHECK_SUMMARY"
+    echo "Evidence folder: $RUN_DIR"
+    exit 1
+  fi
+
+  prior_context="Previous attempt $attempt did not pass. Read the implementation/reviewer logs and verification summary in $RUN_DIR. Address only actionable code/test findings. If the blocker is runner/dependency availability or another infrastructure issue, do not invent a code fix. Prior summary:
+$(cat "$CHECK_SUMMARY" 2>/dev/null || true)
+Reviewer output:
+$(cat "$RUN_DIR/reviewer-${attempt}-final.txt" 2>/dev/null || true)
+"
+  ((attempt += 1))
+done
+ || true)
+    if (( ${#changed_tests[@]} > 0 )); then
+      local test_index=0
+      for test_file in "${changed_tests[@]}"; do
+        ((test_index += 1))
+        run_check "focused-flutter-test-${test_index}" flutter test "$test_file"
+      done
+    else
+      run_check flutter-tests flutter test
+    fi
   fi
 
   if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
