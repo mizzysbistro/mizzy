@@ -98,6 +98,26 @@ void main() {
     expect(orders, hasLength(1));
   });
 
+  test('an idempotency key cannot be reused for a different order ID', () async {
+    final key = const Uuid().v4();
+    await repository.saveOrder(
+      draft(orderId: const Uuid().v4(), idempotencyKey: key),
+    );
+
+    await expectLater(
+      repository.saveOrder(
+        draft(orderId: const Uuid().v4(), idempotencyKey: key),
+      ),
+      throwsStateError,
+    );
+
+    final orders = await repository.listOrders(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+    expect(orders, hasLength(1));
+  });
+
   test('Kitchen status changes are reflected in the same Orders record', () async {
     final orderId = const Uuid().v4();
     await repository.saveOrder(
