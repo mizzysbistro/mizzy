@@ -56,4 +56,56 @@ void main() {
       await database.close();
     },
   );
+
+  testWidgets(
+    'table layout assigns one dine-in table to the saved order',
+    (tester) async {
+      final database = MizzyDatabase(
+        factory: databaseFactoryFfi,
+        databaseName: 'mizzy-table-widget-${const Uuid().v4()}.db',
+      );
+      addTearDown(database.close);
+
+      await tester.pumpWidget(
+        MaterialApp(home: LocalPosWorkspace(database: database)),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tables'));
+      await tester.pumpAndSettle();
+      expect(find.text('Use table'), findsNWidgets(8));
+
+      await tester.tap(find.text('Use table').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Dine-in'), findsOneWidget);
+      expect(find.text('Table: T1'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Add Chicken Adobo'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save & send to Kitchen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Order #1'), findsOneWidget);
+      expect(find.text('SAVED · dine_in · T1'), findsOneWidget);
+
+      final rawDatabase = await database.open();
+      final orders = await rawDatabase.query('orders');
+      final tables = await rawDatabase.query(
+        'restaurant_tables',
+        where: 'name = ?',
+        whereArgs: const <Object?>['T1'],
+      );
+      expect(orders, hasLength(1));
+      expect(orders.single['order_type'], 'dine_in');
+      expect(orders.single['table_id'], isNotNull);
+      expect(tables.single['status'], 'occupied');
+
+      await tester.tap(find.text('Tables'));
+      await tester.pumpAndSettle();
+      expect(find.text('OCCUPIED'), findsOneWidget);
+      expect(find.text('Use table'), findsNWidgets(7));
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
