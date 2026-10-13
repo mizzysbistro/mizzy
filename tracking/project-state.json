@@ -85,6 +85,11 @@
       "task_id": "P0-07",
       "url": "https://github.com/mizzysbistro/mizzy/issues/7",
       "status": "open"
+    },
+    {
+      "task_id": "P1-01",
+      "url": "https://github.com/mizzysbistro/mizzy/issues/12",
+      "status": "open"
     }
   ],
   "completed_in_this_step": [
@@ -110,7 +115,8 @@
     "Successfully built and uploaded debug APK artifact 11825148547 from Flutter run 38417639115; artifact ZIP SHA-256 digest recorded, with APK-level checksum pending the follow-up workflow run.",
     "The P1 order RPC behavior test step passed in Supabase workflow run 38418953622, covering idempotent order save, server-calculated total, single order/line/ticket, kitchen transitions, Kitchen-role denial, cash completion and table release.",
     "Added a clearly labeled local-only Counter, Orders and Kitchen UI over the shared SQLite OrderRepository. Saving from Counter writes one order and one kitchen ticket; Orders and Kitchen read the same local parent order, and Kitchen transitions update that order.",
-    "The first UI CI analysis found an inaccessible private named-parameter call; corrected the callsite to the public constructor parameter name and restarted strict CI validation."
+    "The first UI CI analysis found an inaccessible private named-parameter call; corrected the callsite to the public constructor parameter name and restarted strict CI validation.",
+    "Created P1-01 GitHub issue to track Counter → Orders → Kitchen integration, acceptance criteria and remaining validation gaps."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
