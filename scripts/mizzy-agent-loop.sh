@@ -5,7 +5,7 @@ set -Eeuo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  scripts/mizzy-agent-loop.sh <task-slug> <task description>
+  bash scripts/mizzy-agent-loop.sh <task-slug> <task description>
 
 Required:
   Run from a clean feature branch in the Mizzy repo.
@@ -14,10 +14,10 @@ Required:
 Optional environment:
   MIZZY_IMPLEMENTER=auto|codex|claude   (default: auto, prefer Codex)
   MIZZY_REVIEWER=auto|codex|claude|same (default: independent provider if available)
-  MIZZY_VERIFY=targeted|full            (default: targeted)
+  MIZZY_VERIFY=auto|targeted|full       (default: auto; critical scope selects full)
   MIZZY_TARGET_TEST=test/path_test.dart (targeted test; unset runs all Flutter tests)
   MIZZY_AGENT_MAX_TURNS=8              (Claude Code turn cap)
-  MIZZY_RUN_SUPABASE_TESTS=1            (opt in to local 'supabase test db')
+  MIZZY_RUN_SUPABASE_TESTS=1            (required for Supabase/RLS/migration tasks; local only)
 USAGE
 }
 
@@ -74,13 +74,32 @@ if [[ "$has_codex" -eq 0 && "$has_claude" -eq 0 ]]; then
   exit 2
 fi
 
-VERIFY_MODE="${MIZZY_VERIFY:-targeted}"
-if [[ "$VERIFY_MODE" != "targeted" && "$VERIFY_MODE" != "full" ]]; then
-  echo "ERROR: MIZZY_VERIFY must be 'targeted' or 'full'." >&2
+VERIFY_REQUEST="${MIZZY_VERIFY:-auto}"
+TASK_LOWER="${TASK_DESCRIPTION,,}"
+TASK_REQUIRES_SUPABASE=0
+if [[ "$TASK_LOWER" =~ (supabase|migration|rls|row.level.security|tenant.isolation) ]]; then
+  TASK_REQUIRES_SUPABASE=1
+fi
+case "$VERIFY_REQUEST" in
+  auto)
+    if [[ "$TASK_LOWER" =~ (auth|rls|tenant|branch|payment|refund|cash.session|inventory|stock|sync|migration|security|release|production|backup|restore|financial) ]]; then
+      VERIFY_MODE="full"
+    else
+      VERIFY_MODE="targeted"
+    fi
+    ;;
+  targeted|full) VERIFY_MODE="$VERIFY_REQUEST" ;;
+  *)
+    echo "ERROR: MIZZY_VERIFY must be 'auto', 'targeted' or 'full'." >&2
+    exit 2
+    ;;
+esac
+if [[ "$TASK_REQUIRES_SUPABASE" -eq 1 && "${MIZZY_RUN_SUPABASE_TESTS:-0}" != "1" ]]; then
+  echo "BLOCKED: this task references Supabase/RLS/migrations. Set MIZZY_RUN_SUPABASE_TESTS=1 with a working local Supabase CLI and Docker stack before coding." >&2
   exit 2
 fi
 if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
-  echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
+  echo "ERROR: selected full verification requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
   exit 2
 fi
 if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
@@ -97,6 +116,7 @@ if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
     exit 2
   }
 fi
+echo "Selected verification lane: $VERIFY_MODE"
 MAX_TURNS="${MIZZY_AGENT_MAX_TURNS:-8}"
 MAX_ATTEMPTS=3
 
@@ -244,6 +264,7 @@ run_check() {
 run_verification() {
   CHECK_FAILED=0
   : > "$CHECK_SUMMARY"
+  echo "Verification lane: $VERIFY_MODE" | tee -a "$CHECK_SUMMARY"
   run_check diff-check git diff --check
   run_check dart-format dart format --output=none --set-exit-if-changed lib test
   run_check flutter-analyze flutter analyze
