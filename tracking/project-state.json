@@ -332,6 +332,12 @@
     ],
     "verification": {
       "github_pr_diff_reviewed": true,
+      "latest_static_review_findings": [
+        "Detected truncated shell syntax in the targeted-test-selection edit before merge; repaired the full run_verification function at commit 23516e1f71623525e5e440621e9bab7da69360c5.",
+        "Expanded critical task keyword detection to inspect both task slug and description and include security, billing/refund/tax, idempotency/replay, production and deployment terms.",
+        "Targeted test discovery includes staged/unstaged tracked changes and untracked test files, while skipping deleted tests and falling back to the full suite when no current test file changed."
+      ],
+      "latest_static_fix_commit": "a95ec88ba155be77a8b5fea0cb60ca0b2e955867",
       "static_review_fixes": [
         "Validate MIZZY_AGENT_MAX_TURNS as a positive integer before starting agents.",
         "Automatically route security/financial/sync/release keywords to critical lane and refuse PASS when independent cross-provider review is unavailable.",
