@@ -253,7 +253,7 @@ declare
     v_line_total numeric;
     v_subtotal numeric := 0;
     v_order_total bigint;
-    v_currency text := 'PHP';
+    v_currency text;
     v_line_count integer;
     v_item_count integer := 0;
     v_table_status text;
