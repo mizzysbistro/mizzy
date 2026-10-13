@@ -25,6 +25,12 @@ Before editing, define:
 
 Implement the smallest testable change. Prefer test-first defect work. Report only commands actually run and their exit status. Inspect the full diff and check the test logs independently.
 
+## Strict completion gate
+- The first line of both implementer and reviewer output must be exactly `VERDICT: PASS`, `VERDICT: CHANGES_REQUIRED`, or `VERDICT: BLOCKED`. The coordinator accepts success only when the first line is exactly `VERDICT: PASS` for both providers, every required command passes, and neither CLI exits nonzero. A successful CLI exit alone is never a task PASS.
+- Codex implementer runs in `workspace-write`; Codex reviewer runs in `read-only`. Claude implementer runs in `acceptEdits`; Claude reviewer runs in `plan`. The separate reviewer must not edit.
+- The launcher must verify origin is the independent `mizzysbistro/mizzy` repository. Never run in sibling POS repos.
+- The fast test selector covers staged/unstaged tracked and untracked tests, filters deleted paths, and falls back to the full suite when no current test file changed. At PR/release boundaries use `MIZZY_VERIFY=full` and run local Supabase tests only when explicitly enabled and Docker is ready.
+
 ## Repair loop
 1. Inspect current issue/PR/commit and relevant files.
 2. Implement one small patch.
