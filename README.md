@@ -37,7 +37,7 @@ Dashboard, POS, tables, orders, kitchen, inventory, purchasing, employees, repor
 Implemented in source (verification status varies by commit; see CI links below):
 
 - Versioned SQLite schema and persisted device/installation ID.
-- Local Counter, Orders, and Kitchen demo screens backed by one SQLite order repository. Saving an order writes immutable line snapshots, one kitchen ticket, and outbox operations in one transaction; Kitchen transitions update the same parent order.
+- Local Counter, Tables, Orders, and Kitchen demo screens backed by one SQLite order repository. The table grid supports dine-in selection, transactional table occupancy/release, and table names in Orders; saving an order writes immutable line snapshots, one kitchen ticket, and outbox operations in one transaction. Kitchen transitions update the same parent order, and cancellation is blocked when any captured payment exists until refund handling is implemented.
 - Retry/idempotency protections, including order-ID-aware request fingerprints, branch-scoped reads, legal Kitchen transitions, and scoped organization/branch access tests.
 - Build-time Supabase configuration validation and guarded client initialization.
 - Draft versioned Supabase tenant/branch migration and database catalog/grant smoke-test SQL.
@@ -46,7 +46,7 @@ Implemented in source (verification status varies by commit; see CI links below)
 Not yet verified or complete:
 
 - Earlier green CI at commit `95a9528338085b2f2a057362e9b8fd5c066e6b81` passed formatter, analyzer, 17 Flutter tests, secret scan, Android debug APK build, and local Supabase migration/pgTAP validation ([Flutter run](https://github.com/mizzysbistro/mizzy/actions/runs/38421231622); [database run](https://github.com/mizzysbistro/mizzy/actions/runs/38421231810)).
-- The expanded SQLite order repository suite (nine tests) and the Counter → Orders → Kitchen screen-level widget test are **not yet verified**. Latest PR CI jobs failed before any workflow step started (`runner_id: 0`, empty steps and no logs); see [CI blocker issue #13](https://github.com/mizzysbistro/mizzy/issues/13). Do not infer a test failure or success from those runs.
+- The expanded SQLite order repository suite (13 tests) and two local POS widget tests (Counter → Orders → Kitchen, plus dine-in table selection) are **not yet verified**. Latest PR CI jobs failed before any workflow step started (`runner_id: 0`, empty steps and no logs); see [CI blocker issue #13](https://github.com/mizzysbistro/mizzy/issues/13). Do not infer a test failure or success from those runs.
 - No hosted Supabase project is connected; authenticated cloud POS flows, real-time synchronization and production payment processing are not active.
 - The Counter/Orders/Kitchen UI is still local-only and uses a sample menu. Inventory, purchasing and reporting have not been connected to operational screens.
 - The recorded debug APK is an older development artifact, not a signed production release; no production database, signed release APK, hardware validation or store publication has been created.
