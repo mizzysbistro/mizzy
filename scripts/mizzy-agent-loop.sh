@@ -158,6 +158,13 @@ if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
   echo "NOTICE: reviewer uses the same provider in a separate read-only session; independent provider review is not available."
 fi
 
+# Critical POS/security work must not pass on a same-provider self-review.
+CRITICAL_TASK=0
+if printf '%s' "$TASK_DESCRIPTION" | grep -Eiq '(auth|RLS|tenant|branch[- ]scope|payment|financial|inventory|stock|offline|sync|migration|release|backup|restore)'; then
+  CRITICAL_TASK=1
+  echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
+fi
+
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 RUN_BASE="$ROOT/.agent-runs/${STAMP}-${TASK_SLUG}"
 mkdir -p "$ROOT/.agent-runs"
@@ -328,8 +335,17 @@ while (( attempt <= MAX_ATTEMPTS )); do
   final_verdict="$(extract_verdict "$RUN_DIR/reviewer-${attempt}-final.txt")"
 
   if [[ "$CHECK_FAILED" -eq 0 && "$final_verdict" == "PASS" && "$IMPLEMENTER_FAILED" -eq 0 && "$REVIEWER_FAILED" -eq 0 ]]; then
+    if [[ "$CRITICAL_TASK" -eq 1 && "$REVIEWER" == "$IMPLEMENTER" ]]; then
+      echo "BLOCKED: local checks completed, but critical work requires an independent cross-provider reviewer. See $RUN_DIR."
+      exit 1
+    fi
     echo
-    echo "PASS: local verification and review completed. No GitHub write/merge/deploy was performed."
+    if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
+      echo "PASS WITH LIMITATION: local verification passed; review used the same provider in read-only mode, not an independent cross-provider reviewer."
+    else
+      echo "PASS: local verification and independent cross-provider review completed."
+    fi
+    echo "No GitHub write/merge/deploy was performed."
     echo "Evidence folder: $RUN_DIR"
     exit 0
   fi
