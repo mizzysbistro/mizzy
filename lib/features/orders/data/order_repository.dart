@@ -200,6 +200,29 @@ class OrderRepository {
       );
       final localOrderNumber = numberRows.single['next_number']! as int;
       final timestamp = _timestamp();
+      if (draft.orderType == MizzyOrderType.dineIn) {
+        final tableChanges = await transaction.update(
+          'restaurant_tables',
+          <String, Object?>{
+            'status': 'occupied',
+            'updated_at': timestamp,
+            'sync_state': 'pending',
+          },
+          where:
+              'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
+          whereArgs: <Object?>[
+            draft.tableId,
+            draft.organizationId,
+            draft.branchId,
+            'available',
+          ],
+        );
+        if (tableChanges != 1) {
+          throw StateError(
+            'The selected table is unavailable or belongs to another branch.',
+          );
+        }
+      }
       final ticketId = _uuid.v4();
 
       await transaction.insert('orders', <String, Object?>{
@@ -364,13 +387,27 @@ class OrderRepository {
 
       final orderRows = await transaction.query(
         'orders',
-        columns: <String>['id'],
+        columns: <String>['id', 'table_id'],
         where: 'id = ? AND organization_id = ? AND branch_id = ?',
         whereArgs: <Object?>[orderId, organizationId, branchId],
         limit: 1,
       );
       if (orderRows.isEmpty) {
         throw StateError('The scoped parent order does not exist.');
+      }
+      if (nextStatus == KitchenTicketStatus.cancelled) {
+        final capturedPayments = await transaction.query(
+          'payments',
+          columns: <String>['id'],
+          where: 'order_id = ? AND status = ?',
+          whereArgs: <Object?>[orderId, 'captured'],
+          limit: 1,
+        );
+        if (capturedPayments.isNotEmpty) {
+          throw StateError(
+            'Paid orders require an authorized refund before cancellation.',
+          );
+        }
       }
 
       final timestamp = _timestamp();
@@ -404,6 +441,33 @@ class OrderRepository {
         throw StateError(
           'Parent order changed concurrently; reload the order.',
         );
+      }
+
+      if (nextStatus == KitchenTicketStatus.cancelled) {
+        final tableId = orderRows.single['table_id'] as String?;
+        if (tableId != null) {
+          final tableChanges = await transaction.update(
+            'restaurant_tables',
+            <String, Object?>{
+              'status': 'available',
+              'updated_at': timestamp,
+              'sync_state': 'pending',
+            },
+            where:
+                'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
+            whereArgs: <Object?>[
+              tableId,
+              organizationId,
+              branchId,
+              'occupied',
+            ],
+          );
+          if (tableChanges != 1) {
+            throw StateError(
+              'The dine-in table could not be released consistently.',
+            );
+          }
+        }
       }
 
       final eventId = _uuid.v4();
