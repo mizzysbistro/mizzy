@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   secret-scan:
@@ -53,17 +53,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Format Dart files and export canonical source for repair
+      - name: Apply canonical Dart formatting on validation branch
         run: |
           dart format lib test
-          git diff -- lib test
           git diff --check
-          for file in lib/features/orders/data/order_repository.dart lib/main.dart test/order_repository_test.dart; do
-            echo "FORMAT_FILE_B64_BEGIN:$file"
-            base64 -w0 "$file"
-            echo
-            echo "FORMAT_FILE_B64_END:$file"
-          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib test
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply canonical Dart formatting for CI validation"
+            git push origin HEAD
+          fi
 
       - name: Static analysis
         run: flutter analyze
