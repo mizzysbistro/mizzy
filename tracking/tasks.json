@@ -394,6 +394,7 @@
       "Added tests for scope denial, active/inactive import, price update vs. immutable order snapshot, removed/reused SKU, unsynced local conflict, foreign-branch rejection, malformed data and session requirement. Tests are authored but not yet executed.",
       "Added an additional test proving local-only catalog rows in a cloud branch are quarantined and hidden until they can be reconciled to a server-owned UUID.",
       "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts.",
+      "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged.",
       "Stacked draft PR #22 wires branch selection to a POS workspace that refreshes the branch-scoped cloud catalog before display, keeps demo menu/table seeding isolated to local demo mode, disables Dine-in until cloud table sync exists, and truthfully labels orders/Kitchen/payments local. A widget test is authored but not executed."
     ],
     "attempt_count": 0,

@@ -182,6 +182,7 @@
     "Drafted CloudCatalogRepository and tests on feat/p1-cloud-catalog-cache: stable cloud item UUIDs, full paginated pull, inactive-item/deleted-cache deactivation, SKU-reuse handling, conflict quarantine for unsynced local changes, and protection of sale-line snapshots. Auth/UI wiring and verification remain outstanding.",
     "Hardened P1-02 catalog cache to quarantine local-only menu rows in a cloud-scoped branch unless they map to a server-owned catalog UUID; added a regression test.",
     "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive.",
+    "Fixed cloud catalog reconciliation so quarantined local-only rows release a SKU only when a different cloud catalog UUID currently owns that SKU; added regression test proving valid cloud product remains active.",
     "Drafted authenticated branch-card selection into a branch-scoped POS workspace using the cloud catalog cache. The selected branch is rechecked through AuthRepository before catalog pull; cloud branches skip local demo menu/table seeding and explicitly keep orders, tables, Kitchen and payments local.",
     "Added a cloud-branch widget test verifying only the injected cloud catalog loads and a saved local order preserves the selected org/branch and cloud catalog UUID."
   ],
