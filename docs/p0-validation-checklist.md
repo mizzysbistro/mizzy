@@ -4,7 +4,7 @@ This checklist is intentionally evidence-driven. The CI validation branch applie
 
 ## Flutter and Android gates
 
-The current P0 validation run also includes the AuthEntry, sign-in/signup and owner-workspace bootstrap code. This is a new code path; validate it before adding the POS workspace screens.
+The current P0 validation run also includes the AuthEntry, sign-in/signup and owner-workspace bootstrap code. This is a new code path; validate it before adding the POS workspace screens. Email confirmation may be required according to the project's Supabase Auth settings.
 
 - [ ] `flutter pub get` completes and dependency resolution is recorded in the committed lockfile.
 - [ ] `dart format --output=none --set-exit-if-changed lib test` passes without modifying source.
