@@ -175,7 +175,8 @@
     "Added AGENTS.md and CLAUDE.md shared project guardrails, plus docs/agent-orchestration.md defining fast/standard/critical lanes, single-writer coordination, independent review and evidence-based verdicts.",
     "Added reusable Mizzy smart-loop skill under .agents/skills and .claude/skills.",
     "Added scripts/mizzy-agent-loop.sh for local Codex/Claude CLI selection, clean non-main branch checks, bounded repair attempts, verification and read-only review; it never commits, pushes, merges, deploys or provisions.",
-    "Added CI shell syntax/help smoke test and documented the local launcher."
+    "Added CI shell syntax/help smoke test and documented the local launcher.",
+    "Added CI smoke coverage that checks launcher syntax/help and verifies the launcher refuses the protected main branch and dirty working trees before requiring any model CLI."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -270,7 +271,9 @@
     "35f1c557dbf6f8ffb4fdb26a2a505db90aebd454",
     "9ec759c8ed6d6038bd3113cad67336da5089348a",
     "49d20710ee436916710745a53909c4454097efac",
-    "b24aabf8099a589e29a3ea4178baff55879a2780"
+    "b24aabf8099a589e29a3ea4178baff55879a2780",
+    "c4d219f0158a905af47c1496822be03f1f3d4f9a",
+    "5ee97581fbe4eb2b00a08b3d23061bb363dd65bd"
   ],
   "flutter_app_created": true,
   "apk_built": true,
@@ -333,7 +336,15 @@
       "shell_syntax_ci_pending": true,
       "codex_cli_executed_in_this_session": false,
       "claude_code_executed_in_this_session": false,
-      "flutter_ci_pending": "Existing GitHub Actions runner issue #13 prevents reliable validation; do not claim the new shell or Flutter checks passed."
+      "flutter_ci_pending": "Existing GitHub Actions runner issue #13 prevents reliable validation; do not claim the new shell or Flutter checks passed.",
+      "guard_smoke_test_added": true,
+      "guard_smoke_test_ci_pending": true,
+      "latest_observed_workflow_run": {
+        "run_id": 38431426089,
+        "tested_commit": "b24aabf8099a589e29a3ea4178baff55879a2780",
+        "conclusion": "failure_before_first_step",
+        "evidence": "Both jobs reported runner_id=0 and zero steps. This run predates the latest shell guard smoke test and does not validate it."
+      }
     },
     "safety_boundaries": [
       "Launcher does not commit, push, merge, deploy, provision or alter repository settings",
@@ -341,6 +352,6 @@
       "No external agent output is claimed unless actually run",
       "External CLIs must be installed and authenticated on the developer machine"
     ],
-    "next_action": "Resolve GitHub Actions runner availability issue #13. Then validate bash -n and --help smoke test, test launcher refusal on main and dirty working trees, run it on a clean feature branch with at least one authenticated CLI, and confirm the read-only review cannot edit files. Keep PR 17 draft until current-head checks actually execute and pass."
+    "next_action": "Wait for GitHub Actions runner availability issue #13 to be resolved; do not spam retries. Then validate the latest PR head: bash syntax/help, guard smoke test (main and dirty-tree rejection), full Flutter formatting/analyzer/tests, secret scan, local Supabase migration/pgTAP, and Android debug APK. On a local development machine, validate the launcher with authenticated Codex/Claude CLI and independently confirm the reviewer is read-only. Keep PR 17 draft until evidence is green."
   }
 }
