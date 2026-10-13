@@ -67,7 +67,7 @@
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
     "P1 cloud catalog repository is drafted but not integrated into authenticated POS flow or tested; order-upload worker must remain disabled until branch authorization, catalog ID mapping, price reconciliation and CI pass."
   ],
-  "next_action": "Review stacked PRs #21/#22 for cloud catalog cache and authenticated branch selection. Actions runner issue #13 blocks all verification; owner/admin must inspect Actions settings/account limits without paid workaround. Run formatter, analyzer, Flutter suite, Gitleaks, debug APK and fresh local Supabase migration/pgTAP before starting authenticated outbox upload.",
+  "next_action": "Review PRs #18/#19/#21/#22, restore Actions runner availability under issue #13, and run formatter/analyzer/full Flutter suite/secret scan/Android build plus local Supabase migration/pgTAP. Then complete tested outbox upload/pull sync, cloud table sync, and authorization/security review before any production release.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -184,7 +184,8 @@
     "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive.",
     "Fixed cloud catalog reconciliation so quarantined local-only rows release a SKU only when a different cloud catalog UUID currently owns that SKU; added regression test proving valid cloud product remains active.",
     "Drafted authenticated branch-card selection into a branch-scoped POS workspace using the cloud catalog cache. The selected branch is rechecked through AuthRepository before catalog pull; cloud branches skip local demo menu/table seeding and explicitly keep orders, tables, Kitchen and payments local.",
-    "Added a cloud-branch widget test verifying only the injected cloud catalog loads and a saved local order preserves the selected org/branch and cloud catalog UUID."
+    "Added a cloud-branch widget test verifying only the injected cloud catalog loads and a saved local order preserves the selected org/branch and cloud catalog UUID.",
+    "Fixed cloud workspace startup to load the verified SQLite catalog cache after a cloud refresh failure and keep order sync visibly disabled; added an offline startup widget regression test."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

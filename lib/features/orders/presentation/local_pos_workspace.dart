@@ -150,13 +150,21 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       });
 
       if (_isCloudWorkspace) {
-        final conflicts = await widget.cloudCatalogRefresh!(
-          database: _database,
-          organizationId: organizationId,
-          branchId: branchId,
-        );
-        if (!mounted) return;
-        setState(() => _notice = _catalogRefreshNotice(conflicts));
+        try {
+          final conflicts = await widget.cloudCatalogRefresh!(
+            database: _database,
+            organizationId: organizationId,
+            branchId: branchId,
+          );
+          if (!mounted) return;
+          setState(() => _notice = _catalogRefreshNotice(conflicts));
+        } on Object {
+          if (!mounted) return;
+          setState(
+            () => _error =
+                'Cloud menu refresh failed. Showing any verified catalog cached on this device; cloud order sync remains disabled.',
+          );
+        }
       } else {
         // Never create sample menu/table rows inside a real cloud branch scope.
         await _ensureDemoTables(organizationId, branchId);

@@ -395,10 +395,11 @@
       "Added an additional test proving local-only catalog rows in a cloud branch are quarantined and hidden until they can be reconciled to a server-owned UUID.",
       "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts.",
       "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged.",
-      "Stacked draft PR #22 wires branch selection to a POS workspace that refreshes the branch-scoped cloud catalog before display, keeps demo menu/table seeding isolated to local demo mode, disables Dine-in until cloud table sync exists, and truthfully labels orders/Kitchen/payments local. A widget test is authored but not executed."
+      "Stacked draft PR #22 wires branch selection to a POS workspace that refreshes the branch-scoped cloud catalog before display, keeps demo menu/table seeding isolated to local demo mode, disables Dine-in until cloud table sync exists, and truthfully labels orders/Kitchen/payments local. A widget test is authored but not executed.",
+      "Cloud workspace startup now catches catalog-refresh failures separately and still loads the verified local SQLite cache; a new widget regression test verifies cached products remain available for local order saving while the cloud-sync limitation is displayed. Authored but not executed."
     ],
     "attempt_count": 0,
-    "blocker": "Catalog cache and branch POS wiring are in draft PRs #21/#22, unverified. Authenticated outbox upload, cloud table/Kitchen/payment sync, and catalog mutation remain unfinished; CI runner issue #13 persists.",
+    "blocker": "Cloud catalog and branch POS wiring plus offline startup fallback are draft-only and unverified; Actions jobs continue to fail before steps. The catalog worker/order upload and table/Kitchen/payment sync are not implemented.",
     "approval_required": false,
     "next_action": "Review stacked PR #21/#22 and restore Actions runners; run Dart format, analyzer, all Flutter tests, secret scan and Android debug APK plus local Supabase migration/pgTAP. Then implement cloud table sync and the authenticated outbox worker only after catalog/auth scope tests pass.",
     "updated_at": "2026-10-14",
