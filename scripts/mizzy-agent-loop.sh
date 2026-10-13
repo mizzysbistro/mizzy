@@ -79,6 +79,24 @@ if [[ "$VERIFY_MODE" != "targeted" && "$VERIFY_MODE" != "full" ]]; then
   echo "ERROR: MIZZY_VERIFY must be 'targeted' or 'full'." >&2
   exit 2
 fi
+if [[ "$VERIFY_MODE" == "full" ]] && ! command -v gitleaks >/dev/null 2>&1; then
+  echo "ERROR: full mode requires the local 'gitleaks' CLI. Install/configure it before starting agents." >&2
+  exit 2
+fi
+if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
+  command -v supabase >/dev/null 2>&1 || {
+    echo "ERROR: Supabase tests were requested but the Supabase CLI is missing." >&2
+    exit 2
+  }
+  command -v docker >/dev/null 2>&1 || {
+    echo "ERROR: Supabase tests were requested but Docker is missing." >&2
+    exit 2
+  }
+  docker info >/dev/null 2>&1 || {
+    echo "ERROR: Docker is not ready; start the local container engine before agent execution." >&2
+    exit 2
+  }
+fi
 MAX_TURNS="${MIZZY_AGENT_MAX_TURNS:-8}"
 MAX_ATTEMPTS=3
 
@@ -133,12 +151,7 @@ if [[ "$REVIEWER" == "same" ]]; then
   REVIEWER="$IMPLEMENTER"
 fi
 if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
-  REVIEW_SANDBOX="read-only"
-  REVIEW_PERMISSION="plan"
   echo "NOTICE: reviewer uses the same provider in a separate read-only session; independent provider review is not available."
-else
-  REVIEW_SANDBOX="read-only"
-  REVIEW_PERMISSION="plan"
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -239,12 +252,7 @@ run_verification() {
     run_check flutter-tests flutter test
     run_check android-debug-apk flutter build apk --debug
 
-    if command -v gitleaks >/dev/null 2>&1; then
-      run_check gitleaks gitleaks git --redact
-    else
-      printf 'BLOCKED: gitleaks CLI not installed; rely on GitHub secret-scan gate.\n' | tee -a "$CHECK_SUMMARY"
-      CHECK_FAILED=1
-    fi
+    run_check gitleaks gitleaks git --redact
 
     if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
       if command -v supabase >/dev/null 2>&1; then
