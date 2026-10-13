@@ -42,6 +42,9 @@ Use: not_started, in_progress, blocked, failed, verified, deferred, cancelled. I
 ## Execution loop
 Inspect real state -> select highest-priority safe task -> define criteria -> implement a small reversible change -> run targeted tests -> inspect diff -> diagnose and repair failures -> run regressions -> record evidence -> update GitHub -> continue. Reopen earlier tasks if regressions occur. If GitHub is temporarily unavailable, preserve local state and reconcile later.
 
+## Multi-agent routing
+Use `docs/agent-orchestration.md` for the fast/standard/critical lanes and the single-writer rule. Read `AGENTS.md` for shared coding-agent instructions and `CLAUDE.md` for Claude Code. Use `.agents/skills/mizzy-smart-loop/SKILL.md` in Codex-compatible runtimes and `.claude/skills/mizzy-smart-loop/SKILL.md` in Claude Code. On a development machine, `bash scripts/mizzy-agent-loop.sh <task-slug> "<task description>"` runs a bounded local loop. The launcher requires a clean feature branch and does not commit, push, merge, deploy or provision services.
+
 ## Recovery
 Capture exact errors and reproduction steps; classify; reproduce; diagnose; make the smallest safe fix; test the original failure then regressions. Make up to three distinct safe attempts. Never disable security, bypass RLS, suppress meaningful failures, hardcode secrets, or blindly replay financial operations. Stop immediately on risk to credentials, customer data, irreversible deletion, payment integrity, unapproved spending, or production security.
 
