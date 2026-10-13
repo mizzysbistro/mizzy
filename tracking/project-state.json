@@ -319,7 +319,7 @@
     "status": "blocked_pending_actions_runner_availability"
   },
   "smart_agent_loop": {
-    "status": "implemented_pending_hosted_validation",
+    "status": "implemented_pending_current_head_verification",
     "pull_request": "https://github.com/mizzysbistro/mizzy/pull/17",
     "branch": "feat/smart-agent-loop",
     "capabilities": [
@@ -335,7 +335,7 @@
     ],
     "verification": {
       "github_pr_diff_reviewed": true,
-      "current_launcher_blob_sha": "db887b649faa8703a50e2a79798b74d62a9f713b",
+      "current_launcher_blob_sha": "fea1ebf9821188986d18d2cdb273ffb58d5bfa62",
       "current_helper_blob_sha": "e8c0b34bcba26a1c0f48b427fdcaf8c77577058a",
       "launcher_and_helper_hashes_matched_local_tested_copies": false,
       "local_bash_syntax_passed": true,
@@ -364,19 +364,17 @@
         "run_id": 38431426089,
         "run_attempt": 2,
         "tested_commit": "b24aabf8099a589e29a3ea4178baff55879a2780",
-        "tested_old_commit": true,
         "conclusion": "failure_before_first_step",
-        "evidence": "Second retry completed before workflow steps began; job records had runner_id=0, zero steps and no logs. This is infrastructure unavailability, not code test failure.",
-        "retry_policy": "One retry already performed; do not rerun until repository Actions runner availability issue #13 is resolved.",
-        "current_pr_head": "79687d8bec49b433679687a1bf954f5fa83c864e",
-        "status_of_current_head": "no workflow run exists for current head"
+        "evidence": "runner_id=0, zero steps and no logs; current PR head has no workflow run.",
+        "action": "Do not retry this infra failure again until Actions runner/event execution is available."
       },
       "verification_limitations": [
-        "The local provider harness uses fake Codex, Claude, Flutter, Dart, Gitleaks, Supabase and Docker executables; this validates orchestration logic only.",
-        "No real Flutter format/analyzer/test suite, real Android APK build/checksum, real Gitleaks scans, or real local Supabase DB tests were executed in this runtime.",
-        "The committed provider smoke test is in the workflow but no current-head GitHub Actions run is available."
+        "Current exact launcher/helper/provider test blobs have not been executed in a local shell in this session.",
+        "Earlier local checks/fake-provider harness passed on previous launcher/test blobs; do not transfer that claim to the current blob.",
+        "No current-head GitHub Actions run exists. Full Flutter, Gitleaks, Android APK/checksum and real local Supabase tests remain unverified.",
+        "Real authenticated Codex and Claude Code sessions were not run in this environment."
       ],
-      "pr_head_at_tracking_update": "79687d8bec49b433679687a1bf954f5fa83c864e",
+      "pr_head_at_tracking_update": "3d56da2688f41fba90abef9bcb5db78cc4ef426c",
       "repository_provider_smoke_line_count": 235,
       "repository_provider_smoke_top_level_case_count": 1,
       "current_launcher_matches_previously_tested_copy": false,
@@ -386,11 +384,25 @@
       "local_launcher_help_exit_zero_for_current_launcher": false,
       "local_guard_smoke_passed_for_current_launcher_blob": false,
       "local_fake_harness_passed_for_current_launcher_blob": false,
-      "current_provider_smoke_blob_sha": "22566105235eb9bef6ee613c73fb8ec7d08fc9cd",
-      "current_provider_smoke_line_count": 235,
+      "current_provider_smoke_blob_sha": "41e0d0d1d6b1fc1aba27f1c1e90b47a09f598270",
+      "current_provider_smoke_line_count": 246,
       "current_branch_head_at_last_audit": "8cc0fe4aae550e8461f2936faf55957660d3556a",
       "current_head_ci_workflow_count": 0,
-      "current_head_requires_validation": true
+      "current_head_requires_validation": true,
+      "current_provider_smoke_single_body": true,
+      "critical_reviewer_fails_before_preflight": true,
+      "full_mode_requires_android_scaffold": true,
+      "full_mode_requires_running_local_supabase_stack": true,
+      "current_exact_launcher_bash_syntax_run": false,
+      "current_exact_provider_smoke_run": false,
+      "latest_static_review_fixes": [
+        "Critical tasks stop before dependency/full-gate preflight if an independent reviewer provider is not configured.",
+        "Full/critical verification fails early unless the Android platform wrapper exists and the local Supabase stack reports ready.",
+        "Critical work with a separate reviewer automatically runs full Flutter/build/checksum/Gitleaks/Supabase tests.",
+        "Provider smoke test was rebuilt into one clean body after malformed repeated tails; current exact blob is 41e0d0d1d6b1fc1aba27f1c1e90b47a09f598270.",
+        "Strict first-line verdict and repository identity guards remain in the current launcher."
+      ],
+      "next_action": "Trigger a workflow run on the current PR head after checking GitHub Actions availability. Require current exact bash syntax/help and guard/provider smoke tests, followed by Flutter format/analyzer/full tests, Gitleaks, Supabase migration/pgTAP and APK/checksum. Verify actual Codex/Claude CLI and reviewer isolation. Keep PR #17 draft/unmerged until all real evidence is green."
     },
     "safety_boundaries": [
       "Launcher does not commit, push, merge, deploy, provision or alter repository settings",
