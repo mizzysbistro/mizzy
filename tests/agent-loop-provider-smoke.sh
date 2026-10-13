@@ -22,6 +22,7 @@ cp "$ROOT/.gitignore" "$FIXTURE/"
 git -C "$FIXTURE" init -q -b feature/agent-e2e-smoke
 git -C "$FIXTURE" config user.name "Mizzy Agent Loop Test"
 git -C "$FIXTURE" config user.email "mizzy-agent-loop-test@example.invalid"
+git -C "$FIXTURE" remote add origin https://github.com/mizzysbistro/mizzy.git
 git -C "$FIXTURE" add .
 git -C "$FIXTURE" commit -qm "fixture: safe loop harness"
 
@@ -120,5 +121,18 @@ if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_
 fi
 grep -q "MIZZY_AGENT_MAX_TURNS must be a positive integer" <<< "$output" ||
   fail "invalid turn-limit diagnostic was missing"
+
+# The repository identity guard must stop before any provider invocation.
+calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
+git -C "$FIXTURE" remote set-url origin https://github.com/mizzysbistro/bistro.git
+if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
+  fail "launcher accepted a sibling repository origin"
+fi
+grep -q "origin remote must point to mizzysbistro/mizzy on GitHub" <<< "$output" ||
+  fail "wrong-origin diagnostic was missing"
+calls_after="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
+[[ "$calls_before" == "$calls_after" ]] ||
+  fail "agent was invoked despite the wrong repository origin"
+git -C "$FIXTURE" remote set-url origin https://github.com/mizzysbistro/mizzy.git
 
 echo "PASS: end-to-end coordinator gates with fake provider CLIs; no external agents or paid APIs invoked"
