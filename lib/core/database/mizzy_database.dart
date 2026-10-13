@@ -1,5 +1,6 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sqflite;
+import 'package:uuid/uuid.dart';
 
 /// Owns the on-device SQLite database and its versioned schema.
 ///
@@ -54,6 +55,30 @@ class MizzyDatabase {
     if (cached != null) {
       await (await cached).close();
     }
+  }
+
+  /// Returns a stable installation ID, persisted even before cloud sign-in.
+  Future<String> installationId() async {
+    final database = await open();
+    return database.transaction((transaction) async {
+      final rows = await transaction.query(
+        'local_meta',
+        columns: <String>['meta_value'],
+        where: 'meta_key = ?',
+        whereArgs: <Object?>['installation_id'],
+        limit: 1,
+      );
+      if (rows.isNotEmpty) {
+        return rows.single['meta_value']! as String;
+      }
+
+      final installationId = const Uuid().v4();
+      await transaction.insert('local_meta', <String, Object?>{
+        'meta_key': 'installation_id',
+        'meta_value': installationId,
+      });
+      return installationId;
+    });
   }
 
   static Future<void> _createSchema(sqflite.Database database) async {
@@ -125,6 +150,7 @@ class MizzyDatabase {
         organization_id TEXT NOT NULL,
         branch_id TEXT NOT NULL,
         local_order_number INTEGER NOT NULL CHECK (local_order_number > 0),
+        device_id TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'saved'
           CHECK (status IN ('saved', 'preparing', 'ready', 'served', 'completed', 'cancelled')),
         order_type TEXT NOT NULL
@@ -145,7 +171,7 @@ class MizzyDatabase {
         server_version INTEGER NOT NULL DEFAULT 0 CHECK (server_version >= 0),
         idempotency_key TEXT NOT NULL UNIQUE,
         request_fingerprint TEXT NOT NULL,
-        UNIQUE (organization_id, branch_id, local_order_number)
+        UNIQUE (organization_id, branch_id, device_id, local_order_number)
       )
     ''',
     r'''
