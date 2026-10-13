@@ -1,0 +1,50 @@
+name: Supabase migration and RLS tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-tests.yml"
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up pinned Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.120.0
+
+      - name: Display CLI version
+        run: supabase --version
+
+      - name: Generate next migration filename via CLI
+        run: |
+          supabase migration new p1_pos_foundation
+          find supabase/migrations -maxdepth 1 -type f -name '*_p1_pos_foundation.sql' -print
+
+      - name: Start isolated local Supabase stack
+        run: supabase start
+
+      - name: Apply migrations to fresh local database
+        run: supabase db reset --local
+
+      - name: Run pgTAP migration and RLS tests
+        run: supabase test db --local
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop --no-backup
