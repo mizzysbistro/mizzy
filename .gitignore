@@ -1,0 +1,21 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Android build and local SDK config
+android/.gradle/
+android/local.properties
+android/key.properties
+**/*.keystore
+**/*.jks
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+supabase/.temp/
