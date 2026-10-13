@@ -23,6 +23,7 @@ void main() {
   late String orderIdempotencyKey;
   late DateTime now;
   var accessAllowed = true;
+  var allowKitchenTransition = true;
 
   setUp(() async {
     now = DateTime.utc(2026, 10, 14, 12);
@@ -59,6 +60,17 @@ void main() {
         required String organizationId,
         required String branchId,
       }) async => accessAllowed,
+      hasEventPermission: ({
+        required String organizationId,
+        required String branchId,
+        required String entityType,
+        required String operation,
+      }) async {
+        if (entityType == 'kitchen_ticket' && operation == 'transition') {
+          return allowKitchenTransition;
+        }
+        return true;
+      },
     );
   });
 
@@ -143,6 +155,35 @@ void main() {
     final rows = await (await database.open()).query('sync_outbox');
     expect(rows.map((row) => row['status']).toSet(), {'pending'});
   });
+
+  test(
+    'does not quarantine a Kitchen event when the current actor lacks Kitchen role',
+    () async {
+      await createOrder(addKitchenTransition: true);
+      allowKitchenTransition = false;
+
+      final result = await worker.syncOnce(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+
+      expect(result.claimed, 3);
+      expect(result.delivered, 2);
+      expect(result.retried, 1);
+      expect(result.conflicts, 0);
+      expect(
+        transport.calls,
+        ['save_order', 'save_order'],
+      );
+
+      final rows = await (await database.open()).query(
+        'sync_outbox',
+        orderBy: 'created_at ASC, rowid ASC',
+      );
+      expect(rows.last['status'], 'failed');
+      expect(rows.last['last_error'], 'role_not_permitted');
+    },
+  );
 
   test(
     'uploads order, verifies the server-created ticket and applies Kitchen transition in dependency order',

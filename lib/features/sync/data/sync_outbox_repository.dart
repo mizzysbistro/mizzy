@@ -9,6 +9,7 @@ enum SyncFailureCode {
   serverUnavailable('server_unavailable'),
   rateLimited('rate_limited'),
   rejectedByServer('rejected_by_server'),
+  roleNotPermitted('role_not_permitted'),
   unknown('unknown');
 
   const SyncFailureCode(this.storageValue);

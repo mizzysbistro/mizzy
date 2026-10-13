@@ -69,7 +69,7 @@
     "Stacked P2 source/SQL tests remain unverified because Actions jobs fail before any steps; no authenticated upload/pull worker or remote catalog sync is implemented.",
     "No dedicated Mizzy Supabase project is configured. Connected-project inventory currently lists only projects named `pos` and `banawe`; repository boundaries prohibit repurposing older POS projects without explicit authorization. No new project or paid resources were provisioned."
   ],
-  "next_action": "Review PR #23 worker implementation against PR #19 SQL RPC and PR #18 outbox contracts. Restore Actions runners, run all Flutter and Supabase gates, and obtain independent security review before wiring worker or enabling cross-device sync.",
+  "next_action": "Review and wire role-specific permission callback using AuthRepository branch roles. Actions runner issue #13 remains blocked before step 1; run worker tests/Flutter and Supabase gates plus security review before enabling synchronization.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -180,7 +180,8 @@
     "Prepared a stacked P2 server-side sync contract PR with an idempotent Kitchen-transition receipt RPC, expected-from-status conflict protection, branch/role validation, and pgTAP cases for replay, changed-payload reuse, stale state, invalid transitions, and unauthorized roles. Execution remains unverified; Actions runner issue 13 is still active.",
     "Checked the connected Supabase project inventory; only projects named pos and banawe were listed. Preserved the independent-project boundary and did not alter or provision any Supabase resource.",
     "Added a draft authenticated SQLite outbox worker implementing save_order upload, server-confirmed Kitchen-ticket verification, and stable-event Kitchen transition RPC replay; added six worker tests with fake server transport. Not wired into production UI and not verified.",
-    "Hardened the P2 worker so ticket-create acknowledgment replays save_order with the same idempotency key/payload and requires already_saved=true and matching ticket ID, instead of depending on direct Kitchen-ticket SELECT grants."
+    "Hardened the P2 worker so ticket-create acknowledgment replays save_order with the same idempotency key/payload and requires already_saved=true and matching ticket ID, instead of depending on direct Kitchen-ticket SELECT grants.",
+    "Fixed sync-worker role-handling design: per-event role denial now yields a retryable role_not_permitted state rather than falsely quarantining a valid Kitchen transition from a Counter-only account; added a regression test. Not yet executed."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

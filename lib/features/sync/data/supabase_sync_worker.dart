@@ -13,6 +13,15 @@ typedef BranchSyncAccessCheck = Future<bool> Function({
   required String branchId,
 });
 
+/// Must reflect the current Supabase actor's permission to perform the event.
+/// The server RPC revalidates the same authorization as the final boundary.
+typedef BranchSyncEventPermissionCheck = Future<bool> Function({
+  required String organizationId,
+  required String branchId,
+  required String entityType,
+  required String operation,
+});
+
 enum SyncCycleStatus {
   completed,
   authenticationRequired,
@@ -162,11 +171,13 @@ class AuthenticatedOutboxSyncWorker {
     required SyncOutboxRepository outbox,
     required CloudSyncTransport transport,
     required BranchSyncAccessCheck hasBranchAccess,
+    required BranchSyncEventPermissionCheck hasEventPermission,
     this.maximumBatchesPerRun = 5,
   }) : _database = database,
        _outbox = outbox,
        _transport = transport,
-       _hasBranchAccess = hasBranchAccess {
+       _hasBranchAccess = hasBranchAccess,
+       _hasEventPermission = hasEventPermission {
     if (maximumBatchesPerRun < 1 || maximumBatchesPerRun > 20) {
       throw RangeError.range(
         maximumBatchesPerRun,
@@ -181,6 +192,7 @@ class AuthenticatedOutboxSyncWorker {
   final SyncOutboxRepository _outbox;
   final CloudSyncTransport _transport;
   final BranchSyncAccessCheck _hasBranchAccess;
+  final BranchSyncEventPermissionCheck _hasEventPermission;
   final int maximumBatchesPerRun;
 
   Future<SyncCycleResult> syncOnce({
@@ -261,6 +273,24 @@ class AuthenticatedOutboxSyncWorker {
         _SyncEntityRefs? refs;
         try {
           refs = _entityRefs(event);
+          final permitted = await _hasEventPermission(
+            organizationId: event.organizationId,
+            branchId: event.branchId,
+            entityType: event.entityType,
+            operation: event.operation,
+          );
+          if (!permitted) {
+            // Roles can change between devices/sessions. Do not poison valid
+            // work as a permanent conflict just because this actor lacks the
+            // role for this event; keep it retryable for an authorized session.
+            await _recordRetry(
+              event,
+              SyncFailureCode.roleNotPermitted,
+              refs: refs,
+            );
+            retriedCount++;
+            continue;
+          }
           await _sendEvent(event, refs);
         } on SyncRemoteFailure catch (failure) {
           if (failure.isPermanent) {
