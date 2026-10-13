@@ -51,11 +51,17 @@ done
 cat >/dev/null
 [[ -n "$last_message" ]] || { echo "missing output-last-message path" >&2; exit 41; }
 case "$sandbox" in
-  workspace-write) message="Stub implementer completed safely." ;;
-  read-only) message="Stub read-only reviewer found no issues." ;;
+  workspace-write)
+    message="Stub implementer completed safely."
+    verdict="\${MIZZY_FAKE_IMPLEMENTER_VERDICT:-PASS}"
+    ;;
+  read-only)
+    message="Stub read-only reviewer found no issues."
+    verdict="PASS"
+    ;;
   *) echo "unexpected Codex sandbox: $sandbox" >&2; exit 42 ;;
 esac
-printf 'VERDICT: PASS\n%s\n' "$message" > "$last_message"
+printf 'VERDICT: %s\n%s\n' "$verdict" "$message" > "$last_message"
 cat "$last_message"
 printf 'codex:%s\n' "$sandbox" >> "$MIZZY_FAKE_AGENT_LOG"
 CODEX
@@ -121,6 +127,15 @@ if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_
 fi
 grep -q "MIZZY_AGENT_MAX_TURNS must be a positive integer" <<< "$output" ||
   fail "invalid turn-limit diagnostic was missing"
+
+# A green CLI exit and green reviewer must not override a non-PASS implementer verdict.
+if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_IMPLEMENTER_VERDICT=CHANGES_REQUIRED bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
+  fail "coordinator accepted CHANGES_REQUIRED implementer verdict"
+fi
+grep -q "Implementer verdict was CHANGES_REQUIRED" <<< "$output" ||
+  fail "non-PASS implementer verdict was not surfaced"
+grep -q "STOP: reached 3 distinct attempts" <<< "$output" ||
+  fail "non-PASS implementer verdict did not exhaust bounded repair attempts"
 
 # The repository identity guard must stop before any provider invocation.
 calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
