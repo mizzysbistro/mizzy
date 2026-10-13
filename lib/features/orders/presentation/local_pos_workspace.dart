@@ -191,7 +191,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       return '$conflicts catalog item conflicts need review and are disabled. '
           'Orders, tables, Kitchen, and payments are still local.';
     }
-    return 'Cloud menu refreshed for this branch. Orders, tables, Kitchen, '
+    return 'Cloud menu and table layout refreshed. Orders, Kitchen status, '
         'and payments are still local.';
   }
 
@@ -505,7 +505,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       appBar: AppBar(
         title: Text(
           _isCloudWorkspace
-              ? 'Mizzy POS · Cloud catalog'
+              ? 'Mizzy POS · Cloud branch'
               : 'Mizzy POS · Local demo',
         ),
         actions: [
@@ -545,7 +545,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                       Expanded(
                         child: Text(
                           _isCloudWorkspace
-                              ? 'Cloud catalog cached for this branch. Orders, tables, Kitchen status and payments are still local; order sync is not enabled.'
+                              ? 'Cloud menu and table layout cached for this branch. Orders, Kitchen status and payments are still local; order sync is not enabled.'
                               : 'Local-only development mode. Orders stay on this device; cloud sync and real payments are not enabled.',
                         ),
                       ),
@@ -781,7 +781,8 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                   value: MizzyOrderType.takeaway,
                   child: Text('Takeaway'),
                 ),
-                if (!_isCloudWorkspace)
+                if (!_isCloudWorkspace ||
+                    _tableRows.any((row) => row['status'] == 'available'))
                   const DropdownMenuItem(
                     value: MizzyOrderType.dineIn,
                     child: Text('Dine-in'),
