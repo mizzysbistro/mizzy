@@ -335,7 +335,7 @@
     ],
     "verification": {
       "github_pr_diff_reviewed": true,
-      "current_launcher_blob_sha": "8e814697c0638c99c2c5f7347fab0d73f1d673a6",
+      "current_launcher_blob_sha": "db887b649faa8703a50e2a79798b74d62a9f713b",
       "current_helper_blob_sha": "e8c0b34bcba26a1c0f48b427fdcaf8c77577058a",
       "launcher_and_helper_hashes_matched_local_tested_copies": true,
       "local_bash_syntax_passed": true,
@@ -353,7 +353,7 @@
         "Invalid MIZZY_AGENT_MAX_TURNS is rejected",
         "Sibling repository origin is refused before agents are invoked"
       ],
-      "current_repository_provider_smoke_test_blob": "60b86aa71990b0914412282c1dff54b5fbb360a6",
+      "current_repository_provider_smoke_test_blob": "22566105235eb9bef6ee613c73fb8ec7d08fc9cd",
       "repository_provider_smoke_exact_blob_executed_locally": false,
       "actual_codex_cli_executed": false,
       "actual_claude_code_cli_executed": false,
@@ -367,13 +367,21 @@
         "tested_old_commit": true,
         "conclusion": "failure_before_first_step",
         "evidence": "Second retry completed before workflow steps began; job records had runner_id=0, zero steps and no logs. This is infrastructure unavailability, not code test failure.",
-        "retry_policy": "One retry already performed; do not rerun until repository Actions runner availability issue #13 is resolved."
+        "retry_policy": "One retry already performed; do not rerun until repository Actions runner availability issue #13 is resolved.",
+        "current_pr_head": "79687d8bec49b433679687a1bf954f5fa83c864e",
+        "status_of_current_head": "no workflow run exists for current head"
       },
       "verification_limitations": [
         "The local provider harness uses fake Codex, Claude, Flutter, Dart, Gitleaks, Supabase and Docker executables; this validates orchestration logic only.",
         "No real Flutter format/analyzer/test suite, real Android APK build/checksum, real Gitleaks scans, or real local Supabase DB tests were executed in this runtime.",
         "The committed provider smoke test is in the workflow but no current-head GitHub Actions run is available."
-      ]
+      ],
+      "pr_head_at_tracking_update": "79687d8bec49b433679687a1bf954f5fa83c864e",
+      "repository_provider_smoke_line_count": 235,
+      "repository_provider_smoke_top_level_case_count": 1,
+      "current_launcher_matches_previously_tested_copy": false,
+      "current_provider_smoke_exact_blob_executed_locally": false,
+      "last_local_fake_harness_status": "Prior deterministic fake-provider harness passed for an earlier launcher/helper copy. Since then the launcher changed to fail fast before full-gate preflight when no independent critical reviewer is available, and provider smoke tests were repaired after a duplicate-tail editing error. Re-run the exact current launcher/provider test blob in CI; no current-head hosted run exists."
     },
     "safety_boundaries": [
       "Launcher does not commit, push, merge, deploy, provision or alter repository settings",
