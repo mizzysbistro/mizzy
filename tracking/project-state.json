@@ -334,11 +334,12 @@
       "github_pr_diff_reviewed": true,
       "static_review_fixes": [
         "Validate MIZZY_AGENT_MAX_TURNS as a positive integer before starting agents.",
+        "Automatically route security/financial/sync/release keywords to critical lane and refuse PASS when independent cross-provider review is unavailable.",
         "Use a unique mktemp evidence directory to avoid overwriting reports when task runs start in the same second.",
         "In targeted mode, run changed tracked test files first; if none changed, fall back to the full Flutter suite.",
         "Document fast-path selection and distinguish same-provider review from independent cross-provider review."
       ],
-      "static_review_fix_commit": "76580f77ecac1d7df8dc9aaa73bf99b76f5e0438",
+      "static_review_fix_commit": "111acadd56f78cf485fb74c1949ecbd1978d439c",
       "shell_syntax_executed_locally": false,
       "shell_syntax_ci_pending": true,
       "codex_cli_executed_in_this_session": false,
