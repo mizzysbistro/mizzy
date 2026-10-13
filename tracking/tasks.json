@@ -350,13 +350,14 @@
     "evidence": [
       "Added SyncOutboxRepository local primitives for branch-scoped leases, expired-lease recovery, bounded retry backoff, safe failure codes, delivered state and conflict quarantine.",
       "Added seven outbox lifecycle tests for branch scope, retries, lease recovery, delivered/conflict transitions, invalid limits, concurrency and wrong-branch acknowledgment.",
-      "The repository is deliberately local-only; no authenticated network worker or cloud reconciliation has been implemented."
+      "The repository is deliberately local-only; no authenticated network worker or cloud reconciliation has been implemented.",
+      "Draft feature-branch change adds explicit SQLite outbox dependencies: kitchen-ticket creation waits for the parent order event, and subsequent Kitchen transitions chain behind the prior ticket event. A regression test asserts dependents are not leased until the parent is marked delivered. Not locally executed; GitHub Actions runner blocker remains open."
     ],
     "attempt_count": 0,
-    "blocker": "Authenticated upload/pull sync is not implemented; outbox persistence and leasing are foundations only. GitHub Actions verification is blocked by issue 13.",
-    "next_action": "After the local runner is available and tests pass, build the trusted server-side idempotent upload contract and authenticated client worker, then add pull cursors and offline/reconnect integration tests.",
+    "blocker": "Dependency-ordering code and regression test are committed only to a draft feature branch and remain unverified because this environment lacks Flutter/Dart and GitHub Actions jobs fail before step 1 (runner_id=0, zero steps). Authenticated upload/pull sync is still not implemented.",
+    "next_action": "Obtain read-only review of the dependency gate, restore Actions runner availability under issue 13, then run strict format, analyzer, all Flutter tests, secret scan, Android debug build and local Supabase migration/pgTAP before extending the authenticated worker.",
     "approval_required": true,
-    "updated_at": "2026-10-13",
+    "updated_at": "2026-10-14",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/15"
   }
 ]
