@@ -272,15 +272,20 @@ on public.branches
 for delete to authenticated
 using ((select private.has_org_role(organization_id, array['owner']::text[])));
 
-create policy organization_memberships_select_org_member
+create policy organization_memberships_select_owner
 on public.organization_memberships
 for select to authenticated
-using ((select private.is_org_member(organization_id)));
+using (
+    (select private.has_org_role(organization_id, array['owner']::text[]))
+);
 
-create policy branch_memberships_select_org_member
+create policy branch_memberships_select_owner_or_branch_manager
 on public.branch_memberships
 for select to authenticated
-using ((select private.is_org_member(organization_id)));
+using (
+    (select private.has_org_role(organization_id, array['owner']::text[]))
+    or (select private.has_branch_role(branch_id, array['manager']::text[]))
+);
 
 create policy audit_events_select_owner_or_branch_manager
 on public.audit_events
