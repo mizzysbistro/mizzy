@@ -53,7 +53,7 @@ cat >/dev/null
 case "$sandbox" in
   workspace-write)
     message="Stub implementer completed safely."
-    verdict="\${MIZZY_FAKE_IMPLEMENTER_VERDICT:-PASS}"
+    verdict="${MIZZY_FAKE_IMPLEMENTER_VERDICT:-PASS}"
     ;;
   read-only)
     message="Stub read-only reviewer found no issues."
