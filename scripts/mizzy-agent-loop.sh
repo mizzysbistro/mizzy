@@ -263,16 +263,32 @@ run_verification() {
   if [[ "$VERIFY_MODE" == "full" ]]; then
     run_check flutter-tests flutter test
     run_check android-debug-apk flutter build apk --debug
-
     run_check gitleaks gitleaks git --redact
-
   elif [[ -n "${MIZZY_TARGET_TEST:-}" ]]; then
     run_check focused-flutter-test flutter test "$MIZZY_TARGET_TEST"
   else
-    # Fast path: run every test file changed by the implementer. If no test
-    # file changed, fall back to the full suite so implementation edits cannot
-    # accidentally skip regression coverage.
-    mapfile -t changed_tests < <(git diff --name-only -- 'test/*_test.dart' 'test/**/*.dart' | grep -E '^test/.*_test\.dart
+    # Fast path: execute changed test files, including newly created untracked
+    # tests. Fall back to the full suite when no existing test file changed.
+    mapfile -t changed_tests < <(
+      {
+        git diff --name-only HEAD -- test/
+        git ls-files --others --exclude-standard -- test/
+      } | grep -E '^test/.*_test\.dart$' | sort -u || true
+    )
+    existing_tests=()
+    for test_file in "${changed_tests[@]}"; do
+      [[ -f "$test_file" ]] && existing_tests+=("$test_file")
+    done
+    if (( ${#existing_tests[@]} > 0 )); then
+      local test_index=0
+      for test_file in "${existing_tests[@]}"; do
+        ((test_index += 1))
+        run_check "focused-flutter-test-${test_index}" flutter test "$test_file"
+      done
+    else
+      run_check flutter-tests flutter test
+    fi
+  fi
 
   if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
     run_check supabase-local-tests supabase test db
