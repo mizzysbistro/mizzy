@@ -115,7 +115,9 @@ void main() {
     );
   });
 
-  test('dine-in order claims an available table in the same transaction', () async {
+  test(
+    'dine-in order claims an available table in the same transaction',
+    () async {
     final tableId = const Uuid().v4();
     await insertTable(id: tableId, tableBranchId: branchId);
 
@@ -147,7 +149,8 @@ void main() {
     expect(order?['table_id'], tableId);
     expect(await rawDatabase.query('orders'), hasLength(1));
     expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
-  });
+    },
+  );
 
   test('dine-in orders cannot claim occupied or cross-branch tables', () async {
     final occupiedTableId = const Uuid().v4();
@@ -192,7 +195,9 @@ void main() {
     expect(await rawDatabase.query('kitchen_tickets'), isEmpty);
   });
 
-  test('cancelling an unpaid dine-in order releases its table atomically', () async {
+  test(
+    'cancelling an unpaid dine-in order releases its table atomically',
+    () async {
     final tableId = const Uuid().v4();
     final orderId = const Uuid().v4();
     await insertTable(id: tableId, tableBranchId: branchId);
@@ -225,12 +230,18 @@ void main() {
       orderId: orderId,
     );
     expect(order?['status'], 'cancelled');
-    expect((order?['kitchenTicket'] as Map<String, Object?>)['status'], 'cancelled');
+    expect(
+      (order?['kitchenTicket'] as Map<String, Object?>)['status'],
+      'cancelled',
+    );
     expect(table['status'], 'available');
     expect(table['sync_state'], 'pending');
-  });
+    },
+  );
 
-  test('captured payment prevents dine-in cancellation without a refund', () async {
+  test(
+    'captured payment prevents dine-in cancellation without a refund',
+    () async {
     final tableId = const Uuid().v4();
     final orderId = const Uuid().v4();
     await insertTable(id: tableId, tableBranchId: branchId);
@@ -281,11 +292,17 @@ void main() {
       orderId: orderId,
     );
     expect(order?['status'], 'saved');
-    expect((order?['kitchenTicket'] as Map<String, Object?>)['status'], 'queued');
+    expect(
+      (order?['kitchenTicket'] as Map<String, Object?>)['status'],
+      'queued',
+    );
     expect(table['status'], 'occupied');
-  });
+    },
+  );
 
-  test('saving an order creates one order and one linked kitchen ticket', () async {
+  test(
+    'saving an order creates one order and one linked kitchen ticket',
+    () async {
     final orderId = const Uuid().v4();
     final saved = await repository.saveOrder(
       draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
@@ -306,9 +323,12 @@ void main() {
     expect(order?['total_minor'], 32300);
     expect((order?['lines']! as List), hasLength(2));
     expect((order?['kitchenTicket'] as Map?)?['status'], 'queued');
-  });
+    },
+  );
 
-  test('retrying the same idempotency key does not duplicate an order', () async {
+  test(
+    'retrying the same idempotency key does not duplicate an order',
+    () async {
     final orderId = const Uuid().v4();
     final key = const Uuid().v4();
     final first = await repository.saveOrder(
@@ -327,9 +347,12 @@ void main() {
     expect(retry.alreadySaved, isTrue);
     expect(retry.orderId, first.orderId);
     expect(orders, hasLength(1));
-  });
+    },
+  );
 
-  test('an idempotency key cannot be reused for a different order ID', () async {
+  test(
+    'an idempotency key cannot be reused for a different order ID',
+    () async {
     final key = const Uuid().v4();
     await repository.saveOrder(
       draft(orderId: const Uuid().v4(), idempotencyKey: key),
@@ -347,9 +370,12 @@ void main() {
       branchId: branchId,
     );
     expect(orders, hasLength(1));
-  });
+    },
+  );
 
-  test('Kitchen status changes are reflected in the same Orders record', () async {
+  test(
+    'Kitchen status changes are reflected in the same Orders record',
+    () async {
     final orderId = const Uuid().v4();
     await repository.saveOrder(
       draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
@@ -375,7 +401,8 @@ void main() {
     expect(orders, hasLength(1));
     expect(orders.single['status'], 'preparing');
     expect((order?['kitchenTicket'] as Map?)?['status'], 'preparing');
-  });
+    },
+  );
 
   test('invalid Kitchen status transitions are rejected', () async {
     final orderId = const Uuid().v4();
@@ -401,7 +428,9 @@ void main() {
     expect(order?['status'], 'saved');
   });
 
-  test('orders are visible only within their organization and branch', () async {
+  test(
+    'orders are visible only within their organization and branch',
+    () async {
     final orderId = const Uuid().v4();
     await repository.saveOrder(
       draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
@@ -440,9 +469,12 @@ void main() {
       ),
       isNull,
     );
-  });
+    },
+  );
 
-  test('simultaneous retries create one order and one kitchen ticket', () async {
+  test(
+    'simultaneous retries create one order and one kitchen ticket',
+    () async {
     final orderId = const Uuid().v4();
     final idempotencyKey = const Uuid().v4();
 
@@ -477,5 +509,6 @@ void main() {
     expect(orders, hasLength(1));
     expect(tickets, hasLength(1));
     expect(outboxEvents, hasLength(2));
-  });
+    },
+  );
 }
