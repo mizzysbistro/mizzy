@@ -153,7 +153,7 @@ class AuthRepository {
       final organizationId = organization['id']! as String;
       final membership = await _client
           .from('organization_memberships')
-          .select('role')
+          .select('role, is_active')
           .eq('organization_id', organizationId)
           .eq('user_id', user.id)
           .maybeSingle();
