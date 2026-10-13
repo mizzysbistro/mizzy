@@ -337,13 +337,14 @@
     "verification": {
       "github_pr_diff_reviewed": true,
       "latest_static_review_findings": [
-        "Repaired a truncated run_verification function and removed a duplicate stale launcher tail that contained a stray token and duplicate coordinator functions.",
-        "Changed strict verdict parsing to accept only the exact first line VERDICT: PASS, VERDICT: CHANGES_REQUIRED or VERDICT: BLOCKED.",
-        "Coordinator requires explicit first-line PASS from both implementer and reviewer before success.",
-        "Extracted risk classification and changed-test discovery into scripts/mizzy-agent-loop-lib.sh; selection covers staged/unstaged tracked and untracked tests, skips deleted paths, and safely yields empty results when no tests changed.",
-        "Origin remote guard prevents accidentally launching agents in a sibling POS repository.",
-        "Added a deterministic fake-provider E2E test for role sandbox/permission choices, critical-task gate, non-PASS implementer rejection, invalid turn limits, and wrong-origin guard.",
-        "Full mode adds SHA-256 APK checksum and Gitleaks scans of working tree and Git history."
+        "Removed truncated verification code and a duplicated stale shell tail.",
+        "Extracted deterministic risk classification and test file discovery into a separately testable helper library.",
+        "Test discovery covers staged/unstaged and untracked tests, filters deleted files, and safely returns empty results when no changed tests exist.",
+        "Added repository origin validation to prevent running agents in sibling POS repositories.",
+        "Both agent reports must start with an exact first-line verdict; local success requires implementer and reviewer VERDICT: PASS plus all checks passing.",
+        "Critical POS/security work requires cross-provider review; same-provider read-only review cannot pass critical work.",
+        "Full local verification includes APK build/checksum, worktree/history secret scans, plus optional local Supabase DB tests.",
+        "Deterministic fake CLI smoke test exercises the actual committed launcher and helper source without paid APIs or external model calls."
       ],
       "latest_static_fix_commit": "a95ec88ba155be77a8b5fea0cb60ca0b2e955867",
       "static_review_fixes": [
@@ -370,10 +371,9 @@
         "run_id": 38431426089,
         "run_attempt": 2,
         "tested_commit": "b24aabf8099a589e29a3ea4178baff55879a2780",
-        "current_pr_head": "dd4445b87df2012000d336e3ce72a14f4541817c",
         "conclusion": "failure_before_first_step",
-        "evidence": "Second attempt failed within seconds with runner_id=0, zero steps and no logs; it tested an older commit and is not source test evidence.",
-        "retry_policy": "One retry already performed; do not repeat until owner fixes Actions runner availability."
+        "evidence": "Retry attempt 2 failed before any step: both jobs had runner_id=0, zero steps, no logs. This commit predates latest PR head; no code test outcome can be inferred.",
+        "action": "Do not retry again until Actions runner availability is fixed."
       },
       "helper_smoke_passed_locally": true,
       "guard_smoke_passed_locally": true,
@@ -381,8 +381,17 @@
       "exact_current_launcher_source_tested_locally": true,
       "actual_codex_cli_executed": false,
       "actual_claude_code_cli_executed": false,
-      "supabase_ci_pending": "No fresh current-head database workflow evidence.",
-      "current_head": "dd4445b87df2012000d336e3ce72a14f4541817c"
+      "supabase_ci_pending": true,
+      "current_head": "dd4445b87df2012000d336e3ce72a14f4541817c",
+      "current_pr_head_before_tracking_update": "f1d43256f4a7cd8ef74a6105ff931c839befdaa2",
+      "local_shell_syntax_and_help_passed": true,
+      "local_guard_smoke_passed": true,
+      "local_provider_smoke_passed_with_fake_clis": true,
+      "local_provider_smoke_blob_verified": "ef1fb4e7d3e0c5be7f342e8413ec2a67addd4426",
+      "local_launcher_blob_verified": "e4812cfd1caea9f2847e45e7a3f939606e6dcbf7",
+      "local_helper_blob_verified": "e8c0b34bcba26a1c0f48b427fdcaf8c77577058a",
+      "full_flutter_ci_pending": true,
+      "next_action": "On the current PR head, obtain real hosted runner execution for bash syntax/help and guard/provider smoke tests, then fresh full Flutter formatting/analyzer/tests, Gitleaks, local Supabase migration/pgTAP and Android APK/checksum. Exercise actual authenticated Codex and Claude Code CLIs in a development environment. Keep PR draft and unmerged until required evidence is green."
     },
     "safety_boundaries": [
       "Launcher does not commit, push, merge, deploy, provision or alter repository settings",
