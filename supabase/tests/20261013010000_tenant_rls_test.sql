@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(19);
+select plan(20);
 
 -- Seed isolated test identities and tenant records as the database test owner.
 insert into auth.users (
