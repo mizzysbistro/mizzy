@@ -318,9 +318,16 @@ run_verification() {
 
 extract_verdict() {
   local file="$1"
-  local verdict
-  verdict="$(grep -E '^VERDICT:[[:space:]]*(PASS|CHANGES_REQUIRED|BLOCKED)' "$file" 2>/dev/null | tail -n 1 | sed -E 's/^VERDICT:[[:space:]]*//')" || true
-  printf '%s' "${verdict:-MISSING}"
+  local first_line=""
+  if [[ -f "$file" ]]; then
+    IFS= read -r first_line < "$file" || true
+  fi
+  case "$first_line" in
+    "VERDICT: PASS") printf 'PASS' ;;
+    "VERDICT: CHANGES_REQUIRED") printf 'CHANGES_REQUIRED' ;;
+    "VERDICT: BLOCKED") printf 'BLOCKED' ;;
+    *) printf 'MISSING' ;;
+  esac
 }
 
 make_reviewer_prompt() {
@@ -369,9 +376,13 @@ while (( attempt <= MAX_ATTEMPTS )); do
     REVIEWER_FAILED=1
     echo "Reviewer process failed. Review evidence is incomplete." | tee -a "$CHECK_SUMMARY"
   fi
+  IMPLEMENTER_VERDICT="$(extract_verdict "$RUN_DIR/implementer-${attempt}-final.txt")"
   final_verdict="$(extract_verdict "$RUN_DIR/reviewer-${attempt}-final.txt")"
+  if [[ "$IMPLEMENTER_VERDICT" != "PASS" ]]; then
+    echo "Implementer verdict was $IMPLEMENTER_VERDICT; an explicit first-line VERDICT: PASS is required." | tee -a "$CHECK_SUMMARY"
+  fi
 
-  if [[ "$CHECK_FAILED" -eq 0 && "$final_verdict" == "PASS" && "$IMPLEMENTER_FAILED" -eq 0 && "$REVIEWER_FAILED" -eq 0 ]]; then
+  if [[ "$CHECK_FAILED" -eq 0 && "$IMPLEMENTER_VERDICT" == "PASS" && "$final_verdict" == "PASS" && "$IMPLEMENTER_FAILED" -eq 0 && "$REVIEWER_FAILED" -eq 0 ]]; then
     if [[ "$CRITICAL_TASK" -eq 1 && "$REVIEWER" == "$IMPLEMENTER" ]]; then
       echo "BLOCKED: local checks completed, but critical work requires an independent cross-provider reviewer. See $RUN_DIR."
       exit 1
