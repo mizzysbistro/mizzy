@@ -59,6 +59,9 @@ jobs:
       - name: Static analysis
         run: flutter analyze
 
+      - name: Install SQLite native library for FFI tests
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-0 libsqlite3-dev
+
       - name: Widget and unit tests
         run: flutter test
 
