@@ -149,4 +149,82 @@ void main() {
     );
     expect(order?['status'], 'saved');
   });
+
+  test('orders are visible only within their organization and branch', () async {
+    final orderId = const Uuid().v4();
+    await repository.saveOrder(
+      draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
+    );
+
+    final differentBranch = const Uuid().v4();
+    final differentOrganization = const Uuid().v4();
+
+    expect(
+      await repository.listOrders(
+        organizationId: organizationId,
+        branchId: differentBranch,
+      ),
+      isEmpty,
+    );
+    expect(
+      await repository.listOrders(
+        organizationId: differentOrganization,
+        branchId: branchId,
+      ),
+      isEmpty,
+    );
+    expect(
+      await repository.readOrder(
+        organizationId: organizationId,
+        branchId: differentBranch,
+        orderId: orderId,
+      ),
+      isNull,
+    );
+    expect(
+      await repository.readOrder(
+        organizationId: differentOrganization,
+        branchId: branchId,
+        orderId: orderId,
+      ),
+      isNull,
+    );
+  });
+
+  test('simultaneous retries create one order and one kitchen ticket', () async {
+    final orderId = const Uuid().v4();
+    final idempotencyKey = const Uuid().v4();
+
+    final results = await Future.wait([
+      repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: idempotencyKey),
+      ),
+      repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: idempotencyKey),
+      ),
+    ]);
+
+    final orders = await repository.listOrders(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+    final rawDatabase = await database.open();
+    final tickets = await rawDatabase.query(
+      'kitchen_tickets',
+      where: 'order_id = ?',
+      whereArgs: [orderId],
+    );
+    final outboxEvents = await rawDatabase.query(
+      'sync_outbox',
+      where: 'entity_id = ? OR idempotency_key IN (?, ?)',
+      whereArgs: [orderId, 'order:$idempotencyKey', 'kitchen:$idempotencyKey'],
+    );
+
+    expect(results.map((result) => result.orderId).toSet(), {orderId});
+    expect(results.where((result) => result.alreadySaved), hasLength(1));
+    expect(results.where((result) => !result.alreadySaved), hasLength(1));
+    expect(orders, hasLength(1));
+    expect(tickets, hasLength(1));
+    expect(outboxEvents, hasLength(2));
+  });
 }
