@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/database/mizzy_database.dart';
+import '../../../core/database/mizzy_database.dart';
 
 enum MizzyOrderType {
   dineIn('dine_in'),
