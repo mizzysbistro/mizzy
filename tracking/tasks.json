@@ -357,8 +357,8 @@
       "Reviewed current Supabase function-security guidance while preparing the RPC. The new public SECURITY DEFINER endpoint is intentionally authenticated-only and guarded by role/scope/status checks, but remains subject to independent advisor/security review; no suppression or production deployment is authorized."
     ],
     "attempt_count": 0,
-    "blocker": "The stacked PRs #18/#19 are draft and unverified. GitHub Actions jobs fail before steps; local Flutter/Dart and Supabase CLI/Docker are unavailable. New SECURITY DEFINER RPC requires independent security review and disposable Supabase/pgTAP execution. Authenticated upload/pull worker and catalog sync remain unimplemented.",
-    "next_action": "Obtain independent security review of PRs #18/#19, restore Actions runner availability under issue 13, and execute Flutter format/analyzer/tests/APK plus fresh local Supabase migrations/pgTAP. Then implement authenticated uploads against save_order and apply_kitchen_transition_event, with catalog reconciliation and cursor-based pull sync.",
+    "blocker": "Stacked PRs #18/#19 remain draft and unverified. GitHub Actions fails before steps; local Flutter/Dart and Supabase CLI/Docker are unavailable. The connected Supabase account lists only older projects named `pos` and `banawe`, which must not be repurposed without authorization; a dedicated isolated test database is still needed. The authenticated upload/pull worker and cloud catalog sync are unimplemented.",
+    "next_action": "Get independent security review of PRs #18/#19, restore Actions runners, and prepare an approved disposable Supabase test database without paid provisioning or changing older projects. Execute fresh migrations/pgTAP plus Flutter format/analyzer/tests/APK and secret scan, then build authenticated upload/pull sync with catalog reconciliation.",
     "approval_required": true,
     "updated_at": "2026-10-14",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/15"
