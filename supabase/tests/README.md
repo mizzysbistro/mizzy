@@ -25,4 +25,4 @@ These checks are a starting smoke suite, not evidence that the schema is product
 - SECURITY DEFINER functions pin search_path to empty, qualify object names, and have narrowly scoped EXECUTE grants.
 - Transaction rollback leaves no partial organization if branch creation fails.
 
-The P0 migration smoke test checks catalog configuration and grants only. The matrix above must be implemented as real JWT/role tests against an isolated stack before RLS is marked verified.
+Implemented SQL tests now include a catalog/grant smoke suite and a separate 21-assertion role/RLS suite using isolated test identities. These tests have not been executed yet. The bootstrap-RPC rollback and unauthorized role-change cases are still additional coverage required before RLS is marked verified.
