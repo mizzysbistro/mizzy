@@ -378,7 +378,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       required String branchId,
     }) async {
       final organizations = await widget.repository.listMyOrganizations();
-      return organizations.any(
+      final allowed = organizations.any(
         (organization) =>
             organization.id == organizationId &&
             organization.branches.any(
@@ -387,6 +387,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
                   assignedBranch.organizationId == organizationId,
             ),
       );
+      if (!allowed) throw const CloudBranchAccessDenied();
+      return true;
     }
     final catalog = CloudCatalogRepository(
       database: database,

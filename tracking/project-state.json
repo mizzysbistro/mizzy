@@ -67,7 +67,7 @@
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
     "P1 cloud catalog repository is drafted but not integrated into authenticated POS flow or tested; order-upload worker must remain disabled until branch authorization, catalog ID mapping, price reconciliation and CI pass."
   ],
-  "next_action": "Review PRs #18/#19/#21/#22, restore Actions runner availability under issue #13, and run formatter/analyzer/full Flutter suite/secret scan/Android build plus local Supabase migration/pgTAP. Then complete tested outbox upload/pull sync, cloud table sync, and authorization/security review before any production release.",
+  "next_action": "Review PR #22 access-denial handling and branch table cache; Actions runner issue #13 still blocks test execution. Then run formatter/analyzer/full Flutter suite/Gitleaks/Android build plus fresh local Supabase migration/pgTAP and concurrent table reservation check.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -185,7 +185,8 @@
     "Fixed cloud catalog reconciliation so quarantined local-only rows release a SKU only when a different cloud catalog UUID currently owns that SKU; added regression test proving valid cloud product remains active.",
     "Drafted authenticated branch-card selection into a branch-scoped POS workspace using the cloud catalog cache. The selected branch is rechecked through AuthRepository before catalog pull; cloud branches skip local demo menu/table seeding and explicitly keep orders, tables, Kitchen and payments local.",
     "Added a cloud-branch widget test verifying only the injected cloud catalog loads and a saved local order preserves the selected org/branch and cloud catalog UUID.",
-    "Fixed cloud workspace startup to load the verified SQLite catalog cache after a cloud refresh failure and keep order sync visibly disabled; added an offline startup widget regression test."
+    "Fixed cloud workspace startup to load the verified SQLite catalog cache after a cloud refresh failure and keep order sync visibly disabled; added an offline startup widget regression test.",
+    "Separated confirmed branch membership denial from temporary network failure: explicit denial clears visible cached menu/table/order data, while ordinary network failures can still use cache. Corrected table/conflict messages and added widget regression test; not executed."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

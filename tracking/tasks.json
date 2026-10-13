@@ -396,7 +396,8 @@
       "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts.",
       "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged.",
       "Stacked draft PR #22 wires branch selection to a POS workspace that refreshes the branch-scoped cloud catalog before display, keeps demo menu/table seeding isolated to local demo mode, disables Dine-in until cloud table sync exists, and truthfully labels orders/Kitchen/payments local. A widget test is authored but not executed.",
-      "Cloud workspace startup now catches catalog-refresh failures separately and still loads the verified local SQLite cache; a new widget regression test verifies cached products remain available for local order saving while the cloud-sync limitation is displayed. Authored but not executed."
+      "Cloud workspace startup now catches catalog-refresh failures separately and still loads the verified local SQLite cache; a new widget regression test verifies cached products remain available for local order saving while the cloud-sync limitation is displayed. Authored but not executed.",
+      "Explicit branch membership denial now raises CloudBranchAccessDenied; the selected workspace clears visible cached menu/table/orders instead of falling back to data for a revoked branch. Temporary network errors still retain local cache. Added a widget regression test; unexecuted."
     ],
     "attempt_count": 0,
     "blocker": "Cloud catalog and branch POS wiring plus offline startup fallback are draft-only and unverified; Actions jobs continue to fail before steps. The catalog worker/order upload and table/Kitchen/payment sync are not implemented.",

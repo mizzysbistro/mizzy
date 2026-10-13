@@ -225,6 +225,63 @@ void main() {
   );
 
   testWidgets(
+    'confirmed branch access denial hides cached menu and table data',
+    (tester) async {
+      final database = MizzyDatabase(
+        factory: databaseFactoryFfi,
+        databaseName: 'mizzy-cloud-access-denied-${const Uuid().v4()}.db',
+      );
+      addTearDown(database.close);
+      final organizationId = const Uuid().v4();
+      final branchId = const Uuid().v4();
+      final rawDatabase = await database.open();
+      await rawDatabase.insert('catalog_items', <String, Object?>{
+        'id': const Uuid().v4(),
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'name': 'Restricted Cached Meal',
+        'sku': 'RESTRICTED-MEAL',
+        'category_name': 'Meals',
+        'price_minor': 10000,
+        'currency_code': 'PHP',
+        'is_active': 1,
+        'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+        'sync_state': 'synced',
+      });
+      await rawDatabase.insert('restaurant_tables', <String, Object?>{
+        'id': const Uuid().v4(),
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'name': 'Restricted Table',
+        'area_name': null,
+        'capacity': 2,
+        'status': 'available',
+        'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+        'sync_state': 'synced',
+      });
+      Future<int> denyBranch({
+        required MizzyDatabase database,
+        required String organizationId,
+        required String branchId,
+      }) async => throw const CloudBranchAccessDenied();
+
+      await tester.pumpWidget(MaterialApp(
+        home: LocalPosWorkspace(
+          database: database,
+          organizationId: organizationId,
+          branchId: branchId,
+          cloudCatalogRefresh: denyBranch,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Access to this branch is no longer active'), findsOneWidget);
+      expect(find.text('Restricted Cached Meal'), findsNothing);
+      expect(find.text('Restricted Table'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
     'table layout assigns one dine-in table to the saved order',
     (tester) async {
       final database = MizzyDatabase(

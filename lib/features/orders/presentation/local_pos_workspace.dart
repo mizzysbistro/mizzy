@@ -12,6 +12,11 @@ typedef CloudCatalogRefresh = Future<int> Function({
   required String branchId,
 });
 
+/// A verified membership check denied access; do not fall back to cached data.
+class CloudBranchAccessDenied implements Exception {
+  const CloudBranchAccessDenied();
+}
+
 /// Counter, Orders and Kitchen views over one SQLite order store.
 ///
 /// This is deliberately marked as a development workspace. It does not process
@@ -158,12 +163,22 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
           );
           if (!mounted) return;
           setState(() => _notice = _catalogRefreshNotice(conflicts));
+        } on CloudBranchAccessDenied {
+          if (!mounted) return;
+          setState(() {
+            _error = 'Access to this branch is no longer active. Sign in and choose an assigned branch.';
+            _menuItems = const <_MenuItem>[];
+            _tableRows = const <Map<String, Object?>>[];
+            _orderRows = const <Map<String, Object?>>[];
+            _cart.clear();
+            _selectedTableId = null;
+            _selectedOrderType = MizzyOrderType.takeaway;
+          });
+          return;
         } on Object {
           if (!mounted) return;
-          setState(
-            () => _error =
-                'Cloud menu refresh failed. Showing any verified catalog cached on this device; cloud order sync remains disabled.',
-          );
+          setState(() => _error =
+              'Cloud menu/table refresh failed. Showing the verified local cache while access remains active; cloud order sync remains disabled.');
         }
       } else {
         // Never create sample menu/table rows inside a real cloud branch scope.
@@ -188,8 +203,8 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
 
   String _catalogRefreshNotice(int conflicts) {
     if (conflicts > 0) {
-      return '$conflicts catalog item conflicts need review and are disabled. '
-          'Orders, tables, Kitchen, and payments are still local.';
+      return '$conflicts cloud catalog/table conflicts need review; affected items or tables are blocked. '
+          'Order upload, Kitchen status sync and payments are still local.';
     }
     return 'Cloud menu and table layout refreshed. Orders, Kitchen status, '
         'and payments are still local.';
@@ -213,12 +228,21 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         _error = null;
         _notice = _catalogRefreshNotice(conflicts);
       });
+    } on CloudBranchAccessDenied {
+      if (!mounted) return;
+      setState(() {
+        _menuItems = const <_MenuItem>[];
+        _tableRows = const <Map<String, Object?>>[];
+        _orderRows = const <Map<String, Object?>>[];
+        _cart.clear();
+        _selectedTableId = null;
+        _selectedOrderType = MizzyOrderType.takeaway;
+        _error = 'Access to this branch is no longer active. Sign in and choose an assigned branch.';
+      });
     } on Object {
       if (!mounted) return;
-      setState(
-        () => _error =
-            'Cloud menu refresh failed. The local cache was kept; cloud order upload is not enabled.',
-      );
+      setState(() => _error =
+          'Cloud menu/table refresh failed. The local cache was kept; cloud order upload is not enabled.');
     }
   }
 
@@ -638,7 +662,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
           Center(
              child: Text(
                _isCloudWorkspace
-                   ? 'Cloud table sync is not enabled. Dine-in ordering is unavailable.'
+                   ? 'No restaurant tables are available for this branch. Check the branch table setup.'
                    : 'No tables configured for this branch.',
              ),
            )
