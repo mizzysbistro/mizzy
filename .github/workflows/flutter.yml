@@ -35,6 +35,8 @@ jobs:
         run: |
           bash -n scripts/mizzy-agent-loop.sh
           bash scripts/mizzy-agent-loop.sh --help
+          bash -n tests/agent-loop-guard-smoke.sh
+          bash tests/agent-loop-guard-smoke.sh
 
       - name: Set up Java
         uses: actions/setup-java@v6
