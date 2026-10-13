@@ -17,7 +17,7 @@ Optional environment:
   MIZZY_VERIFY=targeted|full            (default: targeted)
   MIZZY_TARGET_TEST=test/path_test.dart (optional explicit test; otherwise changed tests or full suite)
   MIZZY_AGENT_MAX_TURNS=8              (Claude Code turn cap)
-  MIZZY_RUN_SUPABASE_TESTS=1            (opt in to local 'supabase test db')
+  MIZZY_RUN_SUPABASE_TESTS=1            (opt-in for noncritical tasks; critical tasks auto-enable)
 USAGE
 }
 
