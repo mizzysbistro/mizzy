@@ -68,6 +68,7 @@ void main() {
       final organizationId = const Uuid().v4();
       final branchId = const Uuid().v4();
       final catalogId = const Uuid().v4();
+      final tableId = const Uuid().v4();
       var syncCalls = 0;
 
       Future<int> refreshCloudCatalog({
@@ -87,6 +88,13 @@ void main() {
           'price_minor': 12500,
           'currency_code': 'PHP',
           'is_active': 1,
+          'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
+          'sync_state': 'synced',
+        });
+        await rawDatabase.insert('restaurant_tables', <String, Object?>{
+          'id': tableId, 'organization_id': organizationId, 'branch_id': branchId,
+          'name': 'Cloud T1', 'area_name': 'Main Hall', 'capacity': 4,
+          'status': 'available',
           'updated_at': DateTime.utc(2026, 10, 14).toIso8601String(),
           'sync_state': 'synced',
         });
@@ -114,14 +122,15 @@ void main() {
       );
 
       final rawDatabase = await database.open();
-      expect(
-        await rawDatabase.query(
-          'restaurant_tables',
-          where: 'organization_id = ? AND branch_id = ?',
-          whereArgs: <Object?>[organizationId, branchId],
-        ),
-        isEmpty,
+      final cachedTables = await rawDatabase.query(
+        'restaurant_tables',
+        where: 'organization_id = ? AND branch_id = ?',
+        whereArgs: <Object?>[organizationId, branchId],
       );
+      expect(cachedTables, hasLength(1));
+      expect(cachedTables.single['id'], tableId);
+      expect(cachedTables.single['name'], 'Cloud T1');
+      expect(cachedTables.single['status'], 'available');
       expect(await rawDatabase.query('catalog_items'), hasLength(1));
 
       await tester.tap(find.byTooltip('Add Cloud Meal'));
