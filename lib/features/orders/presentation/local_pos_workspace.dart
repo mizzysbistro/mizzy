@@ -6,15 +6,35 @@ import 'package:uuid/uuid.dart';
 import '../../../core/database/mizzy_database.dart';
 import '../data/order_repository.dart';
 
-/// Local-only Counter, Orders and Kitchen views over one SQLite order store.
+typedef CloudCatalogRefresh = Future<int> Function({
+  required MizzyDatabase database,
+  required String organizationId,
+  required String branchId,
+});
+
+/// Counter, Orders and Kitchen views over one SQLite order store.
 ///
 /// This is deliberately marked as a development workspace. It does not process
 /// real payments or synchronize with a hosted database.
 class LocalPosWorkspace extends StatefulWidget {
-  const LocalPosWorkspace({super.key, this.database});
+  const LocalPosWorkspace({
+    super.key,
+    this.database,
+    this.organizationId,
+    this.branchId,
+    this.cloudCatalogRefresh,
+  }) : assert((organizationId == null) == (branchId == null)),
+       assert((organizationId == null) == (cloudCatalogRefresh == null));
 
   /// Optional injected database for isolated widget tests.
   final MizzyDatabase? database;
+
+  /// Explicit organization/branch scope for a signed-in POS session.
+  final String? organizationId;
+  final String? branchId;
+
+  /// Full branch-catalog refresh. This does not enable order or table sync.
+  final CloudCatalogRefresh? cloudCatalogRefresh;
 
   @override
   State<LocalPosWorkspace> createState() => _LocalPosWorkspaceState();
@@ -115,28 +135,82 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     return value;
   }
 
+  bool get _isCloudWorkspace => widget.cloudCatalogRefresh != null;
+
   Future<void> _initializeLocalWorkspace() async {
     try {
-      final organizationId = await _stableLocalId('local_demo_organization_id');
-      final branchId = await _stableLocalId('local_demo_branch_id');
+      final organizationId = widget.organizationId ??
+          await _stableLocalId('local_demo_organization_id');
+      final branchId =
+          widget.branchId ?? await _stableLocalId('local_demo_branch_id');
       if (!mounted) return;
       setState(() {
         _organizationId = organizationId;
         _branchId = branchId;
       });
-      await _ensureDemoTables(organizationId, branchId);
-      await _ensureDemoCatalog(organizationId, branchId);
+
+      if (_isCloudWorkspace) {
+        final conflicts = await widget.cloudCatalogRefresh!(
+          database: _database,
+          organizationId: organizationId,
+          branchId: branchId,
+        );
+        if (!mounted) return;
+        setState(() => _notice = _catalogRefreshNotice(conflicts));
+      } else {
+        // Never create sample menu/table rows inside a real cloud branch scope.
+        await _ensureDemoTables(organizationId, branchId);
+        await _ensureDemoCatalog(organizationId, branchId);
+      }
+
       await _refreshTables();
       await _refreshMenu();
       await _refreshOrders();
     } on Object {
       if (!mounted) return;
       setState(
-        () =>
-            _error = 'Could not open local storage. Restart the app and retry.',
+        () => _error = _isCloudWorkspace
+            ? 'Could not refresh the cloud menu. The catalog was not confirmed; retry when connected.'
+            : 'Could not open local storage. Restart the app and retry.',
       );
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _catalogRefreshNotice(int conflicts) {
+    if (conflicts > 0) {
+      return '$conflicts catalog item conflicts need review and are disabled. '
+          'Orders, tables, Kitchen, and payments are still local.';
+    }
+    return 'Cloud menu refreshed for this branch. Orders, tables, Kitchen, '
+        'and payments are still local.';
+  }
+
+  Future<void> _refreshCloudCatalog() async {
+    final refresh = widget.cloudCatalogRefresh;
+    final organizationId = _organizationId;
+    final branchId = _branchId;
+    if (refresh == null || organizationId == null || branchId == null) return;
+
+    try {
+      final conflicts = await refresh(
+        database: _database,
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      await _refreshMenu();
+      if (!mounted) return;
+      setState(() {
+        _error = null;
+        _notice = _catalogRefreshNotice(conflicts);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(
+        () => _error =
+            'Cloud menu refresh failed. The local cache was kept; cloud order upload is not enabled.',
+      );
     }
   }
 
@@ -364,8 +438,9 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         _selectedOrderType = MizzyOrderType.takeaway;
         _selectedTableId = null;
         _selectedTab = 2;
-        _notice =
-            'Order #${result.localOrderNumber} saved to Orders and Kitchen.';
+        _notice = _isCloudWorkspace
+            ? 'Order #${result.localOrderNumber} saved on this device. Cloud order sync is not enabled.'
+            : 'Order #${result.localOrderNumber} saved to Orders and Kitchen.';
       });
       await _refreshOrders();
       await _refreshTables();
@@ -404,8 +479,9 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       await _refreshTables();
       if (!mounted) return;
       setState(
-        () => _notice =
-            'Order #${order['local_order_number']} updated to ${nextStatus.storageValue}.',
+        () => _notice = _isCloudWorkspace
+            ? 'Order #${order['local_order_number']} Kitchen status updated locally to ${nextStatus.storageValue}.'
+            : 'Order #${order['local_order_number']} updated to ${nextStatus.storageValue}.',
       );
     } on Object {
       if (!mounted) return;
@@ -419,15 +495,20 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mizzy POS · Local demo'),
+        title: Text(
+          _isCloudWorkspace
+              ? 'Mizzy POS · Cloud catalog'
+              : 'Mizzy POS · Local demo',
+        ),
         actions: [
           IconButton(
-            tooltip: 'Refresh orders',
+            tooltip: 'Refresh menu and orders',
             onPressed: _loading
                 ? null
-                : () {
-                    _refreshOrders();
-                    _refreshTables();
+                : () async {
+                    if (_isCloudWorkspace) await _refreshCloudCatalog();
+                    await _refreshOrders();
+                    await _refreshTables();
                   },
             icon: const Icon(Icons.refresh),
           ),
@@ -444,13 +525,20 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                     vertical: 10,
                   ),
                   color: Theme.of(context).colorScheme.tertiaryContainer,
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.cloud_off_outlined, size: 20),
-                      SizedBox(width: 10),
+                      Icon(
+                        _isCloudWorkspace
+                            ? Icons.cloud_done_outlined
+                            : Icons.cloud_off_outlined,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Local-only development mode. Orders stay on this device; cloud sync and real payments are not enabled.',
+                          _isCloudWorkspace
+                              ? 'Cloud catalog cached for this branch. Orders, tables, Kitchen status and payments are still local; order sync is not enabled.'
+                              : 'Local-only development mode. Orders stay on this device; cloud sync and real payments are not enabled.',
                         ),
                       ),
                     ],
@@ -539,7 +627,13 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         const Text('Choose an available table to start a dine-in order.'),
         const SizedBox(height: 16),
         if (_tableRows.isEmpty)
-          const Center(child: Text('No tables configured for this branch.'))
+          Center(
+             child: Text(
+               _isCloudWorkspace
+                   ? 'Cloud table sync is not enabled. Dine-in ordering is unavailable.'
+                   : 'No tables configured for this branch.',
+             ),
+           )
         else
           Wrap(
             spacing: 12,
@@ -674,16 +768,17 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                   vertical: 10,
                 ),
               ),
-              items: const [
-                DropdownMenuItem(
+              items: <DropdownMenuItem<MizzyOrderType>>[
+                const DropdownMenuItem(
                   value: MizzyOrderType.takeaway,
                   child: Text('Takeaway'),
                 ),
-                DropdownMenuItem(
-                  value: MizzyOrderType.dineIn,
-                  child: Text('Dine-in'),
-                ),
-                DropdownMenuItem(
+                if (!_isCloudWorkspace)
+                  const DropdownMenuItem(
+                    value: MizzyOrderType.dineIn,
+                    child: Text('Dine-in'),
+                  ),
+                const DropdownMenuItem(
                   value: MizzyOrderType.delivery,
                   child: Text('Delivery'),
                 ),
@@ -786,7 +881,13 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.send_outlined),
-              label: Text(_saving ? 'Saving…' : 'Save & send to Kitchen'),
+              label: Text(
+                _saving
+                    ? 'Saving…'
+                    : _isCloudWorkspace
+                    ? 'Save locally to Kitchen'
+                    : 'Save & send to Kitchen',
+              ),
             ),
           ],
         ),

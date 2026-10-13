@@ -1,6 +1,6 @@
 # P1-02: Authenticated cloud catalog cache
 
-**Status:** lower-layer implementation drafted; not wired into the local demo workspace, not yet verified by Dart/Flutter, and not production-ready.
+**Status:** selected branch cards now open a branch-scoped POS workspace and refresh the branch catalog (stacked draft PR #22). Orders, tables, Kitchen status and payments remain local-only. Not verified by Dart/Flutter; not production-ready.
 
 ## Contract
 
@@ -13,8 +13,8 @@
 
 ## Remaining integration and safety work
 
-- Wire authenticated login and explicit organization/branch selection before calling this service.
+- The stacked draft now wires the authenticated workspace's active branch list to a selectable branch POS. Its callback rechecks membership via AuthRepository before fetching; Supabase RLS remains the server authorization boundary.
 - Decide how catalog management writes and audit history are performed; the service deliberately makes no cloud writes.
-- Ensure a local sample menu cannot be mistaken for a verified cloud catalog when the app leaves local-demo mode.
+- Local demo data stays in its separate generated organization/branch namespace. Cloud-selected branches skip demo menu/table seeding and quarantine local-only products. Cloud order upload remains disabled; orders are explicitly saved locally until the sync worker is tested.
 - Keep order upload blocked until the selected branch catalog has completed a successful pull and any price/identity conflicts are reconciled.
 - Run all new tests plus existing Flutter tests, formatter/analyzer, secret scanning, Android debug build and fresh local Supabase migration/pgTAP. Current GitHub Actions runners fail before workflow steps, so no Dart tests or build are yet verified.

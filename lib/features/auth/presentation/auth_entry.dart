@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/database/mizzy_database.dart';
+import '../../catalog/data/cloud_catalog_repository.dart';
+import '../../orders/presentation/local_pos_workspace.dart';
 import '../data/auth_repository.dart';
 
 class AuthEntry extends StatelessWidget {
@@ -352,6 +355,49 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     }
   }
 
+  void _openBranch(BranchAccess branch) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LocalPosWorkspace(
+          organizationId: branch.organizationId,
+          branchId: branch.id,
+          cloudCatalogRefresh: _refreshCloudCatalog,
+        ),
+      ),
+    );
+  }
+
+  Future<int> _refreshCloudCatalog({
+    required MizzyDatabase database,
+    required String organizationId,
+    required String branchId,
+  }) async {
+    final catalog = CloudCatalogRepository(
+      database: database,
+      source: SupabaseCloudCatalogSource(client: Supabase.instance.client),
+      hasBranchAccess: ({
+        required String organizationId,
+        required String branchId,
+      }) async {
+        final organizations = await widget.repository.listMyOrganizations();
+        return organizations.any(
+          (organization) =>
+              organization.id == organizationId &&
+              organization.branches.any(
+                (assignedBranch) =>
+                    assignedBranch.id == branchId &&
+                    assignedBranch.organizationId == organizationId,
+              ),
+        );
+      },
+    );
+    final result = await catalog.syncBranch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+    return result.conflicts;
+  }
+
   Future<void> _createOrganization() async {
     final organizationName = _organizationController.text.trim();
     final branchName = _branchController.text.trim();
@@ -436,8 +482,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Choose a restaurant and branch. Your server-side membership and '
-            'RLS policies control which workspaces appear here.',
+            'Choose an assigned branch to open its POS workspace. The cloud menu '
+            'is refreshed for that branch; orders, tables, Kitchen and payments '
+            'remain local until their dedicated sync workflows are verified.',
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),
@@ -459,7 +506,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
             const _EmptyWorkspaces()
           else
             for (final organization in _organizations)
-              _OrganizationCard(organization: organization),
+              _OrganizationCard(
+                organization: organization,
+                onBranchSelected: _openBranch,
+              ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _creating || _loading
@@ -520,9 +570,9 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
           const SizedBox(height: 24),
           const _InlineNotice(
             message:
-                'Workspace access is active, but Counter, Orders, and Kitchen '
-                'screens are still under implementation. Do not use this build '
-                'to process real sales.',
+                'This branch workspace refreshes the cloud catalog only. '
+                'Orders, tables, Kitchen status and payments remain local; real '
+                'payments and cloud order sync are not enabled.',
             isError: false,
           ),
         ],
@@ -532,9 +582,13 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
 }
 
 class _OrganizationCard extends StatelessWidget {
-  const _OrganizationCard({required this.organization});
+  const _OrganizationCard({
+    required this.organization,
+    required this.onBranchSelected,
+  });
 
   final OrganizationAccess organization;
+  final ValueChanged<BranchAccess> onBranchSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -561,7 +615,8 @@ class _OrganizationCard extends StatelessWidget {
                   leading: const Icon(Icons.store_outlined),
                   title: Text(branch.name),
                   subtitle: Text('Branch role: ${branch.role}'),
-                  trailing: const Icon(Icons.lock_clock_outlined),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => onBranchSelected(branch),
                 ),
           ],
         ),

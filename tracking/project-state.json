@@ -67,7 +67,7 @@
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
     "P1 cloud catalog repository is drafted but not integrated into authenticated POS flow or tested; order-upload worker must remain disabled until branch authorization, catalog ID mapping, price reconciliation and CI pass."
   ],
-  "next_action": "Review draft P1-02 cloud catalog cache; validate branch membership wiring and ensure sample data is never treated as remote catalog. Restore Actions runners under issue #13, run Flutter formatter/analyzer/tests/APK, and run local Supabase pgTAP for PRs #18/#19 before enabling sync.",
+  "next_action": "Review stacked PRs #21/#22 for cloud catalog cache and authenticated branch selection. Actions runner issue #13 blocks all verification; owner/admin must inspect Actions settings/account limits without paid workaround. Run formatter, analyzer, Flutter suite, Gitleaks, debug APK and fresh local Supabase migration/pgTAP before starting authenticated outbox upload.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -181,7 +181,9 @@
     "Created issue #20 for branch-scoped cloud catalog cache as a prerequisite to order sync.",
     "Drafted CloudCatalogRepository and tests on feat/p1-cloud-catalog-cache: stable cloud item UUIDs, full paginated pull, inactive-item/deleted-cache deactivation, SKU-reuse handling, conflict quarantine for unsynced local changes, and protection of sale-line snapshots. Auth/UI wiring and verification remain outstanding.",
     "Hardened P1-02 catalog cache to quarantine local-only menu rows in a cloud-scoped branch unless they map to a server-owned catalog UUID; added a regression test.",
-    "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive."
+    "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive.",
+    "Drafted authenticated branch-card selection into a branch-scoped POS workspace using the cloud catalog cache. The selected branch is rechecked through AuthRepository before catalog pull; cloud branches skip local demo menu/table seeding and explicitly keep orders, tables, Kitchen and payments local.",
+    "Added a cloud-branch widget test verifying only the injected cloud catalog loads and a saved local order preserves the selected org/branch and cloud catalog UUID."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
