@@ -24,16 +24,20 @@
       "mizzysbistro/mizzys-bistro-android"
     ],
     "supabase_project_created": false,
-    "flutter_app_created": false,
-    "apk_built": false
+    "flutter_app_created": true,
+    "apk_built": false,
+    "tenant_migration_committed": true,
+    "secret_scan_configured": true,
+    "schema_smoke_tests_committed": true
   },
   "blockers": [
-    "Flutter/Dart/Android SDK are not installed in the current execution environment.",
-    "GitHub Actions execution result has not yet been retrieved; first CI run must be checked.",
-    "Supabase project is not yet provisioned or connected; external provisioning that may incur cost remains approval-gated.",
-    "GitHub milestone and label creation is not exposed by the available connector actions; P0 issues currently exist without those metadata."
+    "Flutter/Dart/Android SDK and adb are not installed in the current execution environment.",
+    "The GitHub Actions workflow run and APK artifact have not been verified; available repository status tooling did not expose push-triggered Actions runs.",
+    "Supabase CLI, PostgreSQL client and Docker are not installed here; migration and RLS smoke tests have not been executed.",
+    "No Supabase project is provisioned or connected; external provisioning that may incur a cost remains approval-gated.",
+    "GitHub milestone and label creation is not exposed by the available connector actions; P0 issues currently have no phase metadata."
   ],
-  "next_action": "Check GitHub Actions result for the new workflow; fix any CI errors, then continue P0 architecture, SQLite, and Supabase scaffolding. Do not claim a successful build until workflow evidence is available.",
+  "next_action": "Retrieve GitHub Actions run logs and debug APK artifact; repair failures. In parallel, continue implementing SQLite persistence and prepare an isolated Supabase test environment when tooling is available. Do not mark any build or RLS test verified without execution evidence.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -77,7 +81,13 @@
     "Created and confirmed seven open P0 GitHub issues with acceptance criteria and verification plans.",
     "Added Flutter package metadata, initial foundation screen, widget smoke test, Dart lint configuration, safe environment template, and ignore rules.",
     "Added GitHub Actions workflow for formatting, analysis, widget tests, and Android debug APK build.",
-    "Linked all seven P0 tasks to their GitHub issues."
+    "Linked all seven P0 tasks to their GitHub issues.",
+    "Added docs/architecture.md documenting app/domain/data boundaries, SQLite-first persistence, integer-minor-unit money, transactional order/outbox behavior and the unified Counter/Orders/Kitchen logical order.",
+    "Added docs/security-model.md defining organization/branch role scope and least-privilege policy expectations.",
+    "Added a draft Supabase tenant/branch migration with organization bootstrap RPC, RLS helper functions, scoped policies, and restricted table/function grants; not applied to a database.",
+    "Added Supabase smoke-test SQL and an RLS verification matrix; corrected the pgTAP assertion plan count to 18. Tests remain unexecuted.",
+    "Modernized GitHub Actions checkout and Java setup versions and added Gitleaks full-history secret scanning; workflow execution remains unverified.",
+    "Updated P0 task tracker and blockers with current evidence and explicit unverified statuses."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -93,7 +103,14 @@
     "8ab65859622592d5ed361ac5b5d085d5e6b82054",
     "455775dabe4565308ba865c15d7d6b4d96344cbd",
     "a220b90cf84c4f2c171556119a7bd50979b2c6c0",
-    "a9dd5b79f686a1800f687edf44bf8b5905ffc91f"
+    "a9dd5b79f686a1800f687edf44bf8b5905ffc91f",
+    "8b6023c294a7c484acbb640c5746451e95013fd9",
+    "c1a1f4b8e581d7fafd7f02f527f8306b2c07d1f1",
+    "7f38418835aff351ec69c3fbc3d3ee9459987dae",
+    "3627041b551c0d2300aed7dafe66741dc564c71c",
+    "593d3268aaabf4cc3e10481806f9593b4da405df",
+    "1788f1403be88c48946303537aa5c517a9437dc9",
+    "caa0fa7723a00c59c66e98f20cf3d59245d27327"
   ],
   "flutter_app_created": true,
   "apk_built": false,
