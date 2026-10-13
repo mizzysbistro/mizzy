@@ -305,7 +305,7 @@ class OrderRepository {
         'lines': persistedLines,
         'kitchenTicketId': ticketId,
       };
-      await _insertOutboxEvent(
+      final orderOutboxEventId = await _insertOutboxEvent(
         transaction,
         organizationId: draft.organizationId,
         branchId: draft.branchId,
@@ -321,6 +321,7 @@ class OrderRepository {
         organizationId: draft.organizationId,
         branchId: draft.branchId,
         entityType: 'kitchen_ticket',
+        dependsOnEventId: orderOutboxEventId,
         entityId: ticketId,
         operation: 'create',
         idempotencyKey: 'kitchen:${draft.idempotencyKey}',
@@ -470,12 +471,31 @@ class OrderRepository {
         }
       }
 
+      final previousEvents = await transaction.query(
+        'sync_outbox',
+        columns: <String>['id'],
+        where:
+            'organization_id = ? AND branch_id = ? AND entity_type = ? '
+            'AND entity_id = ?',
+        whereArgs: <Object?>[
+          organizationId,
+          branchId,
+          'kitchen_ticket',
+          ticket['id'],
+        ],
+        orderBy: 'rowid DESC',
+        limit: 1,
+      );
+      final dependsOnEventId = previousEvents.isEmpty
+          ? null
+          : previousEvents.single['id']! as String;
       final eventId = _uuid.v4();
       await _insertOutboxEvent(
         transaction,
         organizationId: organizationId,
         branchId: branchId,
         entityType: 'kitchen_ticket',
+        dependsOnEventId: dependsOnEventId,
         entityId: ticket['id']! as String,
         operation: 'transition',
         idempotencyKey: 'kitchen-transition:$eventId',
@@ -665,7 +685,7 @@ class OrderRepository {
     return sha256.convert(utf8.encode(jsonEncode(canonicalPayload))).toString();
   }
 
-  Future<void> _insertOutboxEvent(
+  Future<String> _insertOutboxEvent(
     Transaction transaction, {
     required String organizationId,
     required String branchId,
@@ -675,9 +695,11 @@ class OrderRepository {
     required String idempotencyKey,
     required Map<String, Object?> payload,
     required String createdAt,
+    String? dependsOnEventId,
   }) async {
+    final outboxEventId = _uuid.v4();
     await transaction.insert('sync_outbox', <String, Object?>{
-      'id': _uuid.v4(),
+      'id': outboxEventId,
       'organization_id': organizationId,
       'branch_id': branchId,
       'entity_type': entityType,
@@ -686,10 +708,12 @@ class OrderRepository {
       'schema_version': 1,
       'payload_json': jsonEncode(payload),
       'idempotency_key': idempotencyKey,
+      'depends_on_event_id': dependsOnEventId,
       'status': 'pending',
       'attempts': 0,
       'created_at': createdAt,
     });
+    return outboxEventId;
   }
 
   String _timestamp() => _clock().toUtc().toIso8601String();
