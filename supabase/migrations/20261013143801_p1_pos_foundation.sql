@@ -155,10 +155,10 @@ revoke all on table public.order_lines from anon, authenticated;
 revoke all on table public.kitchen_tickets from anon, authenticated;
 revoke all on table public.payments from anon, authenticated;
 
-grant select, insert, update, delete on public.menu_items to authenticated;
+grant select, insert, delete on public.menu_items to authenticated;
 grant update (name, sku, category_name, price_minor, currency_code, is_active)
   on public.menu_items to authenticated;
-grant select, insert, update, delete on public.restaurant_tables to authenticated;
+grant select, insert, delete on public.restaurant_tables to authenticated;
 grant update (name, area_name, capacity, status, is_active)
   on public.restaurant_tables to authenticated;
 grant select on public.orders, public.order_lines, public.kitchen_tickets to authenticated;
@@ -255,6 +255,7 @@ declare
     v_order_total bigint;
     v_currency text := 'PHP';
     v_line_count integer;
+    v_item_count integer := 0;
     v_table_status text;
 begin
     if v_actor is null then
@@ -275,7 +276,7 @@ begin
         raise exception 'Invalid order identifiers' using errcode = '22023';
     end if;
 
-    if p_order_type not in ('dine_in', 'takeaway', 'delivery') then
+    if p_order_type is null or p_order_type not in ('dine_in', 'takeaway', 'delivery') then
         raise exception 'Invalid order type' using errcode = '22023';
     end if;
     if p_order_type = 'dine_in' and p_table_id is null then
@@ -295,11 +296,11 @@ begin
         end if;
     end if;
 
-    if jsonb_typeof(p_lines) <> 'array' then
+    if p_lines is null or jsonb_typeof(p_lines) is distinct from 'array' then
         raise exception 'Order lines must be a JSON array' using errcode = '22023';
     end if;
     v_line_count := jsonb_array_length(p_lines);
-    if v_line_count < 1 or v_line_count > 250 then
+    if v_line_count is null or v_line_count < 1 or v_line_count > 250 then
         raise exception 'An order must contain between 1 and 250 lines' using errcode = '22023';
     end if;
 
@@ -373,13 +374,13 @@ begin
             raise exception 'Menu price changed; reload the menu and review this order'
               using errcode = '40001';
         end if;
-        if v_menu_item.currency_code <> v_currency then
-            if v_subtotal <> 0 then
-                raise exception 'All menu items in an order must use one currency'
-                  using errcode = '22023';
-            end if;
+        if v_item_count = 0 then
             v_currency := v_menu_item.currency_code;
+        elsif v_menu_item.currency_code <> v_currency then
+            raise exception 'All menu items in an order must use one currency'
+              using errcode = '22023';
         end if;
+        v_item_count := v_item_count + 1;
 
         v_line_total := round(v_menu_item.price_minor::numeric * v_quantity_milli::numeric / 1000);
         if v_line_total < 0 or v_line_total > 9223372036854775807::numeric then
@@ -501,11 +502,23 @@ begin
         raise exception 'Invalid kitchen state transition' using errcode = '22023';
     end if;
 
+    if p_next_status = 'cancelled' and exists (
+        select 1 from public.payments p
+        where p.order_id = v_ticket.order_id and p.status = 'captured'
+    ) then
+        raise exception 'Paid orders require an authorized refund before cancellation'
+          using errcode = '22023';
+    end if;
+
     v_order_status := case p_next_status
         when 'queued' then 'saved'
         when 'preparing' then 'preparing'
         when 'ready' then 'ready'
-        when 'served' then 'served'
+        when 'served' then case
+            when coalesce((select sum(p.amount_minor) from public.payments p
+                           where p.order_id = v_ticket.order_id and p.status = 'captured'), 0)
+                 >= (select o.total_minor from public.orders o where o.id = v_ticket.order_id)
+            then 'completed' else 'served' end
         when 'cancelled' then 'cancelled'
         else null
     end;
@@ -519,6 +532,15 @@ begin
     where id = v_ticket.order_id
       and organization_id = v_ticket.organization_id
       and branch_id = v_ticket.branch_id;
+
+    if v_order_status in ('completed', 'cancelled') and v_ticket.order_id is not null then
+        update public.restaurant_tables t
+          set status = 'available', updated_at = v_now
+        where t.id = (select o.table_id from public.orders o where o.id = v_ticket.order_id)
+          and t.organization_id = v_ticket.organization_id
+          and t.branch_id = v_ticket.branch_id
+          and t.status = 'occupied';
+    end if;
 
     insert into public.audit_events (
         organization_id, branch_id, actor_id, action, entity_type, entity_id, metadata
@@ -635,7 +657,11 @@ begin
     v_paid := v_paid + p_amount_minor;
     v_due := v_order.total_minor - v_paid;
     v_status := v_order.status;
-    if v_due = 0 then
+    if v_due = 0
+       and (
+         v_order.order_type <> 'dine_in'
+         or coalesce((select kt.status from public.kitchen_tickets kt where kt.order_id = p_order_id), '') = 'served'
+       ) then
         v_status := 'completed';
         update public.orders set status = 'completed', updated_at = now()
         where id = p_order_id and organization_id = p_organization_id and branch_id = p_branch_id;
