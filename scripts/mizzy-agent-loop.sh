@@ -129,6 +129,9 @@ case "$REVIEW_REQUESTED" in
     exit 2
     ;;
 esac
+if [[ "$REVIEWER" == "same" ]]; then
+  REVIEWER="$IMPLEMENTER"
+fi
 if [[ "$REVIEWER" == "$IMPLEMENTER" ]]; then
   REVIEW_SANDBOX="read-only"
   REVIEW_PERMISSION="plan"
@@ -294,8 +297,11 @@ attempt=1
 prior_context=""
 final_verdict="BLOCKED"
 while (( attempt <= MAX_ATTEMPTS )); do
+  IMPLEMENTER_FAILED=0
+  REVIEWER_FAILED=0
   make_implementer_prompt "$attempt" "$prior_context"
   if ! run_agent "$IMPLEMENTER" implementer "$RUN_DIR/implementer-prompt.md" "$RUN_DIR/implementer-${attempt}.log" "$RUN_DIR/implementer-${attempt}-final.txt"; then
+    IMPLEMENTER_FAILED=1
     prior_context="The previous implementer process exited non-zero. Inspect $RUN_DIR/implementer-${attempt}.log; diagnose before modifying further."
   fi
 
@@ -305,11 +311,12 @@ while (( attempt <= MAX_ATTEMPTS )); do
 
   make_reviewer_prompt "$attempt"
   if ! run_agent "$REVIEWER" reviewer "$RUN_DIR/reviewer-prompt.md" "$RUN_DIR/reviewer-${attempt}.log" "$RUN_DIR/reviewer-${attempt}-final.txt"; then
+    REVIEWER_FAILED=1
     echo "Reviewer process failed. Review evidence is incomplete." | tee -a "$CHECK_SUMMARY"
   fi
   final_verdict="$(extract_verdict "$RUN_DIR/reviewer-${attempt}-final.txt")"
 
-  if [[ "$CHECK_FAILED" -eq 0 && "$final_verdict" == "PASS" ]]; then
+  if [[ "$CHECK_FAILED" -eq 0 && "$final_verdict" == "PASS" && "$IMPLEMENTER_FAILED" -eq 0 && "$REVIEWER_FAILED" -eq 0 ]]; then
     echo
     echo "PASS: local verification and review completed. No GitHub write/merge/deploy was performed."
     echo "Evidence folder: $RUN_DIR"
