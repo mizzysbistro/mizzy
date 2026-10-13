@@ -30,6 +30,7 @@ class SyncOutboxRecord {
     required this.attempts,
     required this.createdAt,
     this.nextAttemptAt,
+    this.dependsOnEventId,
   });
 
   factory SyncOutboxRecord.fromRow(Map<String, Object?> row) {
@@ -47,6 +48,7 @@ class SyncOutboxRecord {
       attempts: row['attempts']! as int,
       createdAt: row['created_at']! as String,
       nextAttemptAt: row['next_attempt_at'] as String?,
+      dependsOnEventId: row['depends_on_event_id'] as String?,
     );
   }
 
@@ -63,6 +65,7 @@ class SyncOutboxRecord {
   final int attempts;
   final String createdAt;
   final String? nextAttemptAt;
+  final String? dependsOnEventId;
 }
 
 /// Manages durable local outbox transitions; it deliberately performs no
@@ -117,6 +120,14 @@ class SyncOutboxRepository {
             (status IN ('pending', 'failed')
               AND (next_attempt_at IS NULL OR next_attempt_at <= ?))
             OR (status = 'processing' AND next_attempt_at <= ?)
+          )
+          AND (
+            depends_on_event_id IS NULL OR EXISTS (
+              SELECT 1
+              FROM sync_outbox AS dependency
+              WHERE dependency.id = sync_outbox.depends_on_event_id
+                AND dependency.status = 'done'
+            )
           )
         ''',
         whereArgs: <Object?>[
