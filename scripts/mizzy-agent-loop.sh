@@ -160,7 +160,7 @@ fi
 
 # Critical POS/security work must not pass on a same-provider self-review.
 CRITICAL_TASK=0
-if printf '%s' "$TASK_DESCRIPTION" | grep -Eiq '(auth|RLS|tenant|branch[- ]scope|payment|financial|inventory|stock|offline|sync|migration|release|backup|restore)'; then
+if printf '%s\n%s' "$TASK_SLUG" "$TASK_DESCRIPTION" | grep -Eiq '(auth|authorization|security|credential|privacy|RLS|tenant|branch[- ]scope|cross[- ](tenant|branch)|payment|financial|billing|refund|void|cash|tax|ledger|money|idempotenc|replay|inventory|stock|offline|sync|migration|schema|backup|restore|release|production|deploy)'; then
   CRITICAL_TASK=1
   echo "ROUTE: critical lane; independent cross-provider review is required for PASS."
 fi
