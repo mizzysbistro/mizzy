@@ -594,10 +594,10 @@ class AuthenticatedOutboxSyncWorker {
     final branchId = event.branchId;
     if (event.entityId != ticketId ||
         refs.ticketId != ticketId ||
-        refs.orderId != orderId ||
-        organizationId != _requiredString(payload, 'organizationId')) {
-      // The transition's historical payload has no organizationId member;
-      // rely on the event's org/branch and the ticket/order linkage below.
+        refs.orderId != orderId) {
+      throw const FormatException(
+        'Kitchen transition payload identity is inconsistent.',
+      );
     }
     _validateUuid(eventId, 'eventId');
     _validateUuid(ticketId, 'ticketId');
