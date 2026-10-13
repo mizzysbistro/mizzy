@@ -53,11 +53,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Format Dart files for validation and print exact source diff
+      - name: Format Dart files and export canonical source for repair
         run: |
           dart format lib test
           git diff -- lib test
           git diff --check
+          for file in lib/features/orders/data/order_repository.dart lib/main.dart test/order_repository_test.dart; do
+            echo "FORMAT_FILE_B64_BEGIN:$file"
+            base64 -w0 "$file"
+            echo
+            echo "FORMAT_FILE_B64_END:$file"
+          done
 
       - name: Static analysis
         run: flutter analyze
