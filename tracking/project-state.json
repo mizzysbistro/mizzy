@@ -1,0 +1,35 @@
+{
+  "project_name": "Mizzy Independent Android POS",
+  "repository": "https://github.com/mizzysbistro/mizzy",
+  "repository_visibility": "private",
+  "prepared_at": "2026-10-13",
+  "operating_mode": "hybrid",
+  "progress_tracking": "github",
+  "check_in_cadence": "none",
+  "authorization_boundaries": "safe",
+  "completion_criteria": "production",
+  "reporting": "detailed",
+  "failure_recovery": "retry",
+  "current_phase": "P0",
+  "status": "in_progress",
+  "verified_findings": {
+    "target_repository_confirmed": true,
+    "repository_full_name": "mizzysbistro/mizzy",
+    "repository_default_branch": "main",
+    "repository_size_at_inspection": 0,
+    "previous_POS_repositories_to_avoid": [
+      "mizzysbistro/pos",
+      "mizzysbistro/bistro",
+      "mizzysbistro/banawe",
+      "mizzysbistro/mizzys-bistro-android"
+    ],
+    "supabase_project_created": false,
+    "flutter_app_created": false,
+    "apk_built": false
+  },
+  "blockers": [
+    "Flutter/Dart/Android SDK toolchain availability needs verification in a dedicated runner.",
+    "Supabase project is not yet provisioned or connected; do not provision resources with potential cost without approval."
+  ],
+  "next_action": "Initialize tracking, create P0 GitHub issues, verify CI toolchain, then scaffold Flutter app in this repository."
+}
