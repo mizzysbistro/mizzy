@@ -138,6 +138,9 @@ grep -q '^codex:read-only$' "$MIZZY_FAKE_AGENT_LOG" ||
 if grep -q '^flutter:build apk --debug$' "$MIZZY_FAKE_CHECK_LOG"; then
   fail "low-risk task unexpectedly ran a critical full-build gate"
 fi
+if grep -q '^supabase:test db$' "$MIZZY_FAKE_CHECK_LOG"; then
+  fail "low-risk task unexpectedly forced local Supabase tests"
+fi
 
 # Critical tasks auto-upgrade to full verification and cannot pass with one provider.
 if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash scripts/mizzy-agent-loop.sh payment-refund "Validate refund workflow" 2>&1)"; then
@@ -145,6 +148,8 @@ if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash s
 fi
 grep -q "using full verification" <<< "$output" ||
   fail "critical task did not automatically choose full verification"
+grep -q "critical task forces local Supabase database tests" <<< "$output" ||
+  fail "critical task did not force local Supabase tests"
 grep -q "BLOCKED: local checks completed, but critical work requires an independent cross-provider reviewer" <<< "$output" ||
   fail "critical task was not blocked for same-provider review"
 grep -q '^flutter:build apk --debug$' "$MIZZY_FAKE_CHECK_LOG" ||
@@ -153,161 +158,11 @@ grep -q '^gitleaks:dir --redact --no-banner .$' "$MIZZY_FAKE_CHECK_LOG" ||
   fail "critical task did not scan worktree"
 grep -q '^gitleaks:git --redact$' "$MIZZY_FAKE_CHECK_LOG" ||
   fail "critical task did not scan history"
-grep -q '^sha256sum:build/app/outputs/flutter-apk/app-debug.apk
-
-# With an independent reviewer, the critical task may pass the coordinator gate.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=claude bash scripts/mizzy-agent-loop.sh payment-refund "Validate refund workflow" 2>&1)"; then
-  :
-else
-  echo "$output" >&2
-  fail "critical cross-provider loop unexpectedly failed"
-fi
-grep -q "PASS: local verification and independent cross-provider review completed" <<< "$output" ||
-  fail "critical cross-provider PASS was not reported"
-grep -q '^claude:plan$' "$MIZZY_FAKE_AGENT_LOG" ||
-  fail "Claude reviewer did not use plan mode"
-
-# A successful CLI exit and passing reviewer must not override a non-PASS implementer verdict.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_IMPLEMENTER_VERDICT=CHANGES_REQUIRED bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted CHANGES_REQUIRED implementer verdict"
-fi
-grep -q "Implementer verdict was CHANGES_REQUIRED" <<< "$output" ||
-  fail "non-PASS implementer verdict was not surfaced"
-grep -q "STOP: reached 3 distinct attempts" <<< "$output" ||
-  fail "non-PASS implementer verdict did not exhaust bounded retries"
-
-# PASS appearing below a non-verdict first line must not satisfy strict parsing.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_REVIEWER_PREFIX="Untrusted preface" bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted a reviewer whose first line was not a verdict"
-fi
-grep -q "Last reviewer verdict: MISSING" <<< "$output" ||
-  fail "malformed reviewer first line was not rejected"
-
-# Invalid configuration fails before any agent invocation.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_AGENT_MAX_TURNS=0 bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "invalid turn limit was accepted"
-fi
-grep -q "MIZZY_AGENT_MAX_TURNS must be a positive integer" <<< "$output" ||
-  fail "invalid turn-limit diagnostic was missing"
-
-# Wrong repository origin must be rejected before any agent invocation.
-calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-git -C "$FIXTURE" remote set-url origin https://github.com/mizzysbistro/bistro.git
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "launcher accepted a sibling repository origin"
-fi
-grep -q "origin remote must point to mizzysbistro/mizzy on GitHub" <<< "$output" ||
-  fail "wrong-origin diagnostic was missing"
-calls_after="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-[[ "$calls_before" == "$calls_after" ]] ||
-  fail "an agent was invoked with the wrong repository origin"
-
-echo "PASS: coordinator, risk routing, strict verdicts and verification gates using fake CLIs only"
- "$MIZZY_FAKE_CHECK_LOG" ||
+grep -q '^sha256sum:build/app/outputs/flutter-apk/app-debug.apk$' "$MIZZY_FAKE_CHECK_LOG" ||
   fail "critical task did not record APK checksum"
-grep -q '^supabase:test db
-
-# With an independent reviewer, the critical task may pass the coordinator gate.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=claude bash scripts/mizzy-agent-loop.sh payment-refund "Validate refund workflow" 2>&1)"; then
-  :
-else
-  echo "$output" >&2
-  fail "critical cross-provider loop unexpectedly failed"
-fi
-grep -q "PASS: local verification and independent cross-provider review completed" <<< "$output" ||
-  fail "critical cross-provider PASS was not reported"
-grep -q '^claude:plan$' "$MIZZY_FAKE_AGENT_LOG" ||
-  fail "Claude reviewer did not use plan mode"
-
-# A successful CLI exit and passing reviewer must not override a non-PASS implementer verdict.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_IMPLEMENTER_VERDICT=CHANGES_REQUIRED bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted CHANGES_REQUIRED implementer verdict"
-fi
-grep -q "Implementer verdict was CHANGES_REQUIRED" <<< "$output" ||
-  fail "non-PASS implementer verdict was not surfaced"
-grep -q "STOP: reached 3 distinct attempts" <<< "$output" ||
-  fail "non-PASS implementer verdict did not exhaust bounded retries"
-
-# PASS appearing below a non-verdict first line must not satisfy strict parsing.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_REVIEWER_PREFIX="Untrusted preface" bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted a reviewer whose first line was not a verdict"
-fi
-grep -q "Last reviewer verdict: MISSING" <<< "$output" ||
-  fail "malformed reviewer first line was not rejected"
-
-# Invalid configuration fails before any agent invocation.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_AGENT_MAX_TURNS=0 bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "invalid turn limit was accepted"
-fi
-grep -q "MIZZY_AGENT_MAX_TURNS must be a positive integer" <<< "$output" ||
-  fail "invalid turn-limit diagnostic was missing"
-
-# Wrong repository origin must be rejected before any agent invocation.
-calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-git -C "$FIXTURE" remote set-url origin https://github.com/mizzysbistro/bistro.git
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "launcher accepted a sibling repository origin"
-fi
-grep -q "origin remote must point to mizzysbistro/mizzy on GitHub" <<< "$output" ||
-  fail "wrong-origin diagnostic was missing"
-calls_after="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-[[ "$calls_before" == "$calls_after" ]] ||
-  fail "an agent was invoked with the wrong repository origin"
-
-echo "PASS: coordinator, risk routing, strict verdicts and verification gates using fake CLIs only"
- "$MIZZY_FAKE_CHECK_LOG" ||
+grep -q '^supabase:test db$' "$MIZZY_FAKE_CHECK_LOG" ||
   fail "critical task did not run local Supabase DB tests"
-grep -q '^docker:info
-
-# With an independent reviewer, the critical task may pass the coordinator gate.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=claude bash scripts/mizzy-agent-loop.sh payment-refund "Validate refund workflow" 2>&1)"; then
-  :
-else
-  echo "$output" >&2
-  fail "critical cross-provider loop unexpectedly failed"
-fi
-grep -q "PASS: local verification and independent cross-provider review completed" <<< "$output" ||
-  fail "critical cross-provider PASS was not reported"
-grep -q '^claude:plan$' "$MIZZY_FAKE_AGENT_LOG" ||
-  fail "Claude reviewer did not use plan mode"
-
-# A successful CLI exit and passing reviewer must not override a non-PASS implementer verdict.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_IMPLEMENTER_VERDICT=CHANGES_REQUIRED bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted CHANGES_REQUIRED implementer verdict"
-fi
-grep -q "Implementer verdict was CHANGES_REQUIRED" <<< "$output" ||
-  fail "non-PASS implementer verdict was not surfaced"
-grep -q "STOP: reached 3 distinct attempts" <<< "$output" ||
-  fail "non-PASS implementer verdict did not exhaust bounded retries"
-
-# PASS appearing below a non-verdict first line must not satisfy strict parsing.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_REVIEWER_PREFIX="Untrusted preface" bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "coordinator accepted a reviewer whose first line was not a verdict"
-fi
-grep -q "Last reviewer verdict: MISSING" <<< "$output" ||
-  fail "malformed reviewer first line was not rejected"
-
-# Invalid configuration fails before any agent invocation.
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_AGENT_MAX_TURNS=0 bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "invalid turn limit was accepted"
-fi
-grep -q "MIZZY_AGENT_MAX_TURNS must be a positive integer" <<< "$output" ||
-  fail "invalid turn-limit diagnostic was missing"
-
-# Wrong repository origin must be rejected before any agent invocation.
-calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-git -C "$FIXTURE" remote set-url origin https://github.com/mizzysbistro/bistro.git
-if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
-  fail "launcher accepted a sibling repository origin"
-fi
-grep -q "origin remote must point to mizzysbistro/mizzy on GitHub" <<< "$output" ||
-  fail "wrong-origin diagnostic was missing"
-calls_after="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
-[[ "$calls_before" == "$calls_after" ]] ||
-  fail "an agent was invoked with the wrong repository origin"
-
-echo "PASS: coordinator, risk routing, strict verdicts and verification gates using fake CLIs only"
- "$MIZZY_FAKE_CHECK_LOG" ||
+grep -q '^docker:info$' "$MIZZY_FAKE_CHECK_LOG" ||
   fail "critical task did not verify Docker readiness"
 
 # With an independent reviewer, the critical task may pass the coordinator gate.
