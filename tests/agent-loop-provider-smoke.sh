@@ -58,10 +58,16 @@ case "$sandbox" in
   read-only)
     message="Stub read-only reviewer found no issues."
     verdict="PASS"
+    output_prefix="${MIZZY_FAKE_REVIEWER_PREFIX:-}"
     ;;
   *) echo "unexpected Codex sandbox: $sandbox" >&2; exit 42 ;;
 esac
-printf 'VERDICT: %s\n%s\n' "$verdict" "$message" > "$last_message"
+if [[ "${output_prefix:-}" != "" ]]; then
+  printf '%s\n' "$output_prefix" > "$last_message"
+else
+  : > "$last_message"
+fi
+printf 'VERDICT: %s\n%s\n' "$verdict" "$message" >> "$last_message"
 cat "$last_message"
 printf 'codex:%s\n' "$sandbox" >> "$MIZZY_FAKE_AGENT_LOG"
 CODEX
@@ -136,6 +142,13 @@ grep -q "Implementer verdict was CHANGES_REQUIRED" <<< "$output" ||
   fail "non-PASS implementer verdict was not surfaced"
 grep -q "STOP: reached 3 distinct attempts" <<< "$output" ||
   fail "non-PASS implementer verdict did not exhaust bounded repair attempts"
+
+# A PASS appearing on the second line must not satisfy the strict first-line gate.
+if output="$(cd "$FIXTURE" && MIZZY_IMPLEMENTER=codex MIZZY_REVIEWER=same MIZZY_FAKE_REVIEWER_PREFIX="Untrusted preface" bash scripts/mizzy-agent-loop.sh ui-copy "Adjust button spacing" 2>&1)"; then
+  fail "coordinator accepted PASS when reviewer first line was not VERDICT: PASS"
+fi
+grep -q "Last reviewer verdict: MISSING" <<< "$output" ||
+  fail "malformed reviewer first line was not rejected"
 
 # The repository identity guard must stop before any provider invocation.
 calls_before="$(wc -l < "$MIZZY_FAKE_AGENT_LOG")"
