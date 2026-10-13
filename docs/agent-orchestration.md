@@ -77,6 +77,8 @@ Keep the task packet concise. Do not paste credentials, real restaurant/customer
 
 ## Local runner
 Use `scripts/mizzy-agent-loop.sh <task-slug> <task description>` on a development machine that has Git, Flutter/Dart and at least one authenticated Codex or Claude Code CLI. Run it on a clean feature branch—not `main`. It will not push, commit, merge or deploy.
+
+The launcher sources deterministic helper functions from `scripts/mizzy-agent-loop-lib.sh`. `tests/agent-loop-guard-smoke.sh` covers protected-branch and dirty-tree refusal, risk-lane classification, staged/unstaged and untracked test discovery, deletion filtering, and the empty-selection fallback signal. The test-selection function returns an empty list successfully when no current test file changed; the launcher then runs the full test suite.
 - Optional environment: `MIZZY_IMPLEMENTER=codex|claude`, `MIZZY_REVIEWER=codex|claude|same`, `MIZZY_VERIFY=targeted|full`, `MIZZY_TARGET_TEST=test/path_test.dart`.
 - `targeted`: strict format and analyzer, then the explicitly specified `MIZZY_TARGET_TEST`, or every changed existing test file found among staged/unstaged tracked changes and untracked files. Deleted test files are skipped. If no test file changed, safely fall back to the full Flutter test suite.
 - `full`: strict format, analyzer, entire Flutter test suite, debug APK, and local Gitleaks scan when the binary is installed. Set `MIZZY_RUN_SUPABASE_TESTS=1` only when the local Supabase CLI and Docker/test stack are ready; this runs the local database tests and does not deploy to hosted Supabase.
