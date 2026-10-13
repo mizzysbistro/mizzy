@@ -17,7 +17,7 @@ class MizzyDatabase {
   final String databaseName;
   Future<sqflite.Database>? _databaseFuture;
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   Future<sqflite.Database> open() {
     final cached = _databaseFuture;
@@ -100,6 +100,28 @@ class MizzyDatabase {
     // Never drop user order or payment data as a recovery shortcut.
     if (oldVersion < 1 && newVersion >= 1) {
       await _createSchema(database);
+    }
+    if (oldVersion < 2 && newVersion >= 2) {
+      final columns = await database.rawQuery('PRAGMA table_info(sync_outbox)');
+      final hasDependencyColumn = columns.any(
+        (column) => column['name'] == 'depends_on_event_id',
+      );
+      if (!hasDependencyColumn) {
+        await database.execute(
+          'ALTER TABLE sync_outbox ADD COLUMN depends_on_event_id TEXT '
+          'REFERENCES sync_outbox(id)',
+        );
+      }
+      await database.execute(
+        'CREATE INDEX IF NOT EXISTS outbox_dependency_idx '
+        'ON sync_outbox (depends_on_event_id, status)',
+      );
+      await database.update(
+        'local_meta',
+        <String, Object?>{'meta_value': schemaVersion.toString()},
+        where: 'meta_key = ?',
+        whereArgs: <Object?>['schema_version'],
+      );
     }
   }
 
@@ -259,6 +281,7 @@ class MizzyDatabase {
         schema_version INTEGER NOT NULL DEFAULT 1 CHECK (schema_version > 0),
         payload_json TEXT NOT NULL,
         idempotency_key TEXT NOT NULL UNIQUE,
+        depends_on_event_id TEXT REFERENCES sync_outbox(id),
         status TEXT NOT NULL DEFAULT 'pending'
           CHECK (status IN ('pending', 'processing', 'done', 'failed', 'conflict')),
         attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
@@ -281,6 +304,7 @@ class MizzyDatabase {
     'CREATE INDEX order_lines_order_idx ON order_lines (order_id)',
     'CREATE INDEX kitchen_tickets_branch_status_idx ON kitchen_tickets (organization_id, branch_id, status, fired_at)',
     'CREATE INDEX outbox_ready_idx ON sync_outbox (status, next_attempt_at, created_at)',
+    'CREATE INDEX outbox_dependency_idx ON sync_outbox (depends_on_event_id, status)',
     'CREATE INDEX inventory_branch_item_created_idx ON inventory_movements (organization_id, branch_id, item_id, created_at DESC)',
   ];
 }
