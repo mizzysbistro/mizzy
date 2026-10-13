@@ -107,6 +107,35 @@ as $$
     );
 $$;
 
+create or replace function private.can_access_branch(p_branch_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+    select exists (
+        select 1
+        from public.branches as b
+        join public.organization_memberships as om
+          on om.organization_id = b.organization_id
+         and om.user_id = (select auth.uid())
+         and om.is_active
+        where b.id = p_branch_id
+          and (
+              om.role = 'owner'
+              or exists (
+                  select 1
+                  from public.branch_memberships as bm
+                  where bm.branch_id = b.id
+                    and bm.organization_id = b.organization_id
+                    and bm.user_id = om.user_id
+                    and bm.is_active
+              )
+          )
+    );
+$;
+
 create or replace function private.has_branch_role(
     p_branch_id uuid,
     p_roles text[]
@@ -219,7 +248,7 @@ using ((select private.is_org_member(id)));
 create policy branches_select_member
 on public.branches
 for select to authenticated
-using ((select private.is_org_member(organization_id)));
+using ((select private.can_access_branch(id)));
 
 create policy branches_insert_owner
 on public.branches
@@ -269,10 +298,12 @@ using (
 
 revoke all on function private.is_org_member(uuid) from public, anon;
 revoke all on function private.has_org_role(uuid, text[]) from public, anon;
+revoke all on function private.can_access_branch(uuid) from public, anon;
 revoke all on function private.has_branch_role(uuid, text[]) from public, anon;
 grant usage on schema private to authenticated;
 grant execute on function private.is_org_member(uuid) to authenticated;
 grant execute on function private.has_org_role(uuid, text[]) to authenticated;
+grant execute on function private.can_access_branch(uuid) to authenticated;
 grant execute on function private.has_branch_role(uuid, text[]) to authenticated;
 
 revoke all on function public.create_organization(text, text) from public, anon;
