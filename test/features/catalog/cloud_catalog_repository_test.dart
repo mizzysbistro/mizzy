@@ -239,6 +239,35 @@ void main() {
     expect(cached['price_minor'], 9000);
   });
 
+  test('quarantines local-only catalog rows in a cloud branch', () async {
+    final id = const Uuid().v4();
+    final db = await database.open();
+    await db.insert('catalog_items', <String, Object?>{
+      'id': id,
+      'organization_id': organizationId,
+      'branch_id': branchId,
+      'name': 'Local-only sample',
+      'sku': 'LOCAL-SAMPLE-001',
+      'category_name': 'Demo',
+      'price_minor': 1000,
+      'currency_code': 'PHP',
+      'is_active': 1,
+      'updated_at': now.toIso8601String(),
+      'sync_state': 'local',
+    });
+    source.items = <Map<String, Object?>>[];
+
+    final result = await repository.syncBranch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    final cached = await readItem(id);
+    expect(result.conflictItemIds, contains(id));
+    expect(cached['sync_state'], 'conflict');
+    expect(cached['is_active'], 0);
+  });
+
   test('rejects foreign-branch rows before changing the cache', () async {
     source.items = [item(branch: const Uuid().v4())];
 

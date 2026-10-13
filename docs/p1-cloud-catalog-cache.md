@@ -8,7 +8,7 @@
 - SupabaseCloudCatalogSource requires an active Supabase Auth session, fetches all menu_items pages for exactly that organization/branch, and includes inactive rows so deactivated items are not kept active offline.
 - Every row is checked for valid UUIDs, branch scope, name, integer minor-unit price, uppercase three-letter currency, active flag and timestamp before SQLite writes begin.
 - New rows use the stable cloud UUID and are marked synced. Server updates refresh cache rows already synced. Differing unsynchronized rows are preserved, marked conflict, and made unavailable for new orders instead of being silently overwritten.
-- Items absent from the full cloud result are made inactive. When a SKU has been reassigned to a different cloud UUID, an obsolete synced cache row releases that SKU while retaining the row; sale-line name/SKU/price snapshots are not changed.
+- Items absent from the full cloud result are made inactive. Local/pending/failed catalog rows under a cloud branch that have no matching server UUID are quarantined and hidden from new sales until catalog-write sync or explicit reconciliation exists. When a SKU has been reassigned to a different cloud UUID, an obsolete synced cache row releases that SKU while retaining the row; sale-line name/SKU/price snapshots are not changed.
 - This component is read-only against Supabase. It does not create/update/delete catalog items remotely and does not enable cloud order upload.
 
 ## Remaining integration and safety work

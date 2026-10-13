@@ -190,6 +190,39 @@ class CloudCatalogRepository {
         if ((cached['is_active']! as int) != 0) deactivated++;
       }
 
+      // The current app does not yet upload catalog mutations. A local-only
+      // item under a cloud branch therefore cannot be treated as sellable or
+      // guaranteed to sync with its orders. Quarantine it until it is explicitly
+      // reconciled with a server-owned catalog UUID.
+      final unsyncedCachedItems = await transaction.query(
+        'catalog_items',
+        where:
+            'organization_id = ? AND branch_id = ? '
+            'AND sync_state IN (?, ?, ?)',
+        whereArgs: <Object?>[
+          organizationId,
+          branchId,
+          'local',
+          'pending',
+          'failed',
+        ],
+      );
+      for (final cached in unsyncedCachedItems) {
+        final cachedId = cached['id']! as String;
+        if (remoteIds.contains(cachedId)) continue;
+        await transaction.update(
+          'catalog_items',
+          <String, Object?>{
+            'is_active': 0,
+            'sync_state': 'conflict',
+            'updated_at': now,
+          },
+          where: 'id = ? AND organization_id = ? AND branch_id = ?',
+          whereArgs: <Object?>[cachedId, organizationId, branchId],
+        );
+        conflicts.add(cachedId);
+      }
+
       for (final item in remoteItems) {
         final existingRows = await transaction.query(
           'catalog_items',

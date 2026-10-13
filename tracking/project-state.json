@@ -67,7 +67,7 @@
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
     "P1 cloud catalog repository is drafted but not integrated into authenticated POS flow or tested; order-upload worker must remain disabled until branch authorization, catalog ID mapping, price reconciliation and CI pass."
   ],
-  "next_action": "Review the draft P1-02 cloud catalog cache and stacked PRs #18/#19 for P2 outbox/server idempotency. GitHub Actions hosted runners repeatedly fail before steps; issue #13 needs owner/admin settings/usage diagnosis. Then wire the catalog cache after AuthRepository branch selection, run Flutter gates and local Supabase pgTAP, and only afterward enable authenticated outbox upload/pull sync.",
+  "next_action": "Review draft P1-02 cloud catalog cache; validate branch membership wiring and ensure sample data is never treated as remote catalog. Restore Actions runners under issue #13, run Flutter formatter/analyzer/tests/APK, and run local Supabase pgTAP for PRs #18/#19 before enabling sync.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -179,7 +179,8 @@
     "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
     "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner.",
     "Created issue #20 for branch-scoped cloud catalog cache as a prerequisite to order sync.",
-    "Drafted CloudCatalogRepository and tests on feat/p1-cloud-catalog-cache: stable cloud item UUIDs, full paginated pull, inactive-item/deleted-cache deactivation, SKU-reuse handling, conflict quarantine for unsynced local changes, and protection of sale-line snapshots. Auth/UI wiring and verification remain outstanding."
+    "Drafted CloudCatalogRepository and tests on feat/p1-cloud-catalog-cache: stable cloud item UUIDs, full paginated pull, inactive-item/deleted-cache deactivation, SKU-reuse handling, conflict quarantine for unsynced local changes, and protection of sale-line snapshots. Auth/UI wiring and verification remain outstanding.",
+    "Hardened P1-02 catalog cache to quarantine local-only menu rows in a cloud-scoped branch unless they map to a server-owned catalog UUID; added a regression test."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

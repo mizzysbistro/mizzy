@@ -390,10 +390,11 @@
     "evidence": [
       "Created issue #20 with scope, acceptance criteria, failure handling and explicit dependency on Auth and branch RLS.",
       "Drafted Supabase catalog page source plus a SQLite reconciliation repository using stable cloud UUIDs, inactive-item handling, SKU-reuse protection and conflict quarantine.",
-      "Added tests for scope denial, active/inactive import, price update vs. immutable order snapshot, removed/reused SKU, unsynced local conflict, foreign-branch rejection, malformed data and session requirement. Tests are authored but not yet executed."
+      "Added tests for scope denial, active/inactive import, price update vs. immutable order snapshot, removed/reused SKU, unsynced local conflict, foreign-branch rejection, malformed data and session requirement. Tests are authored but not yet executed.",
+      "Added an additional test proving local-only catalog rows in a cloud branch are quarantined and hidden until they can be reconciled to a server-owned UUID."
     ],
     "attempt_count": 0,
-    "blocker": "The repository has no interactive Auth/organization/branch selection wired into the POS UI. GitHub Actions currently fails before steps (runner_id=0, zero steps), and Flutter/Dart are unavailable in this environment; service/tests remain unverified.",
+    "blocker": "The catalog pull/cache repository is drafted but not wired into the POS Auth/branch-selection UI, and tests have not run because Flutter/Dart are unavailable and hosted Actions jobs fail before steps. Sync outbox and server event RPC drafts are also unverified.",
     "approval_required": false,
     "next_action": "Review the catalog reconciliation code, wire it only after AuthRepository confirms active branch membership, restore Actions runners under issue #13, and run all gates. Do not enable order uploads before catalog identity and price conflicts are reconciled.",
     "updated_at": "2026-10-14",
