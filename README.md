@@ -66,6 +66,23 @@ flutter build apk --debug
 
 For FFI-based SQLite tests on Debian/Ubuntu, install the system SQLite library development package (libsqlite3-0 and libsqlite3-dev).
 
+## Smart coding-agent loop
+
+The loop can use **Codex CLI as implementer with Claude Code as a read-only reviewer**, or reverse the roles. If only one provider is installed, the runner reports that peer review is not independent. It never assumes a second agent exists, and it does not put AI API keys in GitHub Actions.
+
+Before running it, install Flutter/Dart, Git, at least one authenticated provider CLI (`codex` or `claude`), and Gitleaks for full verification. Work from a clean feature branch. The runner does not commit, push, merge, deploy or provision infrastructure.
+
+```sh
+git switch -c agent/catalog-flow
+bash scripts/mizzy-agent-loop.sh catalog-flow "Load active items from the branch-scoped SQLite catalog"
+```
+
+The default `MIZZY_VERIFY=auto` selects a focused lane for low-risk work and a full lane for tasks mentioning authentication, RLS/tenant/branch isolation, payments/refunds, stock, synchronization, migrations, security or releases. Full verification includes format, analyzer, all Flutter tests, a debug APK build and Gitleaks. Supabase/RLS/migration tasks are blocked before implementation unless a local Supabase CLI plus Docker stack are available and `MIZZY_RUN_SUPABASE_TESTS=1` is set; that runs local tests only, never a hosted deployment.
+
+Useful overrides: `MIZZY_IMPLEMENTER=codex|claude`, `MIZZY_REVIEWER=codex|claude|same`, `MIZZY_VERIFY=targeted|full`, and `MIZZY_TARGET_TEST=test/path_test.dart`. Logs and provider prompts go under ignored `.agent-runs/`; do not put credentials or customer data in a task description. See [the full orchestration contract](docs/agent-orchestration.md) and [issue #16](https://github.com/mizzysbistro/mizzy/issues/16).
+
+**Current agent-loop status:** instructions and runner are committed, but local CLI execution has not been performed in this environment. GitHub Actions currently fails before job steps start (`runner_id: 0`); this remains an infrastructure blocker under [issue #13](https://github.com/mizzysbistro/mizzy/issues/13), not a test pass/fail result.
+
 ## Supabase client configuration
 
 The app reads build-time defines. Supply a Supabase project URL and a **publishable/anon client key** with `--dart-define` or `--dart-define-from-file`, for example:
