@@ -31,6 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate smart-agent launcher syntax and safe help path
+        run: |
+          bash -n scripts/mizzy-agent-loop.sh
+          bash scripts/mizzy-agent-loop.sh --help
+
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
