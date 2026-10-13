@@ -40,13 +40,6 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   exit 2
 }
 cd "$ROOT"
-if [[ ! -f "$ROOT/scripts/mizzy-agent-loop-lib.sh" ]]; then
-  echo "ERROR: required helper scripts/mizzy-agent-loop-lib.sh is missing." >&2
-  exit 2
-fi
-# shellcheck source=scripts/mizzy-agent-loop-lib.sh
-source "$ROOT/scripts/mizzy-agent-loop-lib.sh"
-
 BRANCH="$(git branch --show-current)"
 if [[ -z "$BRANCH" || "$BRANCH" == "main" || "$BRANCH" == "master" ]]; then
   echo "ERROR: switch to a dedicated feature branch before running agents (current: ${BRANCH:-detached HEAD})." >&2
@@ -64,6 +57,13 @@ if [[ ! -f AGENT.md || ! -f AGENTS.md || ! -f CLAUDE.md || ! -f docs/agent-orche
   echo "ERROR: shared agent rules are missing. Restore AGENT.md, AGENTS.md, CLAUDE.md and docs/agent-orchestration.md." >&2
   exit 2
 fi
+if [[ ! -f "$ROOT/scripts/mizzy-agent-loop-lib.sh" ]]; then
+  echo "ERROR: required helper scripts/mizzy-agent-loop-lib.sh is missing." >&2
+  exit 2
+fi
+# shellcheck source=scripts/mizzy-agent-loop-lib.sh
+source "$ROOT/scripts/mizzy-agent-loop-lib.sh"
+
 for command_name in git dart flutter; do
   if ! command -v "$command_name" >/dev/null 2>&1; then
     echo "ERROR: required command '$command_name' is not installed or not on PATH." >&2
