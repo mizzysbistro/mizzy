@@ -31,6 +31,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate multi-agent loop shell syntax and contracts
+        run: |
+          bash -n scripts/mizzy-agent-loop.sh
+          test -f AGENT.md
+          test -f AGENTS.md
+          test -f CLAUDE.md
+          test -f docs/agent-orchestration.md
+
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
