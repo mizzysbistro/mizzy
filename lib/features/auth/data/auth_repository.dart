@@ -40,7 +40,7 @@ class AuthSignUpResult {
 /// and PostgreSQL RLS policies determine which tenant/branch records are visible.
 class AuthRepository {
   AuthRepository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -54,10 +54,7 @@ class AuthRepository {
       .map((state) => state.session != null)
       .distinct();
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     final normalizedEmail = email.trim().toLowerCase();
     if (!AuthInputValidator.isValidEmail(normalizedEmail)) {
       throw ArgumentError.value(email, 'email', 'Enter a valid email address.');
@@ -90,7 +87,9 @@ class AuthRepository {
       email: normalizedEmail,
       password: password,
     );
-    return AuthSignUpResult(emailConfirmationRequired: response.session == null);
+    return AuthSignUpResult(
+      emailConfirmationRequired: response.session == null,
+    );
   }
 
   Future<void> signOut() => _client.auth.signOut();
