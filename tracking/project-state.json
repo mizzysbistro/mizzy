@@ -65,9 +65,9 @@
     "No hosted Supabase project is connected. Do not provision resources that may incur costs without approval.",
     "Counter/Tables/Orders/Kitchen screens and catalog still run as local-only demonstration data; cloud sync, production catalog management and real payments are not enabled.",
     "Trusted staff invitation/membership lifecycle, authenticated sync worker/reconciliation/cursors/conflict resolution, and remaining adversarial cross-branch/payment validation remain incomplete.",
-    "P2 dependency-ordering patch is unverified and intentionally unmerged pending code review and CI runner recovery; authenticated network sync remains unimplemented."
+    "PR #18 follow-up migration/backfill and branch-scoped dependency tests are unverified and unmerged because GitHub-hosted Actions jobs still fail before step 1; no authenticated network sync worker exists yet."
   ],
-  "next_action": "Review draft PR for P2 outbox dependency ordering without merging. Resolve Actions runner issue 13 without paid provisioning or visibility changes; then run Dart format, analyzer, Flutter tests, Gitleaks, Android debug APK build and local Supabase migrations/pgTAP. Only after those pass should authenticated upload/pull sync, cursors, offline/reconnect reconciliation and conflict handling continue.",
+  "next_action": "Review draft PR #18 for schema-v2 legacy outbox dependency backfill, quarantine behavior and branch-scoped dependency gating. The latest CI run failed before any step due to unavailable hosted runners; resolve issue 13 without paid provisioning or repo visibility changes. Then run formatter, analyzer, all Flutter tests (including v1 migration and outbox dependency tests), Gitleaks, Android debug APK and local Supabase migration/pgTAP. Do not enable a network worker until these gates and independent review pass.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -173,7 +173,8 @@
     "Added seven outbox tests covering organization/branch isolation, retry timing/backoff, expired-lease recovery, delivered/conflict state, invalid leases/batch sizes, concurrent claims, and wrong-branch acknowledgment.",
     "Created issue 15 specifying authenticated outbox upload, dependent event ordering, idempotent replay, cursor-based pull sync, offline/reconnect reconciliation, and safe conflict handling.",
     "Documented that latest code remains unverified because current Flutter and database workflow jobs did not obtain a runner.",
-    "Prepared a draft P2 outbox dependency-ordering patch on a dedicated feature branch: kitchen-ticket creation depends on parent-order delivery, and Kitchen transitions chain behind the previous ticket event. Added a regression test; not verified because Flutter/Dart are unavailable in this execution environment and GitHub Actions runner jobs fail before any steps."
+    "Prepared a draft P2 outbox dependency-ordering patch on a dedicated feature branch: kitchen-ticket creation depends on parent-order delivery, and Kitchen transitions chain behind the previous ticket event. Added a regression test; not verified because Flutter/Dart are unavailable in this execution environment and GitHub Actions runner jobs fail before any steps.",
+    "Extended draft PR #18 with safe v1→v2 legacy outbox dependency backfill, per-branch dependency scope checks, unresolved legacy event quarantine, and migration/cross-branch regression tests. This source and test change remains unverified pending toolchain/CI runner recovery."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

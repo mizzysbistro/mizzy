@@ -134,6 +134,30 @@ void main() {
   );
 
   test(
+    'a dependency in another branch cannot unblock a local event',
+    () async {
+      final foreignBranch = const Uuid().v4();
+      final foreignParentId = await insertEvent(branch: foreignBranch);
+      final rawDatabase = await database.open();
+      await rawDatabase.update(
+        'sync_outbox',
+        <String, Object?>{'status': 'done'},
+        where: 'id = ?',
+        whereArgs: <Object?>[foreignParentId],
+      );
+      await insertEvent(dependsOnEventId: foreignParentId);
+
+      final claimed = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+        limit: 10,
+      );
+
+      expect(claimed, isEmpty);
+    },
+  );
+
+  test(
     'retry uses bounded exponential backoff and the safe error code',
     () async {
     final eventId = await insertEvent();

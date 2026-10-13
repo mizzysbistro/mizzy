@@ -126,6 +126,8 @@ class SyncOutboxRepository {
               SELECT 1
               FROM sync_outbox AS dependency
               WHERE dependency.id = sync_outbox.depends_on_event_id
+                AND dependency.organization_id = sync_outbox.organization_id
+                AND dependency.branch_id = sync_outbox.branch_id
                 AND dependency.status = 'done'
             )
           )
