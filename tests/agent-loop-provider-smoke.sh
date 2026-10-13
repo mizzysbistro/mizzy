@@ -2,7 +2,7 @@
 # End-to-end coordinator test using deterministic fake CLIs; no model API or network.
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMP_ROOT="$(mktemp -d)"
 trap 'rm -rf "$TEMP_ROOT"' EXIT
 
@@ -66,13 +66,13 @@ cat >/dev/null
 case "$sandbox" in
   workspace-write)
     message="Stub implementer completed safely."
-    verdict="\${MIZZY_FAKE_IMPLEMENTER_VERDICT:-PASS}"
+    verdict="${MIZZY_FAKE_IMPLEMENTER_VERDICT:-PASS}"
     output_prefix=""
     ;;
   read-only)
     message="Stub read-only reviewer found no issues."
     verdict="PASS"
-    output_prefix="\${MIZZY_FAKE_REVIEWER_PREFIX:-}"
+    output_prefix="${MIZZY_FAKE_REVIEWER_PREFIX:-}"
     ;;
   *) echo "unexpected Codex sandbox: $sandbox" >&2; exit 42 ;;
 esac
