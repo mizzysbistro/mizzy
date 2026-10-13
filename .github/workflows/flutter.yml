@@ -34,6 +34,7 @@ jobs:
       - name: Validate smart-agent launcher syntax and safe help path
         run: |
           bash -n scripts/mizzy-agent-loop.sh
+          bash -n scripts/mizzy-agent-loop-lib.sh
           bash scripts/mizzy-agent-loop.sh --help
           bash -n tests/agent-loop-guard-smoke.sh
           bash tests/agent-loop-guard-smoke.sh
