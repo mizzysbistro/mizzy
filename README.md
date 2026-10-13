@@ -1,6 +1,6 @@
 # Mizzy — Independent Android Restaurant POS
 
-**Status:** P0 foundations are under implementation. This repository is the new independent Mizzy project and is kept separate from the existing POS repositories.
+**Status:** P1 ordering workflow is under implementation. The Counter → Orders → Kitchen loop exists as a local-only development demo; cloud sync and real payments are not enabled. This repository is independent of the existing POS repositories.
 
 ## Mission
 
@@ -34,22 +34,22 @@ Dashboard, POS, tables, orders, kitchen, inventory, purchasing, employees, repor
 
 ## Current implementation status
 
-Implemented in source (not yet runtime-verified):
+Implemented in source (verification status varies by commit; see CI links below):
 
 - Versioned SQLite schema and persisted device/installation ID.
-- Local order repository that saves the order, immutable sale-line snapshots, one kitchen ticket, and outbox operations in a single transaction.
-- Idempotent local save retries, payload-fingerprint protection, branch-scoped reads, and validated Kitchen transitions that update the same parent order.
+- Local Counter, Orders, and Kitchen demo screens backed by one SQLite order repository. Saving an order writes immutable line snapshots, one kitchen ticket, and outbox operations in one transaction; Kitchen transitions update the same parent order.
+- Retry/idempotency protections, including order-ID-aware request fingerprints, branch-scoped reads, legal Kitchen transitions, and scoped organization/branch access tests.
 - Build-time Supabase configuration validation and guarded client initialization.
 - Draft versioned Supabase tenant/branch migration and database catalog/grant smoke-test SQL.
 - GitHub Actions workflow for formatting, analysis, tests, debug APK, and secret scanning.
 
 Not yet verified or complete:
 
-- No successful Flutter test, static-analysis, or APK-build result has been captured.
-- Supabase migration and RLS tests have not been run against an isolated database.
-- No Supabase project is connected; authentication lifecycle, realtime synchronization, and server-side order/payment workflows are not active.
-- User-facing Counter, Orders, Kitchen, inventory, purchasing, and reporting screens are not yet connected to the local repository.
-- No production database, signed release APK, or store publication has been created.
+- Earlier green CI at commit `95a9528338085b2f2a057362e9b8fd5c066e6b81` passed formatter, analyzer, 17 Flutter tests, secret scan, Android debug APK build, and local Supabase migration/pgTAP validation ([Flutter run](https://github.com/mizzysbistro/mizzy/actions/runs/38421231622); [database run](https://github.com/mizzysbistro/mizzy/actions/runs/38421231810)).
+- The current seven-test SQLite order repository suite and most recent code changes are **not yet verified**. Latest PR CI jobs failed before any workflow step started (`runner_id: 0`, empty steps and no logs); see [CI blocker issue #13](https://github.com/mizzysbistro/mizzy/issues/13). Do not infer a test failure or success from those runs.
+- No hosted Supabase project is connected; authenticated cloud POS flows, real-time synchronization and production payment processing are not active.
+- The Counter/Orders/Kitchen UI is still local-only and uses a sample menu. Inventory, purchasing and reporting have not been connected to operational screens.
+- The recorded debug APK is an older development artifact, not a signed production release; no production database, signed release APK, hardware validation or store publication has been created.
 
 ## Development setup
 
