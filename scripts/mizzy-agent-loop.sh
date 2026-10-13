@@ -254,18 +254,14 @@ run_verification() {
 
     run_check gitleaks gitleaks git --redact
 
-    if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
-      if command -v supabase >/dev/null 2>&1; then
-        run_check supabase-local-tests supabase test db
-      else
-        printf 'BLOCKED: MIZZY_RUN_SUPABASE_TESTS=1 but Supabase CLI is missing.\n' | tee -a "$CHECK_SUMMARY"
-        CHECK_FAILED=1
-      fi
-    fi
   elif [[ -n "${MIZZY_TARGET_TEST:-}" ]]; then
     run_check focused-flutter-test flutter test "$MIZZY_TARGET_TEST"
   else
     run_check flutter-tests flutter test
+  fi
+
+  if [[ "${MIZZY_RUN_SUPABASE_TESTS:-0}" == "1" ]]; then
+    run_check supabase-local-tests supabase test db
   fi
 }
 
