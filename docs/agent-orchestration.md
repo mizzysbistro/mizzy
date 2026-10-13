@@ -76,7 +76,8 @@ Keep the task packet concise. Do not paste credentials, real restaurant/customer
 - Update GitHub issue/PR and `tracking/project-state.json` after the run. Include exact commit, run ID, real checks and blocker, if any.
 
 ## Local runner
-Use `scripts/mizzy-agent-loop.sh <task-slug> <task description>` on a development machine that has Git, Flutter/Dart and at least one authenticated Codex or Claude Code CLI. Run it on a clean feature branch—not `main`. It will not push, commit, merge or deploy.
+Use `bash scripts/mizzy-agent-loop.sh <task-slug> <task description>` on a development machine that has Git, Flutter/Dart and at least one authenticated Codex or Claude Code CLI. Run it on a clean feature branch—not `main`. It will not push, commit, merge or deploy.
 - Optional environment: `MIZZY_IMPLEMENTER=codex|claude`, `MIZZY_REVIEWER=codex|claude|same`, `MIZZY_VERIFY=targeted|full`, `MIZZY_TARGET_TEST=test/path_test.dart`.
+- `auto` (default): chooses targeted for ordinary small changes and full for auth/RLS/tenant/branch/payment/refund/inventory/sync/migration/security/release scope.
 - `targeted`: strict format, analyzer and either the specified test or the Flutter test suite.
-- `full`: strict format, analyzer, entire Flutter test suite, debug APK, and local Gitleaks scan when the binary is installed. Set `MIZZY_RUN_SUPABASE_TESTS=1` only when the local Supabase CLI and Docker/test stack are ready; this runs the local database tests and does not deploy to hosted Supabase.
+- `full`: strict format, analyzer, entire Flutter test suite, debug APK and required local Gitleaks scan. Supabase/RLS/migration task descriptions require `MIZZY_RUN_SUPABASE_TESTS=1` with a ready local Supabase CLI and Docker/test stack; this runs local database tests and never deploys to hosted Supabase.
