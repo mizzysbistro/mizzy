@@ -251,6 +251,69 @@ void main() {
     );
   });
 
+  test(
+    'simultaneous claims lease each outbox event to only one worker',
+    () async {
+      final first = await insertEvent(
+        createdAt: now.subtract(const Duration(seconds: 2)),
+      );
+      final second = await insertEvent(
+        createdAt: now.subtract(const Duration(seconds: 1)),
+      );
+
+      final batches = await Future.wait([
+        repository.claimNextBatch(
+          organizationId: organizationId,
+          branchId: branchId,
+          limit: 1,
+        ),
+        repository.claimNextBatch(
+          organizationId: organizationId,
+          branchId: branchId,
+          limit: 1,
+        ),
+      ]);
+
+      final claimedIds = batches.expand((batch) => batch.map((event) => event.id));
+      expect(claimedIds.toSet(), {first, second});
+      expect(claimedIds.length, 2);
+
+      final rawDatabase = await database.open();
+      final rows = await rawDatabase.query(
+        'sync_outbox',
+        orderBy: 'created_at ASC',
+      );
+      expect(rows.map((row) => row['status']).toSet(), {'processing'});
+      expect(rows.map((row) => row['attempts']).toSet(), {1});
+    },
+  );
+
+  test('wrong-branch acknowledgment cannot mutate a leased event', () async {
+    final eventId = await insertEvent();
+    await repository.claimNextBatch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    await expectLater(
+      repository.markDelivered(
+        organizationId: organizationId,
+        branchId: const Uuid().v4(),
+        eventId: eventId,
+      ),
+      throwsStateError,
+    );
+
+    final rawDatabase = await database.open();
+    final row = (await rawDatabase.query(
+      'sync_outbox',
+      where: 'id = ?',
+      whereArgs: <Object?>[eventId],
+      limit: 1,
+    )).single;
+    expect(row['status'], 'processing');
+  });
+
   test('rejects invalid batch sizes and non-positive leases', () async {
     await expectLater(
       repository.claimNextBatch(
