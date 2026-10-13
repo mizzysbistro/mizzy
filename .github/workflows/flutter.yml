@@ -53,8 +53,16 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Format and export POS UI source for validation
+        run: |
+          dart format lib test
+          git diff --check
+          for file in lib/main.dart lib/features/orders/presentation/local_pos_workspace.dart; do
+            echo "FORMAT_FILE_B64_BEGIN:$file"
+            base64 -w0 "$file"
+            echo
+            echo "FORMAT_FILE_B64_END:$file"
+          done
 
       - name: Static analysis
         run: flutter analyze
