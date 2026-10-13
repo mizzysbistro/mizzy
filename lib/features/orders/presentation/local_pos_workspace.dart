@@ -57,7 +57,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   ];
 
   final MizzyDatabase _database = MizzyDatabase();
-  late final OrderRepository _orders = OrderRepository(_database: _database);
+  late final OrderRepository _orders = OrderRepository(database: _database);
   final Map<String, int> _cart = <String, int>{};
 
   String? _organizationId;
