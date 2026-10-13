@@ -392,7 +392,8 @@
       "Drafted Supabase catalog page source plus a SQLite reconciliation repository using stable cloud UUIDs, inactive-item handling, SKU-reuse protection and conflict quarantine.",
       "Added tests for scope denial, active/inactive import, price update vs. immutable order snapshot, removed/reused SKU, unsynced local conflict, foreign-branch rejection, malformed data and session requirement. Tests are authored but not yet executed.",
       "Added an additional test proving local-only catalog rows in a cloud branch are quarantined and hidden until they can be reconciled to a server-owned UUID.",
-      "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts."
+      "Added an explicit regression test for cloud-deactivated cached products and accurate deactivation counts.",
+      "Added a regression test ensuring a quarantined local-only SKU cannot block a different valid cloud-owned UUID that reuses that SKU; cached SKU is released only in that collision case, while historical sale-line snapshots remain unchanged."
     ],
     "attempt_count": 0,
     "blocker": "The catalog pull/cache repository is drafted but not wired into the POS Auth/branch-selection UI, and tests have not run because Flutter/Dart are unavailable and hosted Actions jobs fail before steps. Sync outbox and server event RPC drafts are also unverified.",

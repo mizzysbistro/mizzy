@@ -228,6 +228,43 @@ void main() {
     expect(newItem['sku'], 'REUSED-SKU');
   });
 
+  test('quarantines a local-only SKU without blocking the cloud UUID', () async {
+    final localId = const Uuid().v4();
+    final cloudId = const Uuid().v4();
+    final db = await database.open();
+    await db.insert('catalog_items', <String, Object?>{
+      'id': localId,
+      'organization_id': organizationId,
+      'branch_id': branchId,
+      'name': 'Local sample item',
+      'sku': 'REUSED-SKU',
+      'category_name': 'Demo',
+      'price_minor': 1000,
+      'currency_code': 'PHP',
+      'is_active': 1,
+      'updated_at': now.toIso8601String(),
+      'sync_state': 'local',
+    });
+    source.items = [
+      item(id: cloudId, sku: 'REUSED-SKU', name: 'Cloud-owned item'),
+    ];
+
+    final result = await repository.syncBranch(
+      organizationId: organizationId,
+      branchId: branchId,
+    );
+
+    final localItem = await readItem(localId);
+    final cloudItem = await readItem(cloudId);
+    expect(result.conflictItemIds, contains(localId));
+    expect(localItem['sync_state'], 'conflict');
+    expect(localItem['is_active'], 0);
+    expect(localItem['sku'], isNull);
+    expect(cloudItem['is_active'], 1);
+    expect(cloudItem['sync_state'], 'synced');
+    expect(cloudItem['sku'], 'REUSED-SKU');
+  });
+
   test('preserves conflicting unsynced values and disables the item for sale', () async {
     final id = const Uuid().v4();
     final db = await database.open();

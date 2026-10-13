@@ -181,7 +181,8 @@
     "Created issue #20 for branch-scoped cloud catalog cache as a prerequisite to order sync.",
     "Drafted CloudCatalogRepository and tests on feat/p1-cloud-catalog-cache: stable cloud item UUIDs, full paginated pull, inactive-item/deleted-cache deactivation, SKU-reuse handling, conflict quarantine for unsynced local changes, and protection of sale-line snapshots. Auth/UI wiring and verification remain outstanding.",
     "Hardened P1-02 catalog cache to quarantine local-only menu rows in a cloud-scoped branch unless they map to a server-owned catalog UUID; added a regression test.",
-    "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive."
+    "Added regression coverage and accurate result counting when an existing cached cloud product becomes inactive.",
+    "Fixed cloud catalog reconciliation so quarantined local-only rows release a SKU only when a different cloud catalog UUID currently owns that SKU; added regression test proving valid cloud product remains active."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",

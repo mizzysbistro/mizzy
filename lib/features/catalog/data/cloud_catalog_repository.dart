@@ -210,13 +210,22 @@ class CloudCatalogRepository {
       for (final cached in unsyncedCachedItems) {
         final cachedId = cached['id']! as String;
         if (remoteIds.contains(cachedId)) continue;
+        final cachedSku = cached['sku'] as String?;
+        final cloudSkuOwner =
+            cachedSku == null ? null : remoteSkuOwners[cachedSku];
+        final skuReusedByCloudItem =
+            cloudSkuOwner != null && cloudSkuOwner != cachedId;
+        final quarantineChanges = <String, Object?>{
+          'is_active': 0,
+          'sync_state': 'conflict',
+          'updated_at': now,
+        };
+        // Release a stale local SKU only when a different server-owned UUID
+        // now owns it. Historical order-line snapshots retain the old SKU.
+        if (skuReusedByCloudItem) quarantineChanges['sku'] = null;
         await transaction.update(
           'catalog_items',
-          <String, Object?>{
-            'is_active': 0,
-            'sync_state': 'conflict',
-            'updated_at': now,
-          },
+          quarantineChanges,
           where: 'id = ? AND organization_id = ? AND branch_id = ?',
           whereArgs: <Object?>[cachedId, organizationId, branchId],
         );
