@@ -202,7 +202,7 @@
     "phase": "P0",
     "type": "testing",
     "priority": "P1",
-    "status": "in_progress",
+    "status": "blocked",
     "dependencies": [
       "P0-01"
     ],
@@ -222,12 +222,14 @@
       "Secret scan passed in run 38410952119 and run 38412059992 with explicit 'no leaks found' output.",
       "Flutter run 38410952119 failed strict formatter; run 38411354601 passed formatter after temporary format-and-diff step but failed analysis for two lint issues, now fixed on main.",
       "Run 38412247170 is testing a branch-only canonical formatter repair and will continue through tests/build if its repair step succeeds.",
-      "Pull request run 38417639115 passed secret scanning, Dart formatting, static analysis and unit/widget tests; debug APK build is still in progress."
+      "Pull request run 38417639115 passed secret scanning, Dart formatting, static analysis and unit/widget tests; debug APK build is still in progress.",
+      "Added bash -n and required agent-instruction-file checks to Flutter CI before the Java/Flutter setup steps.",
+      "Latest Actions runner blocker is documented under https://github.com/mizzysbistro/mizzy/issues/13; zero-step failures are infrastructure evidence only."
     ],
     "attempt_count": 0,
-    "blocker": "End-to-end Flutter workflow is not complete until Android debug APK build and artifact upload finish.",
+    "blocker": "Latest Actions runs cannot start a runner (runner_id=0, zero steps); current source and agent-runner shell syntax have not been verified by CI.",
     "approval_required": false,
-    "next_action": "Wait for debug APK build, record artifact/checksum, and rerun strict gates after any source changes.",
+    "next_action": "Resolve runner availability under issue 13. Then verify shell syntax, strict Dart format, analyzer, Flutter suite, Gitleaks, local Supabase migrations/pgTAP and Android debug APK.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   },
@@ -237,7 +239,7 @@
     "phase": "P1",
     "type": "feature",
     "priority": "P1",
-    "status": "in_progress",
+    "status": "blocked",
     "dependencies": [
       "P0-01",
       "P0-02"
@@ -260,13 +262,101 @@
     "evidence": [
       "Added local-only demo workspace in lib/features/orders/presentation/local_pos_workspace.dart using the shared OrderRepository for Counter, Orders and Kitchen.",
       "Counter save and Kitchen transition logic are implemented; strict Flutter CI passed formatting, static analysis and unit/widget tests in run 38421231622.",
-      "Supabase migration/RPC test workflow passed in run 38421231810; the local POS UI APK build/checksum step is still in progress."
+      "Supabase migration/RPC test workflow passed in run 38421231810; the local POS UI APK build/checksum step is still in progress.",
+      "Implemented an organization/branch-scoped SQLite demo catalog. Active catalog rows drive Counter; sale lines snapshot catalog UUID, SKU, item name and price.",
+      "Implemented local table-grid/dine-in selection, atomic table occupancy/release, branch-scoped table names in Orders, and cancellation blocking when a captured payment exists.",
+      "Added 13 local order repository tests, 7 outbox lifecycle tests, and two POS widget tests. Current code is not verified because latest workflow jobs failed before the first step."
     ],
     "attempt_count": 1,
-    "blocker": "The current Android debug APK build and checksum are still running; manual device validation and branch-scoped catalog/table/payment workflows remain outstanding.",
+    "blocker": "Current implementation now uses a branch-scoped SQLite catalog, local table selection/dine-in occupancy and an outbox; 13 repository tests and two widget tests are authored, but CI runner outage prevents validation. Cloud sync, real payments and physical Android validation remain incomplete.",
     "approval_required": false,
-    "next_action": "Capture the current APK and checksum; add widget/integration coverage and replace the static demo menu with a branch-scoped catalog before advancing to tables and payments.",
+    "next_action": "Unblock CI under issue 13, run all repository/outbox/widget tests and APK build; then implement auth-backed catalog/table operations, payment/refund workflows and real-device smoke tests.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/12"
+  },
+  {
+    "task_id": "P0-09",
+    "title": "Upgrade skill loop to coordinated Codex/Claude smart agent",
+    "phase": "P0",
+    "type": "infra",
+    "priority": "P1",
+    "status": "in_progress",
+    "dependencies": [
+      "P0-07"
+    ],
+    "acceptance_criteria": [
+      "Canonical AGENT.md delegates to an explicit multi-agent protocol.",
+      "Codex and Claude Code have repository-specific instruction files and can be selected as implementer/reviewer.",
+      "Only one write-capable agent operates in a worktree; peer review uses a read-only session.",
+      "Automatic risk routing selects focused verification for low-risk work and full verification for auth, RLS, tenant/branch, payments, inventory, sync and release work.",
+      "The local runner has clean-feature-branch and clean-tree guards, stores logs outside version control, and never commits, pushes, merges, deploys or provisions services.",
+      "All agent verdicts are checked against actual diff and verification logs; retries are capped at three distinct attempts.",
+      "CI checks the shell syntax and required agent instruction files.",
+      "Runner behavior is validated locally with at least one installed/authenticated agent CLI and a distinct reviewer when available."
+    ],
+    "verification_plan": [
+      "Run bash -n scripts/mizzy-agent-loop.sh.",
+      "Run --help and verify it exits without requiring an agent CLI.",
+      "Verify main-branch and dirty-worktree guards safely reject starts.",
+      "Run one low-risk task with Codex implementer and Claude read-only reviewer (or reverse).",
+      "Run a critical-scope task and confirm automatic full verification plus Supabase test preflight.",
+      "Inspect run logs, diff, verdict and ensure no commit/push/deploy side effects."
+    ],
+    "evidence": [
+      "Committed AGENTS.md (shared coding-agent policy), CLAUDE.md (Claude Code project instructions), and docs/agent-orchestration.md (fast/standard/critical lanes, single-writer rules, verdict and evidence format).",
+      "Enhanced AGENT.md to make the coordinator, single-writer implementation, read-only peer review, infrastructure-blocker classification and P0-P6 verification loop canonical.",
+      "Added scripts/mizzy-agent-loop.sh with Codex/Claude selection, read-only review mode, risk-based auto verification, local verification, bounded retries and no commit/push/merge/deploy.",
+      "Added .agent-runs/ to .gitignore and a CI step to run bash -n plus validate required instruction files.",
+      "The current ChatGPT working environment does not have Flutter/Dart, Codex CLI, Claude Code CLI, Gitleaks, Supabase CLI or Docker; local provider execution could not be performed here.",
+      "GitHub Actions is failing before runner steps start (runner_id=0); no shell syntax or app-test result may be inferred from those jobs."
+    ],
+    "attempt_count": 1,
+    "blocker": "Agent loop is implemented but has not been exercised on a development workstation with Flutter/Dart and an authenticated Codex or Claude Code CLI. GitHub Actions validation is additionally blocked by issue 13.",
+    "next_action": "On a configured workstation, run bash -n scripts/mizzy-agent-loop.sh and the --help/guard checks, then one low-risk dual-provider task. After Actions runners are restored, confirm the new shell-contract CI step passes; record real outputs before marking verified.",
+    "approval_required": false,
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/16"
+  },
+  {
+    "task_id": "P2-01",
+    "title": "Implement authenticated outbox upload and offline reconciliation worker",
+    "phase": "P2",
+    "type": "feature",
+    "priority": "P1",
+    "status": "in_progress",
+    "dependencies": [
+      "P0-04",
+      "P0-06",
+      "P1-01"
+    ],
+    "acceptance_criteria": [
+      "Worker starts only with trusted Supabase authentication and active organization/branch membership.",
+      "Every batch is strictly scoped and server authorization/RLS revalidates scope.",
+      "Stable idempotency keys prevent duplicate logical orders, Kitchen tickets, payments or inventory movements after retries.",
+      "Parent-order and dependent event replay ordering is deterministic.",
+      "Events are marked delivered only after server-confirmed durable commit.",
+      "Retry/backoff, rate limits, expired leases, termination, offline/reconnect, duplicate replies and partial batch failure are tested.",
+      "Permanent validation/authorization conflicts are quarantined for explicit repair, never endlessly retried.",
+      "Pull sync uses organization/branch cursors and reports unresolved conflicts without blindly replaying financial operations.",
+      "Flutter, Android build, secret scanning, local migrations and pgTAP gates pass."
+    ],
+    "verification_plan": [
+      "Test outbox lease scope, expiry, concurrent claims, idempotent upload and server-authorized acknowledgment.",
+      "Run offline/reconnect and application-restart integration tests against disposable Supabase.",
+      "Run duplicate/reordered event and cross-branch negative tests.",
+      "Reconcile order, payment and inventory source-of-truth totals after replay.",
+      "Run all Flutter and Supabase CI gates."
+    ],
+    "evidence": [
+      "Added SyncOutboxRepository local primitives for branch-scoped leases, expired-lease recovery, bounded retry backoff, safe failure codes, delivered state and conflict quarantine.",
+      "Added seven outbox lifecycle tests for branch scope, retries, lease recovery, delivered/conflict transitions, invalid limits, concurrency and wrong-branch acknowledgment.",
+      "The repository is deliberately local-only; no authenticated network worker or cloud reconciliation has been implemented."
+    ],
+    "attempt_count": 0,
+    "blocker": "Authenticated upload/pull sync is not implemented; outbox persistence and leasing are foundations only. GitHub Actions verification is blocked by issue 13.",
+    "next_action": "After the local runner is available and tests pass, build the trusted server-side idempotent upload contract and authenticated client worker, then add pull cursors and offline/reconnect integration tests.",
+    "approval_required": true,
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/15"
   }
 ]
