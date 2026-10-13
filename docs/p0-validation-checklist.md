@@ -1,6 +1,6 @@
 # P0 execution and validation checklist
 
-This checklist is intentionally evidence-driven. Source files existing in Git do not count as successful test or release evidence.
+This checklist is intentionally evidence-driven. The CI validation branch applies formatter changes only to its own branch so the resulting source can be reviewed before porting to main. Source files existing in Git do not count as successful test or release evidence.
 
 ## Flutter and Android gates
 
