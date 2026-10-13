@@ -26,7 +26,8 @@
     "blocker": "Flutter/Dart/Android SDK availability not yet verified in a dedicated development runner",
     "approval_required": false,
     "next_action": "Check CI/toolchain availability and create Flutter app scaffold",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/1"
   },
   {
     "task_id": "P0-02",
@@ -52,7 +53,8 @@
     "blocker": null,
     "approval_required": false,
     "next_action": "Create architecture decision record after Flutter baseline",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/2"
   },
   {
     "task_id": "P0-03",
@@ -81,7 +83,8 @@
     "blocker": "Supabase project not created or connected",
     "approval_required": true,
     "next_action": "Prepare local migrations and request approval before paid/external provisioning",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/3"
   },
   {
     "task_id": "P0-04",
@@ -107,7 +110,8 @@
     "blocker": null,
     "approval_required": false,
     "next_action": "Design schema and authorization model",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/4"
   },
   {
     "task_id": "P0-05",
@@ -134,7 +138,8 @@
     "blocker": null,
     "approval_required": false,
     "next_action": "Draft permission matrix",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/5"
   },
   {
     "task_id": "P0-06",
@@ -161,7 +166,8 @@
     "blocker": "Requires Supabase-compatible test environment",
     "approval_required": false,
     "next_action": "Draft and review migration policies locally",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/6"
   },
   {
     "task_id": "P0-07",
@@ -187,6 +193,7 @@
     "blocker": "Flutter runner availability needs verification",
     "approval_required": false,
     "next_action": "Inspect available GitHub Actions runners/tooling and add CI",
-    "updated_at": "2026-10-13"
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
   }
 ]
