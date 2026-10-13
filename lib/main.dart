@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MizzyApp());
+import 'core/cloud/supabase_bootstrap.dart';
+import 'core/config/app_environment.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final environment = AppEnvironment.fromDartDefines();
+  var cloudStatus = CloudBootstrapStatus.notConfigured;
+  try {
+    cloudStatus = await SupabaseBootstrap.initialize(environment);
+  } on Object {
+    // Do not print configuration values or credentials to the logs.
+    cloudStatus = CloudBootstrapStatus.initializationFailed;
+  }
+  runApp(MizzyApp(cloudBootstrapStatus: cloudStatus));
 }
 
 class MizzyApp extends StatelessWidget {
-  const MizzyApp({super.key});
+  const MizzyApp({
+    super.key,
+    this.cloudBootstrapStatus = CloudBootstrapStatus.notConfigured,
+  });
+
+  final CloudBootstrapStatus cloudBootstrapStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +36,18 @@ class MizzyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const FoundationScreen(),
+      home: FoundationScreen(cloudBootstrapStatus: cloudBootstrapStatus),
     );
   }
 }
 
 class FoundationScreen extends StatelessWidget {
-  const FoundationScreen({super.key});
+  const FoundationScreen({
+    super.key,
+    required this.cloudBootstrapStatus,
+  });
+
+  final CloudBootstrapStatus cloudBootstrapStatus;
 
   @override
   Widget build(BuildContext context) {
@@ -73,17 +95,24 @@ class FoundationScreen extends StatelessWidget {
                 const _StatusRow(
                   icon: Icons.storage_outlined,
                   label: 'Local persistence',
-                  value: 'Not configured',
+                  value: 'SQLite foundation; UI pending',
                 ),
-                const _StatusRow(
+                _StatusRow(
                   icon: Icons.cloud_outlined,
-                  label: 'Supabase synchronization',
-                  value: 'Not configured',
+                  label: 'Supabase client',
+                  value: switch (cloudBootstrapStatus) {
+                    CloudBootstrapStatus.notConfigured => 'Not configured',
+                    CloudBootstrapStatus.clientInitialized =>
+                      'Initialized; sync pending',
+                    CloudBootstrapStatus.initializationFailed =>
+                      'Initialization failed',
+                  },
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'This screen is a development scaffold, not a finished POS. '
-                  'No orders, payments, or cloud sync are active yet.',
+                  'This is a development scaffold, not a finished POS. '
+                  'The SQLite order repository is not yet connected to POS screens. '
+                  'Payments, user sign-in, and live cloud synchronization are not active.',
                 ),
               ],
             ),
