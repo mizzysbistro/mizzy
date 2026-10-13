@@ -75,7 +75,7 @@ if [[ "$has_codex" -eq 0 && "$has_claude" -eq 0 ]]; then
 fi
 
 VERIFY_REQUEST="${MIZZY_VERIFY:-auto}"
-TASK_LOWER="${TASK_DESCRIPTION,,}"
+TASK_LOWER="$(printf '%s' "$TASK_DESCRIPTION" | tr '[:upper:]' '[:lower:]')"
 TASK_REQUIRES_SUPABASE=0
 if [[ "$TASK_LOWER" =~ (supabase|migration|rls|row.level.security|tenant.isolation) ]]; then
   TASK_REQUIRES_SUPABASE=1
