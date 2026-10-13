@@ -230,5 +230,43 @@
     "next_action": "Wait for debug APK build, record artifact/checksum, and rerun strict gates after any source changes.",
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/7"
+  },
+  {
+    "task_id": "P1-01",
+    "title": "Complete local Counter → Orders → Kitchen workflow",
+    "phase": "P1",
+    "type": "feature",
+    "priority": "P1",
+    "status": "in_progress",
+    "dependencies": [
+      "P0-01",
+      "P0-02"
+    ],
+    "acceptance_criteria": [
+      "Counter save creates one logical order, immutable line snapshots, one kitchen ticket and outbox events atomically",
+      "Orders and Kitchen read the same parent order and status without duplicates",
+      "Kitchen transitions are validated and reflected in Orders",
+      "Widget/integration tests cover save, refresh, transitions, persistence and failures",
+      "Local-only mode clearly states cloud sync and real payments are disabled",
+      "Debug APK builds and APK SHA-256 is recorded"
+    ],
+    "verification_plan": [
+      "Run Flutter formatting, static analysis and widget/unit tests",
+      "Run SQLite order repository tests",
+      "Run fresh local Supabase migration and pgTAP suites",
+      "Build Android debug APK and record SHA-256",
+      "Perform manual phone/tablet install and order/kitchen smoke test when a device is available"
+    ],
+    "evidence": [
+      "Added local-only demo workspace in lib/features/orders/presentation/local_pos_workspace.dart using the shared OrderRepository for Counter, Orders and Kitchen.",
+      "Counter save and Kitchen transition logic are implemented; strict Flutter CI passed formatting, static analysis and unit/widget tests in run 38421231622.",
+      "Supabase migration/RPC test workflow passed in run 38421231810; the local POS UI APK build/checksum step is still in progress."
+    ],
+    "attempt_count": 1,
+    "blocker": "The current Android debug APK build and checksum are still running; manual device validation and branch-scoped catalog/table/payment workflows remain outstanding.",
+    "approval_required": false,
+    "next_action": "Capture the current APK and checksum; add widget/integration coverage and replace the static demo menu with a branch-scoped catalog before advancing to tables and payments.",
+    "updated_at": "2026-10-13",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/12"
   }
 ]
