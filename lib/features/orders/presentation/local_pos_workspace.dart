@@ -18,16 +18,46 @@ class LocalPosWorkspace extends StatefulWidget {
 class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
   static const _uuid = Uuid();
   static const _menu = <_DemoMenuItem>[
-    _DemoMenuItem(id: 'adobo', name: 'Chicken Adobo', category: 'Meals', priceMinor: 14900),
-    _DemoMenuItem(id: 'pancit', name: 'Pancit Canton', category: 'Meals', priceMinor: 12900),
-    _DemoMenuItem(id: 'sisig', name: 'Pork Sisig', category: 'Meals', priceMinor: 17900),
-    _DemoMenuItem(id: 'rice', name: 'Steamed Rice', category: 'Sides', priceMinor: 2500),
-    _DemoMenuItem(id: 'iced-tea', name: 'Iced Tea', category: 'Drinks', priceMinor: 3500),
-    _DemoMenuItem(id: 'water', name: 'Bottled Water', category: 'Drinks', priceMinor: 2000),
+    _DemoMenuItem(
+      id: 'adobo',
+      name: 'Chicken Adobo',
+      category: 'Meals',
+      priceMinor: 14900,
+    ),
+    _DemoMenuItem(
+      id: 'pancit',
+      name: 'Pancit Canton',
+      category: 'Meals',
+      priceMinor: 12900,
+    ),
+    _DemoMenuItem(
+      id: 'sisig',
+      name: 'Pork Sisig',
+      category: 'Meals',
+      priceMinor: 17900,
+    ),
+    _DemoMenuItem(
+      id: 'rice',
+      name: 'Steamed Rice',
+      category: 'Sides',
+      priceMinor: 2500,
+    ),
+    _DemoMenuItem(
+      id: 'iced-tea',
+      name: 'Iced Tea',
+      category: 'Drinks',
+      priceMinor: 3500,
+    ),
+    _DemoMenuItem(
+      id: 'water',
+      name: 'Bottled Water',
+      category: 'Drinks',
+      priceMinor: 2000,
+    ),
   ];
 
   final MizzyDatabase _database = MizzyDatabase();
-  late final OrderRepository _orders = OrderRepository(_database);
+  late final OrderRepository _orders = OrderRepository(_database: _database);
   final Map<String, int> _cart = <String, int>{};
 
   String? _organizationId;
@@ -78,7 +108,10 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       await _refreshOrders();
     } on Object {
       if (!mounted) return;
-      setState(() => _error = 'Could not open local storage. Restart the app and retry.');
+      setState(
+        () =>
+            _error = 'Could not open local storage. Restart the app and retry.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -152,12 +185,15 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       setState(() {
         _cart.clear();
         _selectedTab = 1;
-        _notice = 'Order #${result.localOrderNumber} saved to Orders and Kitchen.';
+        _notice =
+            'Order #${result.localOrderNumber} saved to Orders and Kitchen.';
       });
       await _refreshOrders();
     } on Object {
       if (!mounted) return;
-      setState(() => _error = 'Order was not confirmed. Review the cart and retry.');
+      setState(
+        () => _error = 'Order was not confirmed. Review the cart and retry.',
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -186,10 +222,15 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       );
       await _refreshOrders();
       if (!mounted) return;
-      setState(() => _notice = 'Order #${order['local_order_number']} updated to ${nextStatus.storageValue}.');
+      setState(
+        () => _notice =
+            'Order #${order['local_order_number']} updated to ${nextStatus.storageValue}.',
+      );
     } on Object {
       if (!mounted) return;
-      setState(() => _error = 'Kitchen status was not changed. Refresh and retry.');
+      setState(
+        () => _error = 'Kitchen status was not changed. Refresh and retry.',
+      );
     }
   }
 
@@ -212,7 +253,10 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   color: Theme.of(context).colorScheme.tertiaryContainer,
                   child: const Row(
                     children: [
@@ -270,9 +314,21 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
           if (index != 0) _refreshOrders();
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: 'Counter'),
-          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Orders'),
-          NavigationDestination(icon: Icon(Icons.soup_kitchen_outlined), selectedIcon: Icon(Icons.soup_kitchen), label: 'Kitchen'),
+          NavigationDestination(
+            icon: Icon(Icons.point_of_sale_outlined),
+            selectedIcon: Icon(Icons.point_of_sale),
+            label: 'Counter',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.soup_kitchen_outlined),
+            selectedIcon: Icon(Icons.soup_kitchen),
+            label: 'Kitchen',
+          ),
         ],
       ),
     );
@@ -325,9 +381,15 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
         subtitle: Text('${item.category} · ${_formatMoney(item.priceMinor)}'),
         trailing: IconButton(
           tooltip: 'Add ${item.name}',
-          onPressed: _saving ? null : () => setState(() {
-            _cart.update(item.id, (count) => count + 1, ifAbsent: () => 1);
-          }),
+          onPressed: _saving
+              ? null
+              : () => setState(() {
+                  _cart.update(
+                    item.id,
+                    (count) => count + 1,
+                    ifAbsent: () => 1,
+                  );
+                }),
           icon: const Icon(Icons.add_circle_outline),
         ),
       ),
@@ -362,22 +424,26 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         tooltip: 'Remove one ${item.name}',
-                        onPressed: _saving ? null : () => setState(() {
-                          if (count <= 1) {
-                            _cart.remove(item.id);
-                          } else {
-                            _cart[item.id] = count - 1;
-                          }
-                        }),
+                        onPressed: _saving
+                            ? null
+                            : () => setState(() {
+                                if (count <= 1) {
+                                  _cart.remove(item.id);
+                                } else {
+                                  _cart[item.id] = count - 1;
+                                }
+                              }),
                         icon: const Icon(Icons.remove_circle_outline),
                       ),
                       Text('$count'),
                       IconButton(
                         visualDensity: VisualDensity.compact,
                         tooltip: 'Add one ${item.name}',
-                        onPressed: _saving ? null : () => setState(() {
-                          _cart[item.id] = count + 1;
-                        }),
+                        onPressed: _saving
+                            ? null
+                            : () => setState(() {
+                                _cart[item.id] = count + 1;
+                              }),
                         icon: const Icon(Icons.add_circle_outline),
                       ),
                       Text(_formatMoney(item.priceMinor * count)),
@@ -389,14 +455,21 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
             Row(
               children: [
                 const Expanded(child: Text('Total')),
-                Text(_formatMoney(_cartTotalMinor), style: theme.textTheme.titleLarge),
+                Text(
+                  _formatMoney(_cartTotalMinor),
+                  style: theme.textTheme.titleLarge,
+                ),
               ],
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _cart.isEmpty || _saving ? null : _saveOrder,
               icon: _saving
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.send_outlined),
               label: Text(_saving ? 'Saving…' : 'Save & send to Kitchen'),
             ),
@@ -408,7 +481,15 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
 
   Widget _buildOrderList({required bool kitchen}) {
     final visibleOrders = kitchen
-        ? _orderRows.where((row) => !<String>{'served', 'completed', 'cancelled'}.contains(row['status'])).toList()
+        ? _orderRows
+              .where(
+                (row) => !<String>{
+                  'served',
+                  'completed',
+                  'cancelled',
+                }.contains(row['status']),
+              )
+              .toList()
         : _orderRows;
     if (visibleOrders.isEmpty) {
       return Center(
@@ -417,11 +498,22 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(kitchen ? Icons.soup_kitchen_outlined : Icons.receipt_long_outlined, size: 44),
+              Icon(
+                kitchen
+                    ? Icons.soup_kitchen_outlined
+                    : Icons.receipt_long_outlined,
+                size: 44,
+              ),
               const SizedBox(height: 12),
-              Text(kitchen ? 'No active kitchen tickets' : 'No orders saved yet'),
+              Text(
+                kitchen ? 'No active kitchen tickets' : 'No orders saved yet',
+              ),
               const SizedBox(height: 8),
-              Text(kitchen ? 'New saved orders appear here automatically.' : 'Save an order from Counter to see it here.'),
+              Text(
+                kitchen
+                    ? 'New saved orders appear here automatically.'
+                    : 'Save an order from Counter to see it here.',
+              ),
             ],
           ),
         ),
@@ -431,18 +523,25 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        Text(kitchen ? 'Kitchen tickets' : 'Orders', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          kitchen ? 'Kitchen tickets' : 'Orders',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 8),
         ...visibleOrders.map((order) {
           final status = order['status'] as String? ?? 'saved';
           final number = order['local_order_number'] as int? ?? 0;
           final total = order['total_minor'] as int? ?? 0;
-          final canAdvance = kitchen && <String>{'saved', 'preparing', 'ready'}.contains(status);
+          final canAdvance =
+              kitchen &&
+              <String>{'saved', 'preparing', 'ready'}.contains(status);
           return Card(
             child: ListTile(
               leading: CircleAvatar(child: Text(number.toString())),
               title: Text('Order #$number'),
-              subtitle: Text('${status.toUpperCase()} · ${order['order_type']}'),
+              subtitle: Text(
+                '${status.toUpperCase()} · ${order['order_type']}',
+              ),
               trailing: kitchen && canAdvance
                   ? FilledButton(
                       onPressed: () => _advanceKitchen(order),
@@ -453,7 +552,10 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                         _ => 'Update',
                       }),
                     )
-                  : Text(_formatMoney(total), style: Theme.of(context).textTheme.titleMedium),
+                  : Text(
+                      _formatMoney(total),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
             ),
           );
         }),
