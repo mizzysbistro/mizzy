@@ -101,7 +101,7 @@ class SaveOrderResult {
 
 class OrderRepository {
   OrderRepository({
-    required MizzyDatabase this._database,
+    required this._database,
     Uuid? uuid,
     DateTime Function()? clock,
   }) : _uuid = uuid ?? const Uuid(),
