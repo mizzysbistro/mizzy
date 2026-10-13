@@ -4,6 +4,7 @@ import 'core/cloud/supabase_bootstrap.dart';
 import 'core/config/app_environment.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_entry.dart';
+import 'features/orders/presentation/local_pos_workspace.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -124,10 +125,22 @@ class FoundationScreen extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const LocalPosWorkspace(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.point_of_sale_outlined),
+                  label: const Text('Open local POS demo'),
+                ),
+                const SizedBox(height: 12),
                 const Text(
-                  'This is a development scaffold, not a finished POS. '
-                  'The SQLite order repository is not yet connected to POS screens. '
-                  'Payments, user sign-in, and live cloud synchronization are not active.',
+                  'Local demo mode uses SQLite to connect Counter, Orders, and Kitchen '
+                  'for development only. It does not enable cloud sync or real payments. '
+                  'Do not use this build to process real sales.',
                 ),
               ],
             ),
