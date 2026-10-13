@@ -28,16 +28,21 @@
     "apk_built": false,
     "tenant_migration_committed": true,
     "secret_scan_configured": true,
-    "schema_smoke_tests_committed": true
+    "schema_smoke_tests_committed": true,
+    "secret_scan_passed": true,
+    "sqlite_schema_and_order_repository_committed": true,
+    "supabase_guarded_client_bootstrap_committed": true,
+    "supabase_local_ci_configured": true
   },
   "blockers": [
-    "Flutter/Dart/Android SDK and adb are not installed in the current execution environment.",
-    "The GitHub Actions workflow run and APK artifact have not been verified; available repository status tooling did not expose push-triggered Actions runs.",
-    "Supabase CLI, PostgreSQL client and Docker are not installed here; migration and RLS smoke tests have not been executed.",
-    "No Supabase project is provisioned or connected; external provisioning that may incur a cost remains approval-gated.",
-    "GitHub milestone and label creation is not exposed by the available connector actions; P0 issues currently have no phase metadata."
+    "Flutter and Supabase CI are running; no successful end-to-end Flutter tests, APK build, or database/RLS test completion has been captured yet.",
+    "No real Android phone/tablet installation, peripheral/printer, signing, upgrade, or production release validation has been performed.",
+    "No hosted Supabase project is connected. Do not provision external resources that may incur cost without approval.",
+    "User-facing Counter, Orders, Kitchen, inventory and purchasing screens are not yet connected to the local repository.",
+    "Authentication lifecycle, trusted membership management, full role coverage, offline sync/reconnect and conflict resolution remain incomplete.",
+    "GitHub labels/milestones are not supported by the currently available connector actions."
   ],
-  "next_action": "Retrieve GitHub Actions run logs and debug APK artifact; repair failures. In parallel, continue implementing SQLite persistence and prepare an isolated Supabase test environment when tooling is available. Do not mark any build or RLS test verified without execution evidence.",
+  "next_action": "Resolve the current Flutter CI run and inspect the isolated Supabase CI run; use test logs to fix SQL/source failures, then continue P0 auth/role integration and connect the shared SQLite order flow to Counter, Orders and Kitchen. Keep P0-P6 production gate open until evidence is complete.",
   "github_issues_created": [
     {
       "task_id": "P0-01",
@@ -87,7 +92,11 @@
     "Added a draft Supabase tenant/branch migration with organization bootstrap RPC, RLS helper functions, scoped policies, and restricted table/function grants; not applied to a database.",
     "Added Supabase smoke-test SQL and an RLS verification matrix; corrected the pgTAP assertion plan count to 18. Tests remain unexecuted.",
     "Modernized GitHub Actions checkout and Java setup versions and added Gitleaks full-history secret scanning; workflow execution remains unverified.",
-    "Updated P0 task tracker and blockers with current evidence and explicit unverified statuses."
+    "Updated P0 task tracker and blockers with current evidence and explicit unverified statuses.",
+    "Added versioned SQLite schema and transactional local order repository with one logical order shared by Order/Kitchen views, idempotent retries, immutable sale-line snapshots and transactional outbox.",
+    "Added guarded Supabase client bootstrap and explicit build-time public-key configuration validation that rejects privileged service-role credential formats.",
+    "Added a local Supabase CLI config and CI workflow for fresh-database migration, schema and RLS tests.",
+    "Observed Gitleaks succeed with no leaks found; observed Flutter CI format and analyzer failures and recorded them instead of claiming success."
   ],
   "code_commits": [
     "c97e4bbcc245e8e3f7d745b7f70bd1273bdee5be",
@@ -110,7 +119,19 @@
     "3627041b551c0d2300aed7dafe66741dc564c71c",
     "593d3268aaabf4cc3e10481806f9593b4da405df",
     "1788f1403be88c48946303537aa5c517a9437dc9",
-    "caa0fa7723a00c59c66e98f20cf3d59245d27327"
+    "caa0fa7723a00c59c66e98f20cf3d59245d27327",
+    "31e644bcd13e0efce0826b877c190f76ec1c82d1",
+    "901846094a5138a5aa9d6ec1df64fc4df97c31a7",
+    "c29ef9f63386f4eb92ccaaba12e0d4fd96acf32b",
+    "f684176e4a98bdc3be2374113c6e0c6857e58bac",
+    "f19bbb949f11926789fc696491221233183d4c75",
+    "77c37046404262fc995900c78a46e2b38a99f3e1",
+    "9c2ed00d8cf955f0494bf94554b731839a84d4a0",
+    "212d6f24286112ee524d77ea2cf34a2bb29240d4",
+    "c87860c0686fd4e41e67628e642095f5973023a0",
+    "f69feb14b60cdb23199b7d994dac5441954960e0",
+    "9a2efa9cbee7bb2ee9005083afd051f4ac81b12a",
+    "eae959ab8018d6a154cd2004b470a24d65cca1f9"
   ],
   "flutter_app_created": true,
   "apk_built": false,
