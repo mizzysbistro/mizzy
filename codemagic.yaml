@@ -2,7 +2,9 @@ workflows:
   mizzy-android-debug:
     name: Mizzy Android debug APK (free-first)
     max_build_duration: 60
-    instance_type: linux_x2
+    # Codemagic's individual free quota applies to macOS M2, not Linux X2.
+    # Keep this on mac_mini_m2 and do not enable paid usage.
+    instance_type: mac_mini_m2
 
     environment:
       flutter: stable
@@ -23,19 +25,16 @@ workflows:
       - name: Static analysis
         script: flutter analyze
 
-      - name: Install SQLite native library for FFI tests
-        script: |
-          sudo apt-get update
-          sudo apt-get install -y libsqlite3-0 libsqlite3-dev
-
+      # macOS provides SQLite for the sqflite_common_ffi test dependency;
+      # do not use Ubuntu-only apt-get commands on this runner.
       - name: Run tests
         script: flutter test
 
-      - name: Build debug APK
-        script: flutter build apk --debug
+      - name: Build Android debug APK
+        script: flutter build apk --debug --target-platform android-arm64
 
-      - name: Record APK checksum
-        script: sha256sum build/app/outputs/flutter-apk/app-debug.apk | tee build/app/outputs/flutter-apk/app-debug.apk.sha256
+      - name: Record APK SHA-256
+        script: shasum -a 256 build/app/outputs/flutter-apk/app-debug.apk | tee build/app/outputs/flutter-apk/app-debug.apk.sha256
 
     artifacts:
       - build/app/outputs/flutter-apk/app-debug.apk
