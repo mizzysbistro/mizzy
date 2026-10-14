@@ -40,10 +40,11 @@ workflows:
       - build/app/outputs/flutter-apk/app-debug.apk
       - build/app/outputs/flutter-apk/app-debug.apk.sha256
 
+    # Restrict automatic builds while the workflow is being validated.
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: '*'
+        - pattern: 'feat/free-apk-build-codemagic'
           include: true
           source: true
