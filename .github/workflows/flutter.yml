@@ -76,8 +76,9 @@ jobs:
       - name: Install SQLite native library for FFI tests
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-0 libsqlite3-dev
 
-      - name: Widget and unit tests
-        run: flutter test
+      - name: Widget and unit tests (bounded with per-test progress)
+        timeout-minutes: 4
+        run: timeout 210s flutter test --reporter expanded
 
       - name: Build Android debug APK
         run: flutter build apk --debug
