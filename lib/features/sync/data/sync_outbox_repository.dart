@@ -70,10 +70,9 @@ class SyncOutboxRecord {
 /// trusted server endpoint before marking an event delivered.
 class SyncOutboxRepository {
   SyncOutboxRepository({
-    required MizzyDatabase database,
+    required this._database,
     DateTime Function()? clock,
-  }) : _database = database,
-       _clock = clock ?? DateTime.now;
+  }) : _clock = clock ?? DateTime.now;
 
   final MizzyDatabase _database;
   final DateTime Function() _clock;

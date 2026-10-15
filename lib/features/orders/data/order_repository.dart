@@ -101,11 +101,10 @@ class SaveOrderResult {
 
 class OrderRepository {
   OrderRepository({
-    required MizzyDatabase database,
+    required this._database,
     Uuid? uuid,
     DateTime Function()? clock,
-  }) : _database = database,
-       _uuid = uuid ?? const Uuid(),
+  }) : _uuid = uuid ?? const Uuid(),
        _clock = clock ?? DateTime.now;
 
   final MizzyDatabase _database;
