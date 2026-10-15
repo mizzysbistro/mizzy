@@ -61,6 +61,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Temporary repair helper: apply formatter, print the exact patch to the
+      # job log, then verify the working tree is formatter-clean.
+      - name: Generate exact Dart formatting patch
+        run: |
+          dart format lib test
+          git diff -- lib test
+          git diff --check
+
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
 
