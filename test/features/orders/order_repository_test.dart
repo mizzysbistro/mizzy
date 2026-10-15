@@ -118,42 +118,42 @@ void main() {
   test(
     'dine-in order claims an available table in the same transaction',
     () async {
-    final tableId = const Uuid().v4();
-    await insertTable(id: tableId, tableBranchId: branchId);
+      final tableId = const Uuid().v4();
+      await insertTable(id: tableId, tableBranchId: branchId);
 
-    final orderId = const Uuid().v4();
-    await repository.saveOrder(
-      draft(
+      final orderId = const Uuid().v4();
+      await repository.saveOrder(
+        draft(
+          orderId: orderId,
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+          tableId: tableId,
+        ),
+      );
+
+      final rawDatabase = await database.open();
+      final table = (await rawDatabase.query(
+        'restaurant_tables',
+        where: 'id = ?',
+        whereArgs: <Object?>[tableId],
+        limit: 1,
+      )).single;
+      final order = await repository.readOrder(
+        organizationId: organizationId,
+        branchId: branchId,
         orderId: orderId,
-        idempotencyKey: const Uuid().v4(),
-        orderType: MizzyOrderType.dineIn,
-        tableId: tableId,
-      ),
-    );
+      );
 
-    final rawDatabase = await database.open();
-    final table = (await rawDatabase.query(
-      'restaurant_tables',
-      where: 'id = ?',
-      whereArgs: <Object?>[tableId],
-      limit: 1,
-    )).single;
-    final order = await repository.readOrder(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-    );
-
-    expect(table['status'], 'occupied');
-    expect(table['sync_state'], 'pending');
-    expect(order?['table_id'], tableId);
-    final listedOrders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    expect(listedOrders.single['table_name'], table['name']);
-    expect(await rawDatabase.query('orders'), hasLength(1));
-    expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
+      expect(table['status'], 'occupied');
+      expect(table['sync_state'], 'pending');
+      expect(order?['table_id'], tableId);
+      final listedOrders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      expect(listedOrders.single['table_name'], table['name']);
+      expect(await rawDatabase.query('orders'), hasLength(1));
+      expect(await rawDatabase.query('kitchen_tickets'), hasLength(1));
     },
   );
 
@@ -166,10 +166,7 @@ void main() {
       tableBranchId: branchId,
       status: 'occupied',
     );
-    await insertTable(
-      id: otherBranchTableId,
-      tableBranchId: otherBranch,
-    );
+    await insertTable(id: otherBranchTableId, tableBranchId: otherBranch);
 
     await expectLater(
       repository.saveOrder(
@@ -203,209 +200,209 @@ void main() {
   test(
     'cancelling an unpaid dine-in order releases its table atomically',
     () async {
-    final tableId = const Uuid().v4();
-    final orderId = const Uuid().v4();
-    await insertTable(id: tableId, tableBranchId: branchId);
-    await repository.saveOrder(
-      draft(
+      final tableId = const Uuid().v4();
+      final orderId = const Uuid().v4();
+      await insertTable(id: tableId, tableBranchId: branchId);
+      await repository.saveOrder(
+        draft(
+          orderId: orderId,
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+          tableId: tableId,
+        ),
+      );
+
+      await repository.updateKitchenStatus(
+        organizationId: organizationId,
+        branchId: branchId,
         orderId: orderId,
-        idempotencyKey: const Uuid().v4(),
-        orderType: MizzyOrderType.dineIn,
-        tableId: tableId,
-      ),
-    );
+        nextStatus: KitchenTicketStatus.cancelled,
+      );
 
-    await repository.updateKitchenStatus(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-      nextStatus: KitchenTicketStatus.cancelled,
-    );
-
-    final rawDatabase = await database.open();
-    final table = (await rawDatabase.query(
-      'restaurant_tables',
-      where: 'id = ?',
-      whereArgs: <Object?>[tableId],
-      limit: 1,
-    )).single;
-    final order = await repository.readOrder(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-    );
-    expect(order?['status'], 'cancelled');
-    expect(
-      (order?['kitchenTicket'] as Map<String, Object?>)['status'],
-      'cancelled',
-    );
-    expect(table['status'], 'available');
-    expect(table['sync_state'], 'pending');
+      final rawDatabase = await database.open();
+      final table = (await rawDatabase.query(
+        'restaurant_tables',
+        where: 'id = ?',
+        whereArgs: <Object?>[tableId],
+        limit: 1,
+      )).single;
+      final order = await repository.readOrder(
+        organizationId: organizationId,
+        branchId: branchId,
+        orderId: orderId,
+      );
+      expect(order?['status'], 'cancelled');
+      expect(
+        (order?['kitchenTicket'] as Map<String, Object?>)['status'],
+        'cancelled',
+      );
+      expect(table['status'], 'available');
+      expect(table['sync_state'], 'pending');
     },
   );
 
   test(
     'captured payment prevents dine-in cancellation without a refund',
     () async {
-    final tableId = const Uuid().v4();
-    final orderId = const Uuid().v4();
-    await insertTable(id: tableId, tableBranchId: branchId);
-    await repository.saveOrder(
-      draft(
-        orderId: orderId,
-        idempotencyKey: const Uuid().v4(),
-        orderType: MizzyOrderType.dineIn,
-        tableId: tableId,
-      ),
-    );
+      final tableId = const Uuid().v4();
+      final orderId = const Uuid().v4();
+      await insertTable(id: tableId, tableBranchId: branchId);
+      await repository.saveOrder(
+        draft(
+          orderId: orderId,
+          idempotencyKey: const Uuid().v4(),
+          orderType: MizzyOrderType.dineIn,
+          tableId: tableId,
+        ),
+      );
 
-    final rawDatabase = await database.open();
-    final timestamp = DateTime.now().toUtc().toIso8601String();
-    await rawDatabase.insert('payments', <String, Object?>{
-      'id': const Uuid().v4(),
-      'organization_id': organizationId,
-      'branch_id': branchId,
-      'order_id': orderId,
-      'method': 'cash',
-      'status': 'captured',
-      'amount_minor': 100,
-      'currency_code': 'PHP',
-      'idempotency_key': const Uuid().v4(),
-      'created_at': timestamp,
-      'updated_at': timestamp,
-    });
+      final rawDatabase = await database.open();
+      final timestamp = DateTime.now().toUtc().toIso8601String();
+      await rawDatabase.insert('payments', <String, Object?>{
+        'id': const Uuid().v4(),
+        'organization_id': organizationId,
+        'branch_id': branchId,
+        'order_id': orderId,
+        'method': 'cash',
+        'status': 'captured',
+        'amount_minor': 100,
+        'currency_code': 'PHP',
+        'idempotency_key': const Uuid().v4(),
+        'created_at': timestamp,
+        'updated_at': timestamp,
+      });
 
-    await expectLater(
-      repository.updateKitchenStatus(
+      await expectLater(
+        repository.updateKitchenStatus(
+          organizationId: organizationId,
+          branchId: branchId,
+          orderId: orderId,
+          nextStatus: KitchenTicketStatus.cancelled,
+        ),
+        throwsStateError,
+      );
+
+      final table = (await rawDatabase.query(
+        'restaurant_tables',
+        where: 'id = ?',
+        whereArgs: <Object?>[tableId],
+        limit: 1,
+      )).single;
+      final order = await repository.readOrder(
         organizationId: organizationId,
         branchId: branchId,
         orderId: orderId,
-        nextStatus: KitchenTicketStatus.cancelled,
-      ),
-      throwsStateError,
-    );
-
-    final table = (await rawDatabase.query(
-      'restaurant_tables',
-      where: 'id = ?',
-      whereArgs: <Object?>[tableId],
-      limit: 1,
-    )).single;
-    final order = await repository.readOrder(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-    );
-    expect(order?['status'], 'saved');
-    expect(
-      (order?['kitchenTicket'] as Map<String, Object?>)['status'],
-      'queued',
-    );
-    expect(table['status'], 'occupied');
+      );
+      expect(order?['status'], 'saved');
+      expect(
+        (order?['kitchenTicket'] as Map<String, Object?>)['status'],
+        'queued',
+      );
+      expect(table['status'], 'occupied');
     },
   );
 
   test(
     'saving an order creates one order and one linked kitchen ticket',
     () async {
-    final orderId = const Uuid().v4();
-    final saved = await repository.saveOrder(
-      draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
-    );
+      final orderId = const Uuid().v4();
+      final saved = await repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
+      );
 
-    final orders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    final order = await repository.readOrder(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-    );
+      final orders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      final order = await repository.readOrder(
+        organizationId: organizationId,
+        branchId: branchId,
+        orderId: orderId,
+      );
 
-    expect(saved.alreadySaved, isFalse);
-    expect(orders, hasLength(1));
-    expect(order?['total_minor'], 32300);
-    expect((order?['lines']! as List), hasLength(2));
-    expect((order?['kitchenTicket'] as Map?)?['status'], 'queued');
+      expect(saved.alreadySaved, isFalse);
+      expect(orders, hasLength(1));
+      expect(order?['total_minor'], 32300);
+      expect((order?['lines']! as List), hasLength(2));
+      expect((order?['kitchenTicket'] as Map?)?['status'], 'queued');
     },
   );
 
   test(
     'retrying the same idempotency key does not duplicate an order',
     () async {
-    final orderId = const Uuid().v4();
-    final key = const Uuid().v4();
-    final first = await repository.saveOrder(
-      draft(orderId: orderId, idempotencyKey: key),
-    );
-    final retry = await repository.saveOrder(
-      draft(orderId: orderId, idempotencyKey: key),
-    );
+      final orderId = const Uuid().v4();
+      final key = const Uuid().v4();
+      final first = await repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: key),
+      );
+      final retry = await repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: key),
+      );
 
-    final orders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
+      final orders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
 
-    expect(first.alreadySaved, isFalse);
-    expect(retry.alreadySaved, isTrue);
-    expect(retry.orderId, first.orderId);
-    expect(orders, hasLength(1));
+      expect(first.alreadySaved, isFalse);
+      expect(retry.alreadySaved, isTrue);
+      expect(retry.orderId, first.orderId);
+      expect(orders, hasLength(1));
     },
   );
 
   test(
     'an idempotency key cannot be reused for a different order ID',
     () async {
-    final key = const Uuid().v4();
-    await repository.saveOrder(
-      draft(orderId: const Uuid().v4(), idempotencyKey: key),
-    );
-
-    await expectLater(
-      repository.saveOrder(
+      final key = const Uuid().v4();
+      await repository.saveOrder(
         draft(orderId: const Uuid().v4(), idempotencyKey: key),
-      ),
-      throwsStateError,
-    );
+      );
 
-    final orders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    expect(orders, hasLength(1));
+      await expectLater(
+        repository.saveOrder(
+          draft(orderId: const Uuid().v4(), idempotencyKey: key),
+        ),
+        throwsStateError,
+      );
+
+      final orders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      expect(orders, hasLength(1));
     },
   );
 
   test(
     'Kitchen status changes are reflected in the same Orders record',
     () async {
-    final orderId = const Uuid().v4();
-    await repository.saveOrder(
-      draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
-    );
+      final orderId = const Uuid().v4();
+      await repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
+      );
 
-    await repository.updateKitchenStatus(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-      nextStatus: KitchenTicketStatus.preparing,
-    );
+      await repository.updateKitchenStatus(
+        organizationId: organizationId,
+        branchId: branchId,
+        orderId: orderId,
+        nextStatus: KitchenTicketStatus.preparing,
+      );
 
-    final orders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    final order = await repository.readOrder(
-      organizationId: organizationId,
-      branchId: branchId,
-      orderId: orderId,
-    );
+      final orders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      final order = await repository.readOrder(
+        organizationId: organizationId,
+        branchId: branchId,
+        orderId: orderId,
+      );
 
-    expect(orders, hasLength(1));
-    expect(orders.single['status'], 'preparing');
-    expect((order?['kitchenTicket'] as Map?)?['status'], 'preparing');
+      expect(orders, hasLength(1));
+      expect(orders.single['status'], 'preparing');
+      expect((order?['kitchenTicket'] as Map?)?['status'], 'preparing');
     },
   );
 
@@ -436,84 +433,88 @@ void main() {
   test(
     'orders are visible only within their organization and branch',
     () async {
-    final orderId = const Uuid().v4();
-    await repository.saveOrder(
-      draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
-    );
+      final orderId = const Uuid().v4();
+      await repository.saveOrder(
+        draft(orderId: orderId, idempotencyKey: const Uuid().v4()),
+      );
 
-    final differentBranch = const Uuid().v4();
-    final differentOrganization = const Uuid().v4();
+      final differentBranch = const Uuid().v4();
+      final differentOrganization = const Uuid().v4();
 
-    expect(
-      await repository.listOrders(
-        organizationId: organizationId,
-        branchId: differentBranch,
-      ),
-      isEmpty,
-    );
-    expect(
-      await repository.listOrders(
-        organizationId: differentOrganization,
-        branchId: branchId,
-      ),
-      isEmpty,
-    );
-    expect(
-      await repository.readOrder(
-        organizationId: organizationId,
-        branchId: differentBranch,
-        orderId: orderId,
-      ),
-      isNull,
-    );
-    expect(
-      await repository.readOrder(
-        organizationId: differentOrganization,
-        branchId: branchId,
-        orderId: orderId,
-      ),
-      isNull,
-    );
+      expect(
+        await repository.listOrders(
+          organizationId: organizationId,
+          branchId: differentBranch,
+        ),
+        isEmpty,
+      );
+      expect(
+        await repository.listOrders(
+          organizationId: differentOrganization,
+          branchId: branchId,
+        ),
+        isEmpty,
+      );
+      expect(
+        await repository.readOrder(
+          organizationId: organizationId,
+          branchId: differentBranch,
+          orderId: orderId,
+        ),
+        isNull,
+      );
+      expect(
+        await repository.readOrder(
+          organizationId: differentOrganization,
+          branchId: branchId,
+          orderId: orderId,
+        ),
+        isNull,
+      );
     },
   );
 
   test(
     'simultaneous retries create one order and one kitchen ticket',
     () async {
-    final orderId = const Uuid().v4();
-    final idempotencyKey = const Uuid().v4();
+      final orderId = const Uuid().v4();
+      final idempotencyKey = const Uuid().v4();
 
-    final results = await Future.wait([
-      repository.saveOrder(
-        draft(orderId: orderId, idempotencyKey: idempotencyKey),
-      ),
-      repository.saveOrder(
-        draft(orderId: orderId, idempotencyKey: idempotencyKey),
-      ),
-    ]);
+      final results = await Future.wait([
+        repository.saveOrder(
+          draft(orderId: orderId, idempotencyKey: idempotencyKey),
+        ),
+        repository.saveOrder(
+          draft(orderId: orderId, idempotencyKey: idempotencyKey),
+        ),
+      ]);
 
-    final orders = await repository.listOrders(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    final rawDatabase = await database.open();
-    final tickets = await rawDatabase.query(
-      'kitchen_tickets',
-      where: 'order_id = ?',
-      whereArgs: [orderId],
-    );
-    final outboxEvents = await rawDatabase.query(
-      'sync_outbox',
-      where: 'entity_id = ? OR idempotency_key IN (?, ?)',
-      whereArgs: [orderId, 'order:$idempotencyKey', 'kitchen:$idempotencyKey'],
-    );
+      final orders = await repository.listOrders(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      final rawDatabase = await database.open();
+      final tickets = await rawDatabase.query(
+        'kitchen_tickets',
+        where: 'order_id = ?',
+        whereArgs: [orderId],
+      );
+      final outboxEvents = await rawDatabase.query(
+        'sync_outbox',
+        where: 'entity_id = ? OR idempotency_key IN (?, ?)',
+        whereArgs: [
+          orderId,
+          'order:$idempotencyKey',
+          'kitchen:$idempotencyKey',
+        ],
+      );
 
-    expect(results.map((result) => result.orderId).toSet(), {orderId});
-    expect(results.where((result) => result.alreadySaved), hasLength(1));
-    expect(results.where((result) => !result.alreadySaved), hasLength(1));
-    expect(orders, hasLength(1));
-    expect(tickets, hasLength(1));
-    expect(outboxEvents, hasLength(2));
+      expect(results.map((result) => result.orderId).toSet(), {orderId});
+      expect(results.where((result) => result.alreadySaved), hasLength(1));
+      expect(results.where((result) => !result.alreadySaved), hasLength(1));
+      expect(orders, hasLength(1));
+      expect(tickets, hasLength(1));
+      expect(outboxEvents, hasLength(2));
     },
   );
 }

@@ -119,12 +119,7 @@ class SyncOutboxRepository {
             OR (status = 'processing' AND next_attempt_at <= ?)
           )
         ''',
-        whereArgs: <Object?>[
-          organizationId,
-          branchId,
-          now,
-          now,
-        ],
+        whereArgs: <Object?>[organizationId, branchId, now, now],
         orderBy: 'created_at ASC, id ASC',
         limit: limit,
       );
@@ -175,14 +170,8 @@ class SyncOutboxRepository {
         'next_attempt_at': null,
         'last_error': null,
       },
-      where:
-          'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
-      whereArgs: <Object?>[
-        eventId,
-        organizationId,
-        branchId,
-        'processing',
-      ],
+      where: 'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
+      whereArgs: <Object?>[eventId, organizationId, branchId, 'processing'],
     );
     if (changed != 1) {
       throw StateError('Only a leased event in this branch can be delivered.');
@@ -205,12 +194,7 @@ class SyncOutboxRepository {
         columns: <String>['attempts'],
         where:
             'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
-        whereArgs: <Object?>[
-          eventId,
-          organizationId,
-          branchId,
-          'processing',
-        ],
+        whereArgs: <Object?>[eventId, organizationId, branchId, 'processing'],
         limit: 1,
       );
       if (rows.isEmpty) {
@@ -232,12 +216,7 @@ class SyncOutboxRepository {
         },
         where:
             'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
-        whereArgs: <Object?>[
-          eventId,
-          organizationId,
-          branchId,
-          'processing',
-        ],
+        whereArgs: <Object?>[eventId, organizationId, branchId, 'processing'],
       );
       if (changed != 1) {
         throw StateError('Outbox event changed while recording retry.');
@@ -262,14 +241,8 @@ class SyncOutboxRepository {
         'next_attempt_at': null,
         'last_error': failureCode.storageValue,
       },
-      where:
-          'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
-      whereArgs: <Object?>[
-        eventId,
-        organizationId,
-        branchId,
-        'processing',
-      ],
+      where: 'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
+      whereArgs: <Object?>[eventId, organizationId, branchId, 'processing'],
     );
     if (changed != 1) {
       throw StateError(

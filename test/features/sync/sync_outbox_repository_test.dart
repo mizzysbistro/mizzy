@@ -24,10 +24,7 @@ void main() {
       factory: databaseFactoryFfi,
       databaseName: 'mizzy-outbox-test-${const Uuid().v4()}.db',
     );
-    repository = SyncOutboxRepository(
-      database: database,
-      clock: () => now,
-    );
+    repository = SyncOutboxRepository(database: database, clock: () => now);
   });
 
   tearDown(() async {
@@ -61,132 +58,132 @@ void main() {
   test(
     'claims only due events from the requested organization and branch',
     () async {
-    final first = await insertEvent(
-      createdAt: now.subtract(const Duration(seconds: 2)),
-    );
-    final second = await insertEvent(
-      createdAt: now.subtract(const Duration(seconds: 1)),
-    );
-    final otherBranch = const Uuid().v4();
-    final foreign = await insertEvent(branch: otherBranch);
+      final first = await insertEvent(
+        createdAt: now.subtract(const Duration(seconds: 2)),
+      );
+      final second = await insertEvent(
+        createdAt: now.subtract(const Duration(seconds: 1)),
+      );
+      final otherBranch = const Uuid().v4();
+      final foreign = await insertEvent(branch: otherBranch);
 
-    final claimed = await repository.claimNextBatch(
-      organizationId: organizationId,
-      branchId: branchId,
-      limit: 10,
-    );
+      final claimed = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+        limit: 10,
+      );
 
-    expect(claimed.map((event) => event.id), [first, second]);
-    expect(claimed.map((event) => event.attempts), [1, 1]);
-    expect(claimed.map((event) => event.status), ['processing', 'processing']);
-    expect(
-      claimed.every((event) => event.nextAttemptAt != null),
-      isTrue,
-    );
+      expect(claimed.map((event) => event.id), [first, second]);
+      expect(claimed.map((event) => event.attempts), [1, 1]);
+      expect(claimed.map((event) => event.status), [
+        'processing',
+        'processing',
+      ]);
+      expect(claimed.every((event) => event.nextAttemptAt != null), isTrue);
 
-    final rawDatabase = await database.open();
-    final foreignRow = (await rawDatabase.query(
-      'sync_outbox',
-      where: 'id = ?',
-      whereArgs: <Object?>[foreign],
-      limit: 1,
-    )).single;
-    expect(foreignRow['status'], 'pending');
-    expect(foreignRow['attempts'], 0);
+      final rawDatabase = await database.open();
+      final foreignRow = (await rawDatabase.query(
+        'sync_outbox',
+        where: 'id = ?',
+        whereArgs: <Object?>[foreign],
+        limit: 1,
+      )).single;
+      expect(foreignRow['status'], 'pending');
+      expect(foreignRow['attempts'], 0);
     },
   );
 
   test(
     'retry uses bounded exponential backoff and the safe error code',
     () async {
-    final eventId = await insertEvent();
-    final firstClaim = await repository.claimNextBatch(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    expect(firstClaim.single.id, eventId);
-
-    final retryAt = await repository.markRetryableFailure(
-      organizationId: organizationId,
-      branchId: branchId,
-      eventId: eventId,
-      failureCode: SyncFailureCode.networkUnavailable,
-    );
-    expect(retryAt, now.add(const Duration(seconds: 30)));
-
-    var rawDatabase = await database.open();
-    var row = (await rawDatabase.query(
-      'sync_outbox',
-      where: 'id = ?',
-      whereArgs: <Object?>[eventId],
-      limit: 1,
-    )).single;
-    expect(row['status'], 'failed');
-    expect(row['attempts'], 1);
-    expect(row['last_error'], 'network_unavailable');
-
-    now = retryAt.subtract(const Duration(seconds: 1));
-    expect(
-      await repository.claimNextBatch(
+      final eventId = await insertEvent();
+      final firstClaim = await repository.claimNextBatch(
         organizationId: organizationId,
         branchId: branchId,
-      ),
-      isEmpty,
-    );
+      );
+      expect(firstClaim.single.id, eventId);
 
-    now = retryAt;
-    final secondClaim = await repository.claimNextBatch(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    expect(secondClaim.single.attempts, 2);
-    final secondRetryAt = await repository.markRetryableFailure(
-      organizationId: organizationId,
-      branchId: branchId,
-      eventId: eventId,
-      failureCode: SyncFailureCode.timeout,
-    );
-    expect(secondRetryAt, now.add(const Duration(seconds: 60)));
+      final retryAt = await repository.markRetryableFailure(
+        organizationId: organizationId,
+        branchId: branchId,
+        eventId: eventId,
+        failureCode: SyncFailureCode.networkUnavailable,
+      );
+      expect(retryAt, now.add(const Duration(seconds: 30)));
 
-    rawDatabase = await database.open();
-    row = (await rawDatabase.query(
-      'sync_outbox',
-      where: 'id = ?',
-      whereArgs: <Object?>[eventId],
-      limit: 1,
-    )).single;
-    expect(row['last_error'], 'timeout');
-    expect(row['next_attempt_at'], secondRetryAt.toIso8601String());
+      var rawDatabase = await database.open();
+      var row = (await rawDatabase.query(
+        'sync_outbox',
+        where: 'id = ?',
+        whereArgs: <Object?>[eventId],
+        limit: 1,
+      )).single;
+      expect(row['status'], 'failed');
+      expect(row['attempts'], 1);
+      expect(row['last_error'], 'network_unavailable');
+
+      now = retryAt.subtract(const Duration(seconds: 1));
+      expect(
+        await repository.claimNextBatch(
+          organizationId: organizationId,
+          branchId: branchId,
+        ),
+        isEmpty,
+      );
+
+      now = retryAt;
+      final secondClaim = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      expect(secondClaim.single.attempts, 2);
+      final secondRetryAt = await repository.markRetryableFailure(
+        organizationId: organizationId,
+        branchId: branchId,
+        eventId: eventId,
+        failureCode: SyncFailureCode.timeout,
+      );
+      expect(secondRetryAt, now.add(const Duration(seconds: 60)));
+
+      rawDatabase = await database.open();
+      row = (await rawDatabase.query(
+        'sync_outbox',
+        where: 'id = ?',
+        whereArgs: <Object?>[eventId],
+        limit: 1,
+      )).single;
+      expect(row['last_error'], 'timeout');
+      expect(row['next_attempt_at'], secondRetryAt.toIso8601String());
     },
   );
 
   test(
     'expired processing lease can be safely reclaimed with a retry count',
     () async {
-    final eventId = await insertEvent();
-    final first = await repository.claimNextBatch(
-      organizationId: organizationId,
-      branchId: branchId,
-      leaseDuration: const Duration(minutes: 2),
-    );
-    expect(first.single.attempts, 1);
-
-    now = now.add(const Duration(minutes: 1, seconds: 59));
-    expect(
-      await repository.claimNextBatch(
+      final eventId = await insertEvent();
+      final first = await repository.claimNextBatch(
         organizationId: organizationId,
         branchId: branchId,
-      ),
-      isEmpty,
-    );
+        leaseDuration: const Duration(minutes: 2),
+      );
+      expect(first.single.attempts, 1);
 
-    now = now.add(const Duration(seconds: 1));
-    final reclaimed = await repository.claimNextBatch(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    expect(reclaimed.single.id, eventId);
-    expect(reclaimed.single.attempts, 2);
+      now = now.add(const Duration(minutes: 1, seconds: 59));
+      expect(
+        await repository.claimNextBatch(
+          organizationId: organizationId,
+          branchId: branchId,
+        ),
+        isEmpty,
+      );
+
+      now = now.add(const Duration(seconds: 1));
+      final reclaimed = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      expect(reclaimed.single.id, eventId);
+      expect(reclaimed.single.attempts, 2);
     },
   );
 
@@ -274,7 +271,9 @@ void main() {
         ),
       ]);
 
-      final claimedIds = batches.expand((batch) => batch.map((event) => event.id));
+      final claimedIds = batches.expand(
+        (batch) => batch.map((event) => event.id),
+      );
       expect(claimedIds.toSet(), {first, second});
       expect(claimedIds.length, 2);
 

@@ -455,12 +455,7 @@ class OrderRepository {
             },
             where:
                 'id = ? AND organization_id = ? AND branch_id = ? AND status = ?',
-            whereArgs: <Object?>[
-              tableId,
-              organizationId,
-              branchId,
-              'occupied',
-            ],
+            whereArgs: <Object?>[tableId, organizationId, branchId, 'occupied'],
           );
           if (tableChanges != 1) {
             throw StateError(

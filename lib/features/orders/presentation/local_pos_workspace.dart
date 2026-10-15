@@ -140,10 +140,7 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
     }
   }
 
-  Future<void> _ensureDemoTables(
-    String organizationId,
-    String branchId,
-  ) async {
+  Future<void> _ensureDemoTables(String organizationId, String branchId) async {
     final database = await _database.open();
     await database.transaction((transaction) async {
       final existing = await transaction.query(
@@ -215,22 +212,23 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
       final database = await _database.open();
       final rows = await database.query(
         'catalog_items',
-        where:
-            'organization_id = ? AND branch_id = ? AND is_active = ?',
+        where: 'organization_id = ? AND branch_id = ? AND is_active = ?',
         whereArgs: <Object?>[organizationId, branchId, 1],
         orderBy: 'category_name COLLATE NOCASE ASC, name COLLATE NOCASE ASC',
       );
       if (!mounted) return;
       setState(() {
-        _menuItems = rows.map((row) {
-          return _DemoMenuItem(
-            id: row['id']! as String,
-            sku: row['sku'] as String?,
-            name: row['name']! as String,
-            category: row['category_name'] as String? ?? 'Other',
-            priceMinor: row['price_minor']! as int,
-          );
-        }).toList(growable: false);
+        _menuItems = rows
+            .map((row) {
+              return _DemoMenuItem(
+                id: row['id']! as String,
+                sku: row['sku'] as String?,
+                name: row['name']! as String,
+                category: row['category_name'] as String? ?? 'Other',
+                priceMinor: row['price_minor']! as int,
+              );
+            })
+            .toList(growable: false);
       });
     } on Object {
       if (!mounted) return;
@@ -729,7 +727,9 @@ class _LocalPosWorkspaceState extends State<LocalPosWorkspace> {
                 child: Text('Add menu items to start an order.'),
               )
             else
-              ..._menuItems.where((item) => (_cart[item.id] ?? 0) > 0).map((item) {
+              ..._menuItems.where((item) => (_cart[item.id] ?? 0) > 0).map((
+                item,
+              ) {
                 final count = _cart[item.id]!;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
