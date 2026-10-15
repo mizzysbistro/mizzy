@@ -61,6 +61,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate formatter patch for remaining source
+        run: |
+          dart format lib test
+          git diff -- lib test
+          git diff --check
+
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed lib test
 
