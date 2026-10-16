@@ -350,13 +350,15 @@
     "evidence": [
       "Added SyncOutboxRepository local primitives for branch-scoped leases, expired-lease recovery, bounded retry backoff, safe failure codes, delivered state and conflict quarantine.",
       "Added seven outbox lifecycle tests for branch scope, retries, lease recovery, delivered/conflict transitions, invalid limits, concurrency and wrong-branch acknowledgment.",
-      "The repository is deliberately local-only; no authenticated network worker or cloud reconciliation has been implemented."
+      "The repository is deliberately local-only; no authenticated network worker or cloud reconciliation has been implemented.",
+      "Draft feature-branch change adds explicit SQLite outbox dependencies: kitchen-ticket creation waits for the parent order event, and subsequent Kitchen transitions chain behind the prior ticket event. A regression test asserts dependents are not leased until the parent is marked delivered. Not locally executed; GitHub Actions runner blocker remains open.",
+      "Follow-up hardening adds a v1→v2 backfill plan for legacy outbox dependencies: map Kitchen creation events to parent order creation events, chain subsequent ticket transitions, and quarantine unresolved events. Adds migration regression coverage plus a cross-branch dependency negative test. Not locally executed; CI runner outage remains open."
     ],
     "attempt_count": 0,
-    "blocker": "Authenticated upload/pull sync is not implemented; outbox persistence and leasing are foundations only. GitHub Actions verification is blocked by issue 13.",
-    "next_action": "After the local runner is available and tests pass, build the trusted server-side idempotent upload contract and authenticated client worker, then add pull cursors and offline/reconnect integration tests.",
+    "blocker": "Legacy dependency backfill and cross-branch gate are committed to the draft feature branch but unverified because Flutter/Dart are unavailable here and GitHub Actions jobs still fail before steps (runner_id=0, zero steps). Authenticated upload/pull worker remains unimplemented.",
+    "next_action": "Review migration/backfill and branch-scope changes; restore Actions runners under issue 13; run formatting, analyzer, all Flutter tests including migration and outbox tests, secret scan, Android debug APK build, and local Supabase migration/pgTAP before implementing network sync.",
     "approval_required": true,
-    "updated_at": "2026-10-13",
+    "updated_at": "2026-10-14",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/15"
   }
 ]

@@ -35,6 +35,7 @@ void main() {
     String? organization,
     String? branch,
     DateTime? createdAt,
+    String? dependsOnEventId,
   }) async {
     final id = const Uuid().v4();
     final rawDatabase = await database.open();
@@ -48,6 +49,7 @@ void main() {
       'schema_version': 1,
       'payload_json': '{"schemaVersion":1,"test":true}',
       'idempotency_key': const Uuid().v4(),
+      'depends_on_event_id': dependsOnEventId,
       'status': 'pending',
       'attempts': 0,
       'created_at': (createdAt ?? now).toIso8601String(),
@@ -90,6 +92,65 @@ void main() {
       )).single;
       expect(foreignRow['status'], 'pending');
       expect(foreignRow['attempts'], 0);
+    },
+  );
+
+  test(
+    'dependent event waits for server-confirmed parent delivery',
+    () async {
+      final parentId = await insertEvent(
+        createdAt: now.subtract(const Duration(seconds: 2)),
+      );
+      final childId = await insertEvent(
+        dependsOnEventId: parentId,
+        createdAt: now.subtract(const Duration(seconds: 1)),
+      );
+
+      final firstBatch = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+        limit: 10,
+      );
+      expect(firstBatch.map((event) => event.id), [parentId]);
+      expect(firstBatch.single.dependsOnEventId, isNull);
+
+      await repository.markDelivered(
+        organizationId: organizationId,
+        branchId: branchId,
+        eventId: parentId,
+      );
+
+      final secondBatch = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+        limit: 10,
+      );
+      expect(secondBatch.map((event) => event.id), [childId]);
+      expect(secondBatch.single.dependsOnEventId, parentId);
+    },
+  );
+
+  test(
+    'a dependency in another branch cannot unblock a local event',
+    () async {
+      final foreignBranch = const Uuid().v4();
+      final foreignParentId = await insertEvent(branch: foreignBranch);
+      final rawDatabase = await database.open();
+      await rawDatabase.update(
+        'sync_outbox',
+        <String, Object?>{'status': 'done'},
+        where: 'id = ?',
+        whereArgs: <Object?>[foreignParentId],
+      );
+      await insertEvent(dependsOnEventId: foreignParentId);
+
+      final claimed = await repository.claimNextBatch(
+        organizationId: organizationId,
+        branchId: branchId,
+        limit: 10,
+      );
+
+      expect(claimed, isEmpty);
     },
   );
 

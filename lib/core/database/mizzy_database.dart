@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:uuid/uuid.dart';
@@ -17,7 +19,7 @@ class MizzyDatabase {
   final String databaseName;
   Future<sqflite.Database>? _databaseFuture;
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   Future<sqflite.Database> open() {
     final cached = _databaseFuture;
@@ -101,6 +103,135 @@ class MizzyDatabase {
     if (oldVersion < 1 && newVersion >= 1) {
       await _createSchema(database);
     }
+    if (oldVersion < 2 && newVersion >= 2) {
+      final columns = await database.rawQuery('PRAGMA table_info(sync_outbox)');
+      final hasDependencyColumn = columns.any(
+        (column) => column['name'] == 'depends_on_event_id',
+      );
+      if (!hasDependencyColumn) {
+        await database.execute(
+          'ALTER TABLE sync_outbox ADD COLUMN depends_on_event_id TEXT '
+          'REFERENCES sync_outbox(id)',
+        );
+      }
+      await database.execute(
+        'CREATE INDEX IF NOT EXISTS outbox_dependency_idx '
+        'ON sync_outbox (depends_on_event_id, status)',
+      );
+      await _backfillLegacyOutboxDependencies(database);
+      await database.update(
+        'local_meta',
+        <String, Object?>{'meta_value': schemaVersion.toString()},
+        where: 'meta_key = ?',
+        whereArgs: <Object?>['schema_version'],
+      );
+    }
+  }
+
+  /// Safely orders pending legacy Kitchen events before a network worker exists.
+  ///
+  /// If an old event cannot be tied to its parent order or previous Kitchen
+  /// event, quarantine it instead of risking a dependent write reaching the
+  /// server first. Order and branch scope are always included in the mapping.
+  static Future<void> _backfillLegacyOutboxDependencies(
+    sqflite.Database database,
+  ) async {
+    final rows = await database.rawQuery(
+      'SELECT rowid AS local_rowid, * FROM sync_outbox ORDER BY rowid ASC',
+    );
+    final orderEventByScope = <String, String>{};
+
+    for (final row in rows) {
+      if (row['entity_type'] != 'order' || row['operation'] != 'create') {
+        continue;
+      }
+      orderEventByScope[_outboxScopeKey(row, row['entity_id']! as String)] =
+          row['id']! as String;
+    }
+
+    final lastTicketEventByScope = <String, String>{};
+    for (final row in rows) {
+      if (row['entity_type'] != 'kitchen_ticket') {
+        continue;
+      }
+      final operation = row['operation']! as String;
+      if (operation != 'create' &&
+          operation != 'transition' &&
+          operation != 'update' &&
+          operation != 'delete') {
+        continue;
+      }
+
+      final eventId = row['id']! as String;
+      final eventScope = _outboxScopeKey(row, row['entity_id']! as String);
+      final existingDependency = row['depends_on_event_id'] as String?;
+      String? dependencyId = existingDependency;
+
+      if (operation == 'create' && dependencyId == null) {
+        String? orderId;
+        try {
+          final decoded = jsonDecode(row['payload_json']! as String);
+          if (decoded is Map) {
+            final candidate = decoded['orderId'];
+            if (candidate is String) {
+              orderId = candidate;
+            }
+          }
+        } on FormatException {
+          // Invalid legacy payloads are quarantined below.
+        }
+        if (orderId != null) {
+          dependencyId = orderEventByScope[_outboxScopeKey(row, orderId)];
+        }
+        if (dependencyId == null) {
+          await _quarantineLegacyOutboxEvent(database, row);
+        }
+      } else if (operation != 'create' && dependencyId == null) {
+        dependencyId = lastTicketEventByScope[eventScope];
+        if (dependencyId == null) {
+          await _quarantineLegacyOutboxEvent(database, row);
+        }
+      }
+
+      if (dependencyId != null && existingDependency == null) {
+        await database.update(
+          'sync_outbox',
+          <String, Object?>{'depends_on_event_id': dependencyId},
+          where: 'id = ? AND depends_on_event_id IS NULL',
+          whereArgs: <Object?>[eventId],
+        );
+      }
+      lastTicketEventByScope[eventScope] = eventId;
+    }
+  }
+
+  static String _outboxScopeKey(
+    Map<String, Object?> row,
+    String entityId,
+  ) {
+    final organizationId = row['organization_id']! as String;
+    final branchId = row['branch_id']! as String;
+    return '$organizationId\u001f$branchId\u001f$entityId';
+  }
+
+  static Future<void> _quarantineLegacyOutboxEvent(
+    sqflite.Database database,
+    Map<String, Object?> row,
+  ) async {
+    final status = row['status']! as String;
+    if (status == 'done' || status == 'conflict') {
+      return;
+    }
+    await database.update(
+      'sync_outbox',
+      <String, Object?>{
+        'status': 'conflict',
+        'next_attempt_at': null,
+        'last_error': 'dependency_backfill_unresolved',
+      },
+      where: 'id = ? AND status IN (?, ?, ?)',
+      whereArgs: <Object?>[row['id'], 'pending', 'failed', 'processing'],
+    );
   }
 
   static const List<String> _schemaStatements = <String>[
@@ -259,6 +390,7 @@ class MizzyDatabase {
         schema_version INTEGER NOT NULL DEFAULT 1 CHECK (schema_version > 0),
         payload_json TEXT NOT NULL,
         idempotency_key TEXT NOT NULL UNIQUE,
+        depends_on_event_id TEXT REFERENCES sync_outbox(id),
         status TEXT NOT NULL DEFAULT 'pending'
           CHECK (status IN ('pending', 'processing', 'done', 'failed', 'conflict')),
         attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
@@ -281,6 +413,7 @@ class MizzyDatabase {
     'CREATE INDEX order_lines_order_idx ON order_lines (order_id)',
     'CREATE INDEX kitchen_tickets_branch_status_idx ON kitchen_tickets (organization_id, branch_id, status, fired_at)',
     'CREATE INDEX outbox_ready_idx ON sync_outbox (status, next_attempt_at, created_at)',
+    'CREATE INDEX outbox_dependency_idx ON sync_outbox (depends_on_event_id, status)',
     'CREATE INDEX inventory_branch_item_created_idx ON inventory_movements (organization_id, branch_id, item_id, created_at DESC)',
   ];
 }
