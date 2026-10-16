@@ -248,15 +248,24 @@ void main() {
   );
 
   test(
-    'a failed order insert leaves no partial order, ticket or outbox',
+    'a failed order-line insert rolls back the order, ticket and outbox',
     () async {
+      // Force a database-level failure after the order insert has started.
+      // This verifies that the repository transaction rolls back earlier writes.
+      await rawDatabase.execute('''
+        CREATE TRIGGER fail_order_line_insert
+        BEFORE INSERT ON order_lines
+        BEGIN
+          SELECT RAISE(ABORT, 'forced order-line insert failure');
+        END
+      ''');
+
       final draft = CreateOrderDraft(
         orderId: const Uuid().v4(),
         idempotencyKey: const Uuid().v4(),
         organizationId: const Uuid().v4(),
         branchId: const Uuid().v4(),
-        orderType: MizzyOrderType.dineIn,
-        tableId: const Uuid().v4(),
+        orderType: MizzyOrderType.takeaway,
         lines: const <OrderLineDraft>[
           OrderLineDraft(
             itemName: 'Coffee',

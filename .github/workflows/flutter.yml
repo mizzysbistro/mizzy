@@ -25,6 +25,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Scan all branch and tag history for leaked credentials
+        run: |
+          git fetch --force --prune origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+          curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          printf '%s  %s\n' '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' "$RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" version
+          "$RUNNER_TEMP/gitleaks" git --log-opts="--all" --redact --exit-code 1 --timeout 300 .
+
+
   flutter:
     runs-on: ubuntu-latest
     steps:
@@ -70,8 +80,9 @@ jobs:
       - name: Install SQLite native library for FFI tests
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-0 libsqlite3-dev
 
-      - name: Widget and unit tests
-        run: flutter test
+      - name: Widget and unit tests (bounded with per-test progress)
+        timeout-minutes: 4
+        run: timeout 180s flutter test --reporter expanded --concurrency=1
 
       - name: Build Android debug APK
         run: flutter build apk --debug
