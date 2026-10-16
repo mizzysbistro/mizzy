@@ -358,5 +358,41 @@
     "approval_required": true,
     "updated_at": "2026-10-13",
     "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/15"
+  },
+  {
+    "task_id": "P1-03",
+    "title": "Enforce table availability atomically before cloud dine-in order creation",
+    "phase": "P1",
+    "type": "security",
+    "priority": "P0",
+    "status": "in_progress",
+    "dependencies": [
+      "P0-06",
+      "P1-01"
+    ],
+    "acceptance_criteria": [
+      "The server rejects any new dine-in order if the assigned active table is occupied or reserved.",
+      "Availability is checked transactionally while the table row lock remains held to avoid two-device double assignment.",
+      "Exact same order idempotency retries still return the already-saved order even though its table is now occupied.",
+      "Takeaway/delivery orders remain unaffected.",
+      "Fresh local Supabase migrations and pgTAP verify occupied/reserved rejection, rollback, retry and unrelated order paths.",
+      "Existing Flutter/SQL/security gates and independent review pass before merge."
+    ],
+    "verification_plan": [
+      "Apply migration to fresh disposable Supabase database.",
+      "Run new eight-assertion table-availability pgTAP test and full suite.",
+      "Add/test two-session concurrency check before enabling cloud dine-in workflows.",
+      "Inspect the final migration diff, function grants, SQLSTATE mapping and audit/rollback behavior."
+    ],
+    "evidence": [
+      "Static review of `public.save_order` found the table is selected FOR UPDATE but `v_table_status` is never checked before inserting a new order. Existing code could accept a new order for an occupied or reserved table.",
+      "Prepared a draft `BEFORE INSERT` guard that checks active table status in the same transaction and returns SQLSTATE 40001 for conflict; an eight-assertion pgTAP test is authored but unexecuted."
+    ],
+    "attempt_count": 0,
+    "blocker": "GitHub Actions runner outage issue #13 prevents migration/pgTAP execution. No local Supabase CLI/Docker available. Concurrent multi-session check remains required before declaring race-safety verified.",
+    "approval_required": false,
+    "next_action": "Review the trigger’s transactional lock assumptions, execute fresh local Supabase migration/pgTAP and add a two-session concurrent reservation test when runner/runtime is available.",
+    "updated_at": "2026-10-14",
+    "github_issue_url": "https://github.com/mizzysbistro/mizzy/issues/24"
   }
 ]
