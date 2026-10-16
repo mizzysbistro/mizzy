@@ -69,10 +69,8 @@ class SyncOutboxRecord {
 /// network requests. A future sync worker must send the idempotency key to a
 /// trusted server endpoint before marking an event delivered.
 class SyncOutboxRepository {
-  SyncOutboxRepository({
-    required this._database,
-    DateTime Function()? clock,
-  }) : _clock = clock ?? DateTime.now;
+  SyncOutboxRepository({required this._database, DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
 
   final MizzyDatabase _database;
   final DateTime Function() _clock;
