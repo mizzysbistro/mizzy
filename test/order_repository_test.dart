@@ -280,7 +280,7 @@ void main() {
         throwsA(isA<DatabaseException>()),
       );
 
-      for (final tableName of <String>[
+      for (final tableName in <String>[
         'orders',
         'order_lines',
         'kitchen_tickets',
