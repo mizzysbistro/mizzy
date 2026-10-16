@@ -6,6 +6,25 @@ import 'package:uuid/uuid.dart';
 import 'package:mizzy/core/database/mizzy_database.dart';
 import 'package:mizzy/features/orders/presentation/local_pos_workspace.dart';
 
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 5),
+}) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < timeout) {
+    await tester.pump(const Duration(milliseconds: 16));
+    if (finder.evaluate().isNotEmpty) return;
+
+    // SQLite FFI performs real asynchronous work. Allow the real event loop
+    // to finish between fake-time widget frames while the UI is loading.
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    });
+  }
+  fail('Timed out waiting for $finder');
+}
+
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -23,29 +42,29 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(home: LocalPosWorkspace(database: database)),
       );
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.text('Chicken Adobo'));
 
       expect(find.text('Chicken Adobo'), findsOneWidget);
       await tester.tap(find.byTooltip('Add Chicken Adobo'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       await tester.tap(find.text('Save & send to Kitchen'));
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.text('Order #1'));
 
       expect(find.text('Order #1'), findsOneWidget);
       expect(find.text('SAVED · takeaway'), findsOneWidget);
 
       await tester.tap(find.text('Kitchen'));
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.text('SAVED · takeaway'));
       expect(find.text('Order #1'), findsOneWidget);
       expect(find.text('SAVED · takeaway'), findsOneWidget);
 
       await tester.tap(find.text('Start'));
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.text('PREPARING · takeaway'));
       expect(find.text('PREPARING · takeaway'), findsOneWidget);
 
       await tester.tap(find.byIcon(Icons.receipt_long_outlined));
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.text('PREPARING · takeaway'));
       expect(find.text('Order #1'), findsOneWidget);
       expect(find.text('PREPARING · takeaway'), findsOneWidget);
 
@@ -69,21 +88,21 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: LocalPosWorkspace(database: database)),
     );
-    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, find.text('Chicken Adobo'));
 
     await tester.tap(find.text('Tables'));
-    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, find.text('Use table'));
     expect(find.text('Use table'), findsNWidgets(8));
 
     await tester.tap(find.text('Use table').first);
-    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, find.text('Dine-in'));
     expect(find.text('Dine-in'), findsOneWidget);
     expect(find.text('Table: T1'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Add Chicken Adobo'));
-    await tester.pumpAndSettle();
+    await tester.pump();
     await tester.tap(find.text('Save & send to Kitchen'));
-    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, find.text('Order #1'));
 
     expect(find.text('Order #1'), findsOneWidget);
     expect(find.text('SAVED · dine_in · T1'), findsOneWidget);
@@ -121,7 +140,7 @@ void main() {
     expect(lines.single['item_name_snapshot'], 'Chicken Adobo');
 
     await tester.tap(find.text('Tables'));
-    await tester.pumpAndSettle();
+    await _pumpUntilFound(tester, find.text('OCCUPIED'));
     expect(find.text('OCCUPIED'), findsOneWidget);
     expect(find.text('Use table'), findsNWidgets(7));
 
