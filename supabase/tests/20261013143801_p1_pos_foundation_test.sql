@@ -5,6 +5,7 @@ create extension if not exists pgtap with schema extensions;
 select plan(27);
 
 -- P1 catalog smoke checks. These tests intentionally avoid production data.
+-- Validate the current migration on a clean, disposable Supabase CI stack.
 select has_table('public', 'menu_items', 'menu catalog table exists');
 select has_table('public', 'restaurant_tables', 'restaurant table layout exists');
 select has_table('public', 'orders', 'single logical orders table exists');
